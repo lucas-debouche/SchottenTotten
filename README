@@ -1,7 +1,10 @@
 Résumé des étapes :
-Choisir le jeu et définir les règles.
-Choisir un langage de programmation adapté.
 Implémenter la logique du jeu sans IA.
+  Conception des classes et organisation du projet.
+  Initialisation et configuration.
+  Développement des classes.
+  Implémentation de la logique du jeu.
+  Interface utilisateur.
 Développer l'IA (minimax, heuristiques, apprentissage par renforcement, etc.).
 Créer une interface utilisateur pour rendre le jeu interactif.
 Tester et optimiser l'IA et le jeu.
