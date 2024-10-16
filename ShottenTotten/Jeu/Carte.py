@@ -22,8 +22,6 @@ for i in Couleurs:
         carte = CarteClan(Couleurs[i], j)
         CartesClans.append(carte)
 
-for i in range(len(CartesClans)):
-    print(CartesClans[i].couleur, CartesClans[i].force)
 
 Joker = CarteTactique(Capacites[1], NomsCartesTactiques[1])
 Espion = CarteTactique(Capacites[1], NomsCartesTactiques[2])
@@ -45,6 +43,12 @@ CartesTactiques.append(Stratege)
 CartesTactiques.append(Banshee)
 CartesTactiques.append(Traitre)
 
+Pioche = CartesClans + CartesTactiques
+
+'''
+for i in range(len(CartesClans)):
+    print(CartesClans[i].couleur, CartesClans[i].force)
 
 for i in range(len(CartesTactiques)):
     print(CartesTactiques[i].capacite, CartesTactiques[i].nom)
+'''
