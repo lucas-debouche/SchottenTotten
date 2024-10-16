@@ -12,3 +12,4 @@ Jeu.Jeu.mode = Jeu.Jeu.Modes[choix_mode]
 print(Jeu.Jeu.mode)
 
 
+

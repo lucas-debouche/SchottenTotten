@@ -25,3 +25,4 @@ class Joueur:
             Carte.Pioche.pop(0)
             self.main.append(carte)
             return self.main, Carte.Pioche
+
