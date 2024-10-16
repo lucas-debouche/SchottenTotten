@@ -45,10 +45,4 @@ CartesTactiques.append(Traitre)
 
 Pioche = CartesClans + CartesTactiques
 
-'''
-for i in range(len(CartesClans)):
-    print(CartesClans[i].couleur, CartesClans[i].force)
 
-for i in range(len(CartesTactiques)):
-    print(CartesTactiques[i].capacite, CartesTactiques[i].nom)
-'''
