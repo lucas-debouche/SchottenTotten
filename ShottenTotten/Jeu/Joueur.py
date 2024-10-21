@@ -53,3 +53,7 @@ class Joueur:
     def regarder_defausse(self):
         for i in Plateau.plateau.defausse:
             print(Plateau.plateau.defausse[i])
+
+    def revendiquer(self, numeroborne):
+        Plateau.plateau.bornes.pop(numeroborne)
+        return Plateau.plateau
