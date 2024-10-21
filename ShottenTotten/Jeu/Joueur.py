@@ -27,19 +27,16 @@ class Joueur:
         if carte.capacite == Carte.Capacites[1]:
             choix_borne = Jeu.choix_borne()
             Plateau.plateau.bornes[choix_borne - 1][0].append(carte)
-            self.main.pop(choix_carte - 1)
         elif carte.capacite == Carte.Capacites[2]:
             choix_borne = Jeu.choix_borne()
             Plateau.plateau.bornes[choix_borne - 1][1].append(carte)
-            self.main.pop(choix_carte - 1)
         elif carte.capacite == Carte.Capacites[3]:
             Plateau.plateau.defausse.append(carte)
-            self.main.pop(choix_carte - 1)
         else:
             choix_borne = Jeu.choix_borne()
             Plateau.plateau.bornes[choix_borne - 1][0].append(carte)
-            self.main.pop(choix_carte - 1)
-
+        self.main.pop(choix_carte - 1)
+        return self.main, Plateau.plateau
 
     def piocher(self):
         if Jeu.mode == 1:
@@ -54,4 +51,5 @@ class Joueur:
             return self.main, Carte.Pioche
 
     def regarder_defausse(self):
-        ""
+        for i in Plateau.plateau.defausse:
+            print(Plateau.plateau.defausse[i])
