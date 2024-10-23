@@ -3,7 +3,7 @@ import Jeu.Joueur
 import Jeu.Plateau
 import Jeu.Jeu
 
-print("test")
+print("tu")
 
 choix_mode = int(input("Choisis un mode de jeu :\n1) Classsique\n2) Tactique\n3) Expert\n"))
 while (choix_mode < 1) or (choix_mode > 3):
