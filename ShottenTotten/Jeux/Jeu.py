@@ -13,6 +13,7 @@ class Jeu:
     def __init__(self):
         self.mode = None
         self.nbr_joueurs = None
+        self.nbr_manche = None
         self.plateau = Plateau()
         self.pioche = []
         self.joueurs = []
@@ -67,8 +68,24 @@ class Jeu:
             self.joueurs.append(Joueur("IA" + str(i)))
             i += 1
 
+    def nombre_manches(self):
+        """Demande à l'utilisateur commbien de manches vont être jouées."""
+        while True:
+            try:
+                choix = int(input("Choisis un nombre de manche à jouer : 1 à 5\n"))
+                if 1 <= choix <= 5:
+                    self.nbr_manche = choix
+                    break
+                else:
+                    print("Choix invalide. Réessayez.")
+            except ValueError:
+                print("Entrée invalide. Veuillez entrer un nombre entre 1 et 5.")
+
+
     def tour_de_jeu(self):
         """Méthode pour décrire un tour de jeu."""
+
+
 
     def fin_manche(self):
         """Méthode pour définir la fin d'une manche."""
@@ -111,5 +128,7 @@ class Jeu:
             print(str(self.joueurs[0].nom) + " a gagné !")
         else :
             print(str(self.joueurs[1].nom) + " a gagné !")
+
+
 
     # Ajoutez ici d'autres méthodes pour gérer le jeu (tour de jeu, règles, etc.)
