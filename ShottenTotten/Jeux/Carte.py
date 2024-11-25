@@ -40,9 +40,7 @@ def generer_cartes():
 
     cartes_tactiques = [
         CarteTactique(Capacites[capacite], nom)
-        for capacite in Capacites
-        for i, nom in NomsCartesTactiques.items()
-        if i in Capacites and Capacites[i] == Capacites[capacite]
+        for capacite, nom in NomsCartesTactiques.items()
+        if capacite in Capacites
     ]
     return cartes_clans, cartes_tactiques
-

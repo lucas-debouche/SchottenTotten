@@ -1,177 +1,187 @@
-import random
-
-from Jeux.Plateau import Plateau
-from Jeux.Carte import generer_cartes
-from Jeux.Joueur import Joueur
+from ShottenTotten.Jeux.Plateau import Plateau
+from ShottenTotten.Jeux.Carte import generer_cartes
 from ShottenTotten.Jeux.Joueur import Joueur
 import random
+from collections import deque
 
 
 class Jeu:
     """Classe principale pour gérer le déroulement du jeu."""
+
     Modes = {1: "Classique", 2: "Tactique", 3: "Expert"}
 
     def __init__(self):
+        """Initialise les composants du jeu."""
         self.mode = None
         self.nbr_joueurs = None
         self.nbr_manche = None
+        self.nbr_cartes = None
         self.plateau = Plateau()
-        self.pioche = []
+        self.pioche = deque()
         self.joueurs = []
 
     def initialiser_cartes(self):
-        """Initialise les cartes et mélange la pioche."""
+        """Initialise les cartes de clans et tactiques, puis mélange la pioche."""
         cartes_clans, cartes_tactiques = generer_cartes()
-        self.pioche = cartes_clans + cartes_tactiques
+        self.pioche = melanger_pioche(cartes_clans, cartes_tactiques)
 
     def choisir_mode(self):
         """Demande à l'utilisateur de choisir un mode de jeu."""
-        while True:
-            try:
-                choix = int(input("Choisis un mode de jeu :\n1) Classique\n2) Tactique\n3) Expert\n"))
-                if choix in self.Modes:
-                    self.mode = self.Modes[choix]
-                    break
-                else:
-                    print("Choix invalide. Réessayez.")
-            except ValueError:
-                print("Entrée invalide. Veuillez entrer un nombre.")
+        choix = demander_choix(
+            "Choisis un mode de jeu :\n1) Classique\n2) Tactique\n3) Expert\n",
+            lambda x: x in self.Modes,
+        )
+        self.mode = self.Modes[choix]
 
     def nombre_joueurs(self):
         """Demande à l'utilisateur de choisir le nombre de joueurs."""
-        i = 0
-        while i == 0:
-            try:
-                choix = int(input("Choisis un nombre de joueur :\n1) Joueur vs Joueur\n2) Joueur vs IA\n3) IA vs IA\n"))
-                if choix == 1:
-                    self.nbr_joueurs = 2
-                    break
-                elif choix == 2:
-                    self.nbr_joueurs = 1
-                    break
-                elif choix == 3:
-                    self.nbr_joueurs = 0
-                    break
-                else:
-                    print("Choix invalide. Réessayez.")
-            except ValueError:
-                print("Entrée invalide. Veuillez entrer un nombre.")
+        choix = demander_choix(
+            "Choisis un type de partie :\n1) Joueur vs Joueur\n2) Joueur vs IA\n3) IA vs IA\n",
+            lambda x: x in [1, 2, 3],
+        )
+        if choix == 1:
+            self.nbr_joueurs = 2
+        elif choix == 2:
+            self.nbr_joueurs = 1
+        elif choix == 3:
+            self.nbr_joueurs = 0
 
     def configurer_joueurs(self):
-        """Configure les joueurs selon le type de partie."""
+        """Configure les joueurs et ajoute des IA si nécessaire."""
         for i in range(1, self.nbr_joueurs + 1):
             nom = input(f"Nom du joueur {i} : ")
-            self.joueurs.append(Joueur(nom))
+            self.joueurs.append(Joueur(i, nom))
 
-        # Ajouter des IA si nécessaire
-        i = 0
+        # Ajouter des IA pour compléter à 2 joueurs
         while len(self.joueurs) < 2:
-            self.joueurs.append(Joueur("IA" + str(i)))
-            i += 1
+            self.joueurs.append(Joueur(len(self.joueurs) + 1, f"IA{len(self.joueurs) + 1}"))
 
     def nombre_manches(self):
-        """Demande à l'utilisateur commbien de manches vont être jouées."""
-        while True:
-            try:
-                choix = int(input("Choisis un nombre de manche à jouer : 1 à 5\n"))
-                if 1 <= choix <= 5:
-                    self.nbr_manche = choix
-                    break
-                else:
-                    print("Choix invalide. Réessayez.")
-            except ValueError:
-                print("Entrée invalide. Veuillez entrer un nombre entre 1 et 5.")
+        """Demande à l'utilisateur combien de manches vont être jouées."""
+        self.nbr_manche = demander_choix(
+            "Choisis un nombre de manches à jouer (1 à 5) :\n",
+            lambda x: 1 <= x <= 5,
+        )
 
-    def distribuer_cartes(self, nbr_cartes):
-        """Méthode pour distribuer les cartes aux joueurs au début de la partie."""
+    def distribuer_cartes(self):
+        """Distribue les cartes aux joueurs au début de la partie."""
         for joueur in self.joueurs:
-            for i in range(nbr_cartes):
-                joueur.main.append(self.pioche[0])
-                self.pioche.pop(0)
+            for _ in range(self.nbr_cartes):
+                joueur.piocher(self.pioche)
 
     def mode_classique(self):
-        """Méthode pour définir les caractéristiques du mode classique."""
-        self.distribuer_cartes(6)
+        """Définit les caractéristiques du mode classique."""
+        self.nbr_cartes = 6
 
     def mode_tactique(self):
-        """Méthode pour définir les caractéristiques du mode tactique."""
-        self.distribuer_cartes(7)
+        """Définit les caractéristiques du mode tactique."""
+        self.nbr_cartes = 7
 
     def mode_expert(self):
-        """Méthode pour définir les caractéristiques du mode expert."""
-        self.distribuer_cartes(7)
+        """Définit les caractéristiques du mode expert."""
+        self.nbr_cartes = 7
 
+    def choisir_carte(self, joueur):
+        """Demande à un joueur de choisir une carte."""
+        return demander_choix(
+            f"{joueur.nom}, choisis une carte à jouer (1 à {len(joueur.main)}) :\n",
+            lambda x: 1 <= x <= len(joueur.main),
+        )
+
+    def choisir_borne(self, joueur):
+        """Demande à un joueur de choisir une borne où jouer une carte."""
+        return demander_choix(
+            f"{joueur.nom}, choisis une borne (1 à 9) :\n",
+            lambda x: 1 <= x <= 9 and len(self.plateau.bornes[x].joueur1_cartes) < 3,
+        )
+
+    def choisir_borne_revendiquer(self, joueur):
+        """Demande à un joueur de choisir une borne à revendiquer."""
+        return demander_choix(
+            f"{joueur.nom}, choisis une borne à revendiquer (1 à 9) :\n",
+            lambda x: 1 <= x <= 9 and self.plateau.bornes[x].controle_par is None,
+        )
 
     def tour_de_jeu(self):
-        """Méthode pour décrire un tour de jeu."""
-        if self.mode == 1:
+        """Gère le déroulement d'une manche de jeu."""
+        # Configuration du mode
+        if self.mode == "Classique":
             self.mode_classique()
-        elif self.mode == 2:
+        elif self.mode == "Tactique":
             self.mode_tactique()
-        else:
+        elif self.mode == "Expert":
             self.mode_expert()
 
-        while not(self.fin_manche()) and (len(self.pioche) !=  0):
+        # Distribution des cartes
+        self.distribuer_cartes()
+
+        # Tour de jeu
+        while not self.fin_manche() and len(self.pioche) > 0:
             for joueur in self.joueurs:
-                choix =
+                carte_index = self.choisir_carte(joueur) - 1
+                borne_index = self.choisir_borne(joueur)
+                joueur.jouer_carte(self.plateau, borne_index, joueur.main[carte_index])
 
-        "-choisir une carte et jouer sur une borne (max 3 par borne)"
-        "-possibilité de revnediquer une borne (min 3 cartes de chaque côté ou si peut importe la carte qu'il joue tu es sûr de gagner)"
-        "-piocher une carte"
-        "-change joueur"
+                # Revendication de borne
+                revendiquer = demander_choix(
+                    "Veux-tu revendiquer une borne ? 1) Oui 2) Non\n",
+                    lambda x: x in [1, 2],
+                )
+                if revendiquer == 1:
+                    borne_index = self.choisir_borne_revendiquer(joueur)
+                    joueur.revendiquer_borne(self.plateau, borne_index)
 
+                # Piocher une carte
+                joueur.piocher(self.pioche)
+
+    def verifier_fin_manche(self):
+        """Vérifie les conditions de fin de manche."""
+        for joueur in self.joueurs:
+            # Vérifier si un joueur contrôle 5 bornes
+            if joueur.borne_controlee == 5:
+                return joueur, "5 bornes contrôlées"
+
+            # Vérifier si un joueur contrôle 3 bornes consécutives
+            consecutives = 0
+            for numero_borne, borne in self.plateau.bornes.items():
+                if borne.controle_par == joueur:
+                    consecutives += 1
+                    if consecutives == 3:
+                        return joueur, "3 bornes consécutives"
+                else:
+                    consecutives = 0
+
+        return None, None
 
     def fin_manche(self):
-        """Méthode pour définir la fin d'une manche."""
-
-        # Vérification si un joueur contrôle 5 bornes
-        for joueur in self.joueurs:
-            if joueur.borne_controlee == 5:
-                print(str(joueur.nom) + " remporte la manche.")
-                for j in self.joueurs:
-                    print(f"{j.nom} marque {j.borne_controlee} points.")
-                    j.score += j.borne_controlee
-                return True
-
-        # Vérification si un joueur contrôle 3 bornes consécutives
-        for joueur in self.joueurs:
-            if joueur.borne_controlee >= 3:
-                consecutif = 0
-                for numero_borne, borne in self.plateau.bornes.items():
-                    if borne[1] == joueur:
-                        consecutif += 1
-                        if consecutif == 3:
-                            print(f"{joueur.nom} remporte la manche et marque 5 points.")
-                            joueur.score += joueur.borne_controlee
-                            for j in filter(lambda x: x != joueur, self.joueurs):
-                                print(f"{j.nom} marque {j.borne_controlee} points.")
-                                j.score += j.borne_controlee
-                            return True
-                    else:
-                        consecutif = 0
-        # Si aucune condition de victoire n'est remplie
-        print("La manche continue. Aucun vainqueur pour l'instant.")
+        """Définit la fin d'une manche."""
+        gagnant, condition = self.verifier_fin_manche()
+        if gagnant:
+            print(f"{gagnant.nom} remporte la manche ({condition}).")
+            return True
+        print("La manche continue.")
         return False
 
-
-
-
-
     def fin_jeu(self):
-        """Méthode pour définir la fin du jeu."""
-        if self.joueurs[0].score >= self.joueurs[1].score:
-            print(str(self.joueurs[0].nom) + " a gagné !")
-        else :
-            print(str(self.joueurs[1].nom) + " a gagné !")
+        """Définit la fin du jeu."""
+        gagnant = max(self.joueurs, key=lambda j: j.score)
+        print(f"{gagnant.nom} remporte la partie avec {gagnant.score} points.")
 
 
-
-    # Ajoutez ici d'autres méthodes pour gérer le jeu (tour de jeu, règles, etc.)
 def melanger_pioche(cartes_clans, cartes_tactiques):
-    """Méthode pour mélanger la pioche au début de la partie."""
+    """Mélange les cartes et retourne une pioche."""
     pioche = cartes_clans + cartes_tactiques
     random.shuffle(pioche)
-    return pioche
+    return deque(pioche)
 
 
-"odkod"
+def demander_choix(message, condition):
+    """Demande un choix valide à l'utilisateur."""
+    while True:
+        try:
+            choix = int(input(message))
+            if condition(choix):
+                return choix
+            print("Choix invalide. Réessayez.")
+        except ValueError:
+            print("Entrée invalide. Veuillez entrer un nombre.")
