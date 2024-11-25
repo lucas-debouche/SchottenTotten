@@ -113,7 +113,7 @@ class Jeu:
 
         while not(self.fin_manche()) and (len(self.pioche) !=  0):
             for joueur in self.joueurs:
-                ""
+                choix =
 
         "-choisir une carte et jouer sur une borne (max 3 par borne)"
         "-possibilité de revnediquer une borne (min 3 cartes de chaque côté ou si peut importe la carte qu'il joue tu es sûr de gagner)"
@@ -172,3 +172,6 @@ def melanger_pioche(cartes_clans, cartes_tactiques):
     pioche = cartes_clans + cartes_tactiques
     random.shuffle(pioche)
     return pioche
+
+
+"odkod"
