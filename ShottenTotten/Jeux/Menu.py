@@ -9,6 +9,8 @@ class Menu :
         self.classic_mode = False
         self.tactic_mode = False
         self.expert_mode = False
+        self.nbr_joueurs = None
+        self.nbr_manche = None
 
     def displayAcceuil(self):
         """Fonction qui affiche l'acceuil de bienvenue"""
@@ -22,7 +24,7 @@ class Menu :
         background_path = os.path.join(base_dir, "Ressources", "Acceuil.png")
         background = pygame.image.load(background_path)
 
-        """Création des boutons"""
+        #Création des boutons
         smallfont = pygame.font.SysFont('Forte', 35)
         buttons = {"Jouer": pygame.Rect(225, 600, 120, 50)}
 
@@ -38,10 +40,10 @@ class Menu :
                     sys.exit() #Arret du programme
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if buttons["Jouer"].collidepoint(event.pos):
-                        """Lancer le menu quand le bouton jouer est présser"""
+                        #Lancer le menu quand le bouton jouer est présser
                         self.displayMenu()
 
-            """Dessiner les boutons"""
+            #Dessiner les boutons
             pygame.draw.rect(screen_acceuil, (205, 200, 145), buttons["Jouer"])
             text_jouer = smallfont.render("Jouer", True, (255, 45, 0))
             screen_acceuil.blit(text_jouer, (buttons["Jouer"].x + 20, buttons["Jouer"].y + 5))
@@ -52,7 +54,7 @@ class Menu :
         """Fonction qui affiche le menu et permet de récuperer les infos pour initialiser la partie souhaité"""
         os.environ['SDL_VIDEO_CENTERED'] = '1' #Centrer la fenetre sur l'ecran
 
-        """Initialisation de de la fenetre"""
+        #Initialisation de de la fenetre
         window_height = 750
         window_width = 1280
 
@@ -65,26 +67,37 @@ class Menu :
         background = pygame.image.load(background_path)
         background = pygame.transform.scale(background, (window_width, window_height))
 
-        """Création des boutons"""
+        #Création des boutons
         smallfont = pygame.font.SysFont('Forte', 35)
         button_height = 50
         button_width = 200
 
-        buttons = {"classic": pygame.Rect(200, 200, button_width, button_height),
-                "tactic": pygame.Rect(500, 200, button_width, button_height),
-                "expert": pygame.Rect(800, 200, button_width, button_height),
+        buttons = {"classic": pygame.Rect(200, 150, button_width, button_height),
+                   "tactic": pygame.Rect(500, 150, button_width, button_height),
+                   "expert": pygame.Rect(800, 150, button_width, button_height),
+                   "jvsj": pygame.Rect(200, 350, button_width, button_height),
+                   "jvsia":  pygame.Rect(500, 350, button_width, button_height),
+                   "iavsia": pygame.Rect(800, 350, button_width, button_height),
+                   "manche1": pygame.Rect(200, 550, button_width, button_height),
+                   "manche3": pygame.Rect(500, 550, button_width, button_height),
+                   "manche5": pygame.Rect(800, 550, button_width, button_height),
+                   "jouer": pygame.Rect(1050, 650, button_width, button_height),
                }
 
         title_font = pygame.font.SysFont('Forte', 75)
-        text_Menu = title_font.render("Menu", True, (55, 100, 255))
+        text_Mode = title_font.render("Mode", True, (255, 255, 255))
+        text_Joueurs = title_font.render("Joueurs", True, (255, 255, 255))
+        text_Manches = title_font.render("Manches", True, (255, 255, 255))
 
         menu_running = True
 
         while menu_running:
             screen_menu.blit(background, (0, 0))
 
-            # Afficher le texte "Menu" à la position (500, 200)
-            screen_menu.blit(text_Menu, (550, 50))
+            # Afficher les textes "Mode, Joueures, Manches"
+            screen_menu.blit(text_Mode, (500, 50))
+            screen_menu.blit(text_Joueurs, (475, 250))
+            screen_menu.blit(text_Manches, (450, 450))
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -93,22 +106,44 @@ class Menu :
                     sys.exit() #Arret du programme
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if buttons["classic"].collidepoint(event.pos):
-                        """Activer le mode classique et désactiver les autres"""
+                        #Activer le mode classique et désactiver les autres
                         self.classic_mode = True
                         self.tactic_mode = False
                         self.expert_mode = False
                     elif buttons["tactic"].collidepoint(event.pos):
-                        """Activer le mode tactique et désactiver les autres"""
+                        #Activer le mode tactique et désactiver les autres
                         self.classic_mode = False
                         self.tactic_mode = True
                         self.expert_mode = False
                     elif buttons["expert"].collidepoint(event.pos):
-                        """Activer le mode expert et désactiver les autres"""
+                        #Activer le mode expert et désactiver les autres
                         self.classic_mode = False
                         self.tactic_mode = False
                         self.expert_mode = True
+                    if buttons["jvsj"].collidepoint(event.pos):
+                        #Selction joueur contre joueur
+                        self.nbr_joueurs = 2
+                    elif buttons["jvsia"].collidepoint(event.pos):
+                        #Selction joueur contre ia
+                        self.nbr_joueurs = 1
+                    elif buttons["iavsia"].collidepoint(event.pos):
+                        #Selction joueur contre ia
+                        self.nbr_joueurs = 0
+                    if buttons["manche1"].collidepoint(event.pos):
+                        #Selction 1 manche
+                        self.nbr_manche = 1
+                    elif buttons["manche3"].collidepoint(event.pos):
+                        # Selction 3 manches
+                        self.nbr_manche = 3
+                    elif buttons["manche5"].collidepoint(event.pos):
+                        #Selction 5 manches
+                        self.nbr_manche = 5
+                    if buttons["jouer"].collidepoint(event.pos):
+                        #retourne les valeurs Mode, Joueurs, Manches pour initialiser le jeu
+                        return self.classic_mode, self.tactic_mode, self.expert_mode, self.nbr_joueurs, self.nbr_manche
 
-            """Dessiner les boutons"""
+
+            #Dessiner les boutons
             shadow_rect = buttons["classic"].move(4, 4)  # Décalage pour l'ombre
             pygame.draw.rect(screen_menu, (255, 0, 0) if self.classic_mode else (160, 82, 45), shadow_rect, border_radius=10)
 
@@ -136,5 +171,67 @@ class Menu :
             text_rect_expert = text_expert.get_rect(center=buttons["expert"].center)
             screen_menu.blit(text_expert, text_rect_expert)
 
+            shadow_rect = buttons["jvsj"].move(4, 4)  # Décalage pour l'ombre
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_joueurs == 2 else (160, 82, 45), shadow_rect,border_radius=10)
+
+            pygame.draw.rect(screen_menu, (205, 200, 145), buttons["jvsj"], border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_joueurs == 2 else (139, 69, 19), buttons["jvsj"],width=2, border_radius=10)
+            text_jvsj = smallfont.render("J vs J", True, (139, 69, 19))
+            text_rect_jvsj = text_jvsj.get_rect(center=buttons["jvsj"].center)
+            screen_menu.blit(text_jvsj, text_rect_jvsj)
+
+            shadow_rect = buttons["jvsia"].move(4, 4)  # Décalage pour l'ombre
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_joueurs == 1 else (160, 82, 45), shadow_rect,border_radius=10)
+
+            pygame.draw.rect(screen_menu, (205, 200, 145), buttons["jvsia"], border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_joueurs == 1 else (139, 69, 19), buttons["jvsia"],width=2, border_radius=10)
+            text_jvsia = smallfont.render("J vs ia", True, (139, 69, 19))
+            text_rect_jvsia = text_jvsia.get_rect(center=buttons["jvsia"].center)
+            screen_menu.blit(text_jvsia, text_rect_jvsia)
+
+            shadow_rect = buttons["iavsia"].move(4, 4)  # Décalage pour l'ombre
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_joueurs == 0 else (160, 82, 45), shadow_rect,border_radius=10)
+
+            pygame.draw.rect(screen_menu, (205, 200, 145), buttons["iavsia"], border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_joueurs == 0 else (139, 69, 19), buttons["iavsia"],width=2, border_radius=10)
+            text_iavsia = smallfont.render("ia vs ia", True, (139, 69, 19))
+            text_rect_iavsia = text_iavsia.get_rect(center=buttons["iavsia"].center)
+            screen_menu.blit(text_iavsia, text_rect_iavsia)
+
+            shadow_rect = buttons["manche1"].move(4, 4)  # Décalage pour l'ombre
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 1 else (160, 82, 45), shadow_rect,border_radius=10)
+
+            pygame.draw.rect(screen_menu, (205, 200, 145), buttons["manche1"], border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 1 else (139, 69, 19), buttons["manche1"],width=2, border_radius=10)
+            text_manche1 = smallfont.render("1 Manche", True, (139, 69, 19))
+            text_rect_manche1 = text_manche1.get_rect(center=buttons["manche1"].center)
+            screen_menu.blit(text_manche1, text_rect_manche1)
+
+            shadow_rect = buttons["manche3"].move(4, 4)  # Décalage pour l'ombre
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 3 else (160, 82, 45), shadow_rect,border_radius=10)
+
+            pygame.draw.rect(screen_menu, (205, 200, 145), buttons["manche3"], border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 3 else (139, 69, 19), buttons["manche3"],width=2, border_radius=10)
+            text_manche3 = smallfont.render("3 Manches", True, (139, 69, 19))
+            text_rect_manche3 = text_manche3.get_rect(center=buttons["manche3"].center)
+            screen_menu.blit(text_manche3, text_rect_manche3)
+
+            shadow_rect = buttons["manche5"].move(4, 4)  # Décalage pour l'ombre
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 5 else (160, 82, 45), shadow_rect,border_radius=10)
+
+            pygame.draw.rect(screen_menu, (205, 200, 145), buttons["manche5"], border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 5 else (139, 69, 19), buttons["manche5"],width=2, border_radius=10)
+            text_manche5 = smallfont.render("5 Manches", True, (139, 69, 19))
+            text_rect_manche5 = text_manche5.get_rect(center=buttons["manche5"].center)
+            screen_menu.blit(text_manche5, text_rect_manche5)
+
+            shadow_rect = buttons["jouer"].move(4, 4)  # Décalage pour l'ombre
+            pygame.draw.rect(screen_menu, (160, 82, 45), shadow_rect, border_radius=10)
+
+            pygame.draw.rect(screen_menu, (205, 200, 145), buttons["jouer"], border_radius=10)
+            pygame.draw.rect(screen_menu, (139, 69, 19), buttons["jouer"], width=2, border_radius=10)
+            text_jouer = smallfont.render("Jouer", True, (139, 69, 19))
+            text_rect_jouer = text_jouer.get_rect(center=buttons["jouer"].center)
+            screen_menu.blit(text_jouer, text_rect_jouer)
 
             pygame.display.flip()

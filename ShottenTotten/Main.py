@@ -1,15 +1,13 @@
 from Jeux.Jeu import Jeu
 from ShottenTotten.Jeux.Carte import generer_cartes
-from Jeux.Joueur import Joueur
 from ShottenTotten.Jeux.Jeu import melanger_pioche
 from Jeux.Menu import Menu
 from Jeux.Plateau_Jeu import Display
 
-
 def main():
     # Initialisation du jeu
-    plateau = Display()
-    plateau.displayPlateau()
+    plateauJeux = Display()
+    plateauJeux.displayPlateau()
     menu = Menu()
     menu.displayAcceuil()
     jeu = Jeu()
