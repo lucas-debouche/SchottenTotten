@@ -1,6 +1,7 @@
 import pygame
 import sys
 import os
+from ShottenTotten.Jeux.Plateau_Jeu import Display
 
 
 class Menu :
@@ -140,7 +141,9 @@ class Menu :
                         self.nbr_manche = 5
                     if buttons["jouer"].collidepoint(event.pos):
                         #retourne les valeurs Mode, Joueurs, Manches pour initialiser le jeu
+                        Display.displayPlateau(self)
                         return self.classic_mode, self.tactic_mode, self.expert_mode, self.nbr_joueurs, self.nbr_manche
+
 
 
             #Dessiner les boutons

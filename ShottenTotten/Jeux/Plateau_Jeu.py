@@ -1,6 +1,7 @@
 import pygame
 import sys
 import os
+from ShottenTotten.Jeux.Cartes_copie import displayCarte
 
 class Borne:
     """Représente une borne sur le plateau avec des cartes et un contrôle."""
@@ -46,16 +47,16 @@ class Display:
         borne2_path = os.path.join(base_dir, "Ressources", "Frontiere2.png")
         borne3_path = os.path.join(base_dir, "Ressources", "Frontiere3.png")
 
-        buttons = {"pioche": pygame.Rect(50, 275, 85, 150),
-                   "borne1": pygame.Rect(210, 300, 100, 100),
-                   "borne2": pygame.Rect(320, 300, 100, 100),
-                   "borne3": pygame.Rect(430, 300, 100, 100),
-                   "borne4": pygame.Rect(540, 300, 100, 100),
-                   "borne5": pygame.Rect(650, 300, 100, 100),
-                   "borne6": pygame.Rect(760, 300, 100, 100),
-                   "borne7": pygame.Rect(870, 300, 100, 100),
-                   "borne8": pygame.Rect(980, 300, 100, 100),
-                   "borne9": pygame.Rect(1090, 300, 100, 100),
+        buttons = {"pioche": pygame.Rect(50, 300, 85, 150),
+                   "borne1": pygame.Rect(210, 325, 100, 100),
+                   "borne2": pygame.Rect(320, 325, 100, 100),
+                   "borne3": pygame.Rect(430, 325, 100, 100),
+                   "borne4": pygame.Rect(540, 325, 100, 100),
+                   "borne5": pygame.Rect(650, 325, 100, 100),
+                   "borne6": pygame.Rect(760, 325, 100, 100),
+                   "borne7": pygame.Rect(870, 325, 100, 100),
+                   "borne8": pygame.Rect(980, 325, 100, 100),
+                   "borne9": pygame.Rect(1090, 325, 100, 100),
                   }
         buttons_images = {"pioche": pioche_path,
                           "borne1": borne1_path,
@@ -117,4 +118,8 @@ class Display:
             screen_plateau.blit(borne7_button_image, buttons["borne7"].topleft)
             screen_plateau.blit(borne8_button_image, buttons["borne8"].topleft)
             screen_plateau.blit(borne9_button_image, buttons["borne9"].topleft)
+
+            displayCarte(screen_plateau, 1, ["blue","blue","blue","blue","blue","blue"], [1,2,3,4,5,6])
+            displayCarte(screen_plateau, 2, ["blue", "blue", "blue", "blue", "blue", "blue"], [7,8,9,1,2,3])
+
             pygame.display.flip()

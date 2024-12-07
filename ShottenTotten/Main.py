@@ -6,8 +6,6 @@ from Jeux.Plateau_Jeu import Display
 
 def main():
     # Initialisation du jeu
-    plateauJeux = Display()
-    plateauJeux.displayPlateau()
     menu = Menu()
     menu.displayAcceuil()
     jeu = Jeu()
