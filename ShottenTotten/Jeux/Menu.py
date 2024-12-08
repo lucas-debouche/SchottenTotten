@@ -144,6 +144,7 @@ class Menu :
                         displayPlateau()
 
 
+
             #Dessiner les boutons
             shadow_rect = buttons["classic"].move(4, 4)  # Décalage pour l'ombre
             pygame.draw.rect(screen_menu, (255, 0, 0) if self.classic_mode else (160, 82, 45), shadow_rect, border_radius=10)
