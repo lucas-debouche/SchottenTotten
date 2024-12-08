@@ -7,9 +7,7 @@ from ShottenTotten.Jeux.Plateau_Jeu import displayPlateau
 class Menu :
 
     def __init__(self):
-        self.classic_mode = False
-        self.tactic_mode = False
-        self.expert_mode = False
+        self.mode = False
         self.nbr_joueurs = None
         self.nbr_manche = None
 
@@ -108,19 +106,13 @@ class Menu :
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if buttons["classic"].collidepoint(event.pos):
                         #Activer le mode classique et désactiver les autres
-                        self.classic_mode = True
-                        self.tactic_mode = False
-                        self.expert_mode = False
+                        self.mode = "classic"
                     elif buttons["tactic"].collidepoint(event.pos):
                         #Activer le mode tactique et désactiver les autres
-                        self.classic_mode = False
-                        self.tactic_mode = True
-                        self.expert_mode = False
+                        self.mode = "tactic"
                     elif buttons["expert"].collidepoint(event.pos):
                         #Activer le mode expert et désactiver les autres
-                        self.classic_mode = False
-                        self.tactic_mode = False
-                        self.expert_mode = True
+                        self.mode = "expert"
                     if buttons["jvsj"].collidepoint(event.pos):
                         #Selction joueur contre joueur
                         self.nbr_joueurs = 2
@@ -139,7 +131,7 @@ class Menu :
                     elif buttons["manche5"].collidepoint(event.pos):
                         #Selction 5 manches
                         self.nbr_manche = 5
-                    if buttons["jouer"].collidepoint(event.pos) and (self.classic_mode or self.tactic_mode or self.expert_mode) and (self.nbr_joueurs == 1 or self.nbr_joueurs == 2 or self.nbr_joueurs == 3) and self.nbr_manche:
+                    if buttons["jouer"].collidepoint(event.pos) and self.mode and self.nbr_joueurs and self.nbr_manche:
                         #retourne les valeurs Mode, Joueurs, Manches pour initialiser le jeu
                         displayPlateau()
 
@@ -147,28 +139,28 @@ class Menu :
 
             #Dessiner les boutons
             shadow_rect = buttons["classic"].move(4, 4)  # Décalage pour l'ombre
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.classic_mode else (160, 82, 45), shadow_rect, border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.mode == "classic" else (160, 82, 45), shadow_rect, border_radius=10)
 
             pygame.draw.rect(screen_menu,(205, 200, 145), buttons["classic"],border_radius=10)
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.classic_mode else (139, 69, 19), buttons["classic"],width=2,border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.mode == "classic" else (139, 69, 19), buttons["classic"],width=2,border_radius=10)
             text_classic = smallfont.render("Classique", True, (139, 69, 19))
             text_rect_classique = text_classic.get_rect(center=buttons["classic"].center)
             screen_menu.blit(text_classic, text_rect_classique)
 
             shadow_rect = buttons["tactic"].move(4, 4)  # Décalage pour l'ombre
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.tactic_mode else (160, 82, 45), shadow_rect,border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.mode == "tactic" else (160, 82, 45), shadow_rect,border_radius=10)
 
             pygame.draw.rect(screen_menu, (205, 200, 145), buttons["tactic"], border_radius=10)
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.tactic_mode else (139, 69, 19), buttons["tactic"],width=2,border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.mode == "tactic" else (139, 69, 19), buttons["tactic"],width=2,border_radius=10)
             text_tactic = smallfont.render("Tactique", True, (139, 69, 19))
             text_rect_tactic = text_tactic.get_rect(center=buttons["tactic"].center)
             screen_menu.blit(text_tactic, text_rect_tactic)
 
             shadow_rect = buttons["expert"].move(4, 4)  # Décalage pour l'ombre
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.expert_mode else (160, 82, 45), shadow_rect,border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.mode == "expert" else (160, 82, 45), shadow_rect,border_radius=10)
 
             pygame.draw.rect(screen_menu, (205, 200, 145), buttons["expert"], border_radius=10)
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.expert_mode else (139, 69, 19), buttons["expert"],width=2,border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.mode == "expert" else (139, 69, 19), buttons["expert"],width=2,border_radius=10)
             text_expert = smallfont.render("Expert", True, (139, 69, 19))
             text_rect_expert = text_expert.get_rect(center=buttons["expert"].center)
             screen_menu.blit(text_expert, text_rect_expert)
