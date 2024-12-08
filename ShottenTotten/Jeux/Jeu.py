@@ -1,5 +1,5 @@
 from ShottenTotten.Jeux.Plateau import Plateau
-from ShottenTotten.Jeux.Carte import generer_cartes
+from ShottenTotten.Jeux.Carte import generer_cartes, determiner_combinaison
 from ShottenTotten.Jeux.Joueur import Joueur
 import random
 from collections import deque
@@ -102,6 +102,15 @@ class Jeu:
             lambda x: 1 <= x <= 9 and self.plateau.bornes[x].controle_par is None,
         )
 
+    def comparaison_cartes(self, numero_borne):
+        """Compare les cartes des joueurs pour trouver la meilleure combinaison"""
+        j1 = determiner_combinaison(self.plateau.bornes[numero_borne].joueur1_cartes)
+        j2 = determiner_combinaison(self.plateau.bornes[numero_borne].joueur2_cartes)
+        if j1<j2:
+            return self.joueurs[0]
+        else:
+            return self.joueurs[1]
+
     def tour_de_jeu(self):
         """Gère le déroulement d'une manche de jeu."""
         # Configuration du mode
@@ -129,6 +138,7 @@ class Jeu:
                 )
                 if revendiquer == 1:
                     borne_index = self.choisir_borne_revendiquer(joueur)
+                    self.comparaison_cartes(borne_index)
                     joueur.revendiquer_borne(self.plateau, borne_index)
 
                 # Piocher une carte
