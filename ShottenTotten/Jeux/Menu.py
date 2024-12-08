@@ -139,7 +139,7 @@ class Menu :
                     elif buttons["manche5"].collidepoint(event.pos):
                         #Selction 5 manches
                         self.nbr_manche = 5
-                    if buttons["jouer"].collidepoint(event.pos):
+                    if buttons["jouer"].collidepoint(event.pos) and (self.classic_mode or self.tactic_mode or self.expert_mode) and (self.nbr_joueurs == 1 or self.nbr_joueurs == 2 or self.nbr_joueurs == 3) and self.nbr_manche:
                         #retourne les valeurs Mode, Joueurs, Manches pour initialiser le jeu
                         displayPlateau()
 
