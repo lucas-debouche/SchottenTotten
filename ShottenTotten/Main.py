@@ -2,7 +2,6 @@ from Jeux.Jeu import Jeu
 from ShottenTotten.Jeux.Carte import generer_cartes
 from ShottenTotten.Jeux.Jeu import melanger_pioche
 from Jeux.Menu import Menu
-from Jeux.Plateau_Jeu import Display
 
 def main():
     # Initialisation du jeu
