@@ -1,15 +1,24 @@
 import pygame
 import sys
 import os
-from ShottenTotten.Jeux.Plateau_Jeu import displayPlateau
 
+from ShottenTotten.Jeux.Carte import generer_cartes
+from ShottenTotten.Jeux.Plateau import displayPlateau, Plateau, melanger_pioche
+
+plateau = Plateau()
 
 class Menu :
 
     def __init__(self):
         self.mode = False
-        self.nbr_joueurs = None
         self.nbr_manche = None
+
+    def initialiser_cartes(self):
+        """Initialise les cartes de clans et tactiques, puis mélange la pioche."""
+        cartes_clans, cartes_tactiques = generer_cartes()
+        if self.mode == "classic":
+            cartes_tactiques = []
+        plateau.pioche = melanger_pioche(cartes_clans, cartes_tactiques)
 
     def displayAcceuil(self):
         """Fonction qui affiche l'acceuil de bienvenue"""
@@ -93,7 +102,7 @@ class Menu :
         while menu_running:
             screen_menu.blit(background, (0, 0))
 
-            # Afficher les textes "Mode, Joueures, Manches"
+            # Afficher les textes "Mode, Joueurs, Manches"
             screen_menu.blit(text_Mode, (500, 50))
             screen_menu.blit(text_Joueurs, (475, 250))
             screen_menu.blit(text_Manches, (450, 450))
@@ -107,21 +116,24 @@ class Menu :
                     if buttons["classic"].collidepoint(event.pos):
                         #Activer le mode classique et désactiver les autres
                         self.mode = "classic"
+                        plateau.nbr_cartes = 6
                     elif buttons["tactic"].collidepoint(event.pos):
                         #Activer le mode tactique et désactiver les autres
                         self.mode = "tactic"
+                        plateau.nbr_cartes = 7
                     elif buttons["expert"].collidepoint(event.pos):
                         #Activer le mode expert et désactiver les autres
                         self.mode = "expert"
+                        plateau.nbr_cartes = 7
                     if buttons["jvsj"].collidepoint(event.pos):
                         #Selction joueur contre joueur
-                        self.nbr_joueurs = 2
+                        plateau.nbr_joueurs = 2
                     elif buttons["jvsia"].collidepoint(event.pos):
                         #Selction joueur contre ia
-                        self.nbr_joueurs = 1
+                        plateau.nbr_joueurs = 1
                     elif buttons["iavsia"].collidepoint(event.pos):
                         #Selction joueur contre ia
-                        self.nbr_joueurs = 0
+                        plateau.nbr_joueurs = 0
                     if buttons["manche1"].collidepoint(event.pos):
                         #Selction 1 manche
                         self.nbr_manche = 1
@@ -131,9 +143,12 @@ class Menu :
                     elif buttons["manche5"].collidepoint(event.pos):
                         #Selction 5 manches
                         self.nbr_manche = 5
-                    if buttons["jouer"].collidepoint(event.pos) and self.mode and self.nbr_joueurs and self.nbr_manche:
+                    if buttons["jouer"].collidepoint(event.pos) and self.mode != False and plateau.nbr_joueurs is not None and self.nbr_manche:
                         #retourne les valeurs Mode, Joueurs, Manches pour initialiser le jeu
-                        displayPlateau()
+                        self.initialiser_cartes()
+                        plateau.configurer_joueurs()
+                        plateau.distribuer_cartes()
+                        displayPlateau(plateau)
 
 
 
@@ -166,28 +181,28 @@ class Menu :
             screen_menu.blit(text_expert, text_rect_expert)
 
             shadow_rect = buttons["jvsj"].move(4, 4)  # Décalage pour l'ombre
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_joueurs == 2 else (160, 82, 45), shadow_rect,border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if plateau.nbr_joueurs == 2 else (160, 82, 45), shadow_rect,border_radius=10)
 
             pygame.draw.rect(screen_menu, (205, 200, 145), buttons["jvsj"], border_radius=10)
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_joueurs == 2 else (139, 69, 19), buttons["jvsj"],width=2, border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if plateau.nbr_joueurs == 2 else (139, 69, 19), buttons["jvsj"],width=2, border_radius=10)
             text_jvsj = smallfont.render("J vs J", True, (139, 69, 19))
             text_rect_jvsj = text_jvsj.get_rect(center=buttons["jvsj"].center)
             screen_menu.blit(text_jvsj, text_rect_jvsj)
 
             shadow_rect = buttons["jvsia"].move(4, 4)  # Décalage pour l'ombre
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_joueurs == 1 else (160, 82, 45), shadow_rect,border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if plateau.nbr_joueurs == 1 else (160, 82, 45), shadow_rect,border_radius=10)
 
             pygame.draw.rect(screen_menu, (205, 200, 145), buttons["jvsia"], border_radius=10)
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_joueurs == 1 else (139, 69, 19), buttons["jvsia"],width=2, border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if plateau.nbr_joueurs == 1 else (139, 69, 19), buttons["jvsia"],width=2, border_radius=10)
             text_jvsia = smallfont.render("J vs ia", True, (139, 69, 19))
             text_rect_jvsia = text_jvsia.get_rect(center=buttons["jvsia"].center)
             screen_menu.blit(text_jvsia, text_rect_jvsia)
 
             shadow_rect = buttons["iavsia"].move(4, 4)  # Décalage pour l'ombre
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_joueurs == 0 else (160, 82, 45), shadow_rect,border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if plateau.nbr_joueurs == 0 else (160, 82, 45), shadow_rect,border_radius=10)
 
             pygame.draw.rect(screen_menu, (205, 200, 145), buttons["iavsia"], border_radius=10)
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_joueurs == 0 else (139, 69, 19), buttons["iavsia"],width=2, border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if plateau.nbr_joueurs == 0 else (139, 69, 19), buttons["iavsia"],width=2, border_radius=10)
             text_iavsia = smallfont.render("ia vs ia", True, (139, 69, 19))
             text_rect_iavsia = text_iavsia.get_rect(center=buttons["iavsia"].center)
             screen_menu.blit(text_iavsia, text_rect_iavsia)

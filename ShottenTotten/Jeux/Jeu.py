@@ -1,5 +1,5 @@
-from ShottenTotten.Jeux.Plateau import Plateau
-from ShottenTotten.Jeux.Carte import generer_cartes, determiner_combinaison
+from ShottenTotten.Jeux.Plateau import Plateau, displayPlateau
+from ShottenTotten.Jeux.Carte import generer_cartes, determiner_combinaison, displayCarte
 from ShottenTotten.Jeux.Joueur import Joueur
 from ShottenTotten.Jeux.Menu import Menu
 import random
@@ -15,43 +15,9 @@ class Jeu:
 
     def __init__(self):
         """Initialise les composants du jeu."""
-        self.nbr_cartes = None
         self.plateau = Plateau()
         self.pioche = deque()
-        self.joueurs = []
 
-    def initialiser_cartes(self):
-        """Initialise les cartes de clans et tactiques, puis mélange la pioche."""
-        cartes_clans, cartes_tactiques = generer_cartes()
-        self.pioche = melanger_pioche(cartes_clans, cartes_tactiques)
-
-    def configurer_joueurs(self, menu = menu):
-        """Configure les joueurs et ajoute des IA si nécessaire."""
-        for i in range(1, menu.nbr_joueurs + 1):
-            nom = input(f"Nom du joueur {i} : ")
-            self.joueurs.append(Joueur(i, nom))
-
-        # Ajouter des IA pour compléter à 2 joueurs
-        while len(self.joueurs) < 2:
-            self.joueurs.append(Joueur(len(self.joueurs) + 1, f"IA{len(self.joueurs) + 1}"))
-
-    def distribuer_cartes(self):
-        """Distribue les cartes aux joueurs au début de la partie."""
-        for joueur in self.joueurs:
-            for i in range(self.nbr_cartes):
-                joueur.piocher(self.pioche)
-
-    def mode_classique(self):
-        """Définit les caractéristiques du mode classique."""
-        self.nbr_cartes = 6
-
-    def mode_tactique(self):
-        """Définit les caractéristiques du mode tactique."""
-        self.nbr_cartes = 7
-
-    def mode_expert(self):
-        """Définit les caractéristiques du mode expert."""
-        self.nbr_cartes = 7
 
     def choisir_carte(self, joueur):
         """Demande à un joueur de choisir une carte."""
@@ -83,66 +49,11 @@ class Jeu:
         else:
             return self.joueurs[1]
 
-    def tour_de_jeu(self, menu = menu):
-        """Gère le déroulement d'une manche de jeu."""
-        # Configuration du mode
-        if menu.mode == "classic":
-            self.mode_classique()
-        elif menu.mode == "tactic":
-            self.mode_tactique()
-        elif menu.mode == "expert":
-            self.mode_expert()
 
-        # Distribution des cartes
-        self.distribuer_cartes()
 
-        # Tour de jeu
-        while not self.fin_manche() and len(self.pioche) > 0:
-            for joueur in self.joueurs:
-                carte_index = self.choisir_carte(joueur) - 1
-                borne_index = self.choisir_borne(joueur)
-                joueur.jouer_carte(self.plateau, borne_index, joueur.main[carte_index])
 
-                # Revendication de borne
-                revendiquer = demander_choix(
-                    "Veux-tu revendiquer une borne ? 1) Oui 2) Non\n",
-                    lambda x: x in [1, 2],
-                )
-                if revendiquer == 1:
-                    borne_index = self.choisir_borne_revendiquer(joueur)
-                    self.comparaison_cartes(borne_index)
-                    joueur.revendiquer_borne(self.plateau, borne_index)
 
-                # Piocher une carte
-                joueur.piocher(self.pioche)
 
-    def verifier_fin_manche(self):
-        """Vérifie les conditions de fin de manche."""
-        for joueur in self.joueurs:
-            # Vérifier si un joueur contrôle 5 bornes
-            if joueur.borne_controlee == 5:
-                return joueur, "5 bornes contrôlées"
-
-            # Vérifier si un joueur contrôle 3 bornes consécutives
-            consecutives = 0
-            for numero_borne, borne in self.plateau.bornes.items():
-                if borne.controle_par == joueur:
-                    consecutives += 1
-                    if consecutives == 3:
-                        return joueur, "3 bornes consécutives"
-                else:
-                    consecutives = 0
-
-        return None, None
-
-    def fin_manche(self):
-        """Définit la fin d'une manche."""
-        gagnant, condition = self.verifier_fin_manche()
-        if gagnant:
-            print(f"{gagnant.nom} remporte la manche ({condition}).")
-            return True
-        print("La manche continue.")
-        return False
 
     def fin_jeu(self):
         """Définit la fin du jeu."""
@@ -150,11 +61,7 @@ class Jeu:
         print(f"{gagnant.nom} remporte la partie avec {gagnant.score} points.")
 
 
-def melanger_pioche(cartes_clans, cartes_tactiques):
-    """Mélange les cartes et retourne une pioche."""
-    pioche = cartes_clans + cartes_tactiques
-    random.shuffle(pioche)
-    return deque(pioche)
+
 
 
 def demander_choix(message, condition):
