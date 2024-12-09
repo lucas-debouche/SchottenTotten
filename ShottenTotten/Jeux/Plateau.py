@@ -9,6 +9,7 @@ from ShottenTotten.Jeux.Carte import displayCarte
 from ShottenTotten.Jeux.Joueur import Joueur
 
 
+
 class Borne:
     """Représente une borne sur le plateau avec des cartes et un contrôle."""
 
@@ -17,6 +18,56 @@ class Borne:
         self.joueur2_cartes = []
         self.controle_par = None  # Joueur qui contrôle cette borne
 
+
+def choisir_borne(buttons, joueur_id, plateau):
+    """Permet au joueur de sélectionner la borne où il veut jouer."""
+    while True:  # Boucle jusqu'à ce qu'une borne valide soit sélectionnée
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                for borne_key, borne_rect in buttons.items():
+                    if borne_rect.collidepoint(event.pos):
+                        if joueur_id == 0:
+                            if len(plateau.bornes[borne_key].joueur1_cartes) < 3 and plateau.bornes[borne_key].controle_par is None:
+                                try:
+                                    # Extraire le numéro de la borne
+                                    numero_borne = int(borne_key.replace("borne", ""))
+                                    return numero_borne
+                                except ValueError:
+                                    # Si ce n'est pas une borne valide, continuer
+                                    pass
+                            else:
+                                print(f"La borne {borne_key} est déjà controllée.")
+                        elif joueur_id == 1:
+                            if len(plateau.bornes[borne_key].joueur2_cartes) < 3 and plateau.bornes[borne_key].controle_par is None:
+                                try:
+                                    # Extraire le numéro de la borne
+                                    numero_borne = int(borne_key.replace("borne", ""))
+                                    return numero_borne
+                                except ValueError:
+                                    # Si ce n'est pas une borne valide, continuer
+                                    pass
+                            else:
+                                print(f"La borne {borne_key} est déjà controllée.")
+
+def choisir_carte(buttons):
+    """Permet au joueur de sélectionner la carte qu'il veut jouer"""
+    while True:  # Boucle jusqu'à ce qu'une borne valide soit sélectionnée
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                for borne_key, borne_rect in buttons.items():
+                    if borne_rect.collidepoint(event.pos):
+                        try:
+                            # Extraire le numéro de la carte
+                            return borne_key
+                        except ValueError:
+                            # Si ce n'est pas une borne valide, continuer
+                            pass
 
 class Plateau:
     """Représente le plateau de jeu avec ses bornes et sa défausse."""
@@ -40,10 +91,6 @@ class Plateau:
             borne.joueur2_cartes.append(carte)
         else:
             raise ValueError("Index du joueur invalide.")
-
-
-
-
 
     def configurer_joueurs(self):
         """Configure les joueurs et ajoute des IA si nécessaire."""
@@ -83,34 +130,12 @@ class Plateau:
 
         return None, None
 
-    def choisir_carte(self, buttons):
-        """Permet au joueur de sélectionner la carte qu'il veut jouer"""
-        for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if buttons[0].collidepoint(event.pos):
-                    # Prendre l'index de la carte 0 dans la main
-                    return 0
-                if buttons[1].collidepoint(event.pos):
-                    # Prendre l'index de la carte 1 dans la main
-                    return 1
-                if buttons[2].collidepoint(event.pos):
-                    # Prendre l'index de la carte 2 dans la main
-                    return 2
-                if buttons[3].collidepoint(event.pos):
-                    # Prendre l'index de la carte 3 dans la main
-                    return 3
-                if buttons[4].collidepoint(event.pos):
-                    # Prendre l'index de la carte 4 dans la main
-                    return 4
-                if buttons[5].collidepoint(event.pos):
-                    # Prendre l'index de la carte 5 dans la main
-                    return 5
-                if self.nbr_cartes == 7:
-                    if buttons[6].collidepoint(event.pos):
-                        # Prendre l'index de la carte 6 dans la main
-                        return 6
+    def fin_jeu(self):
+        """Définit la fin du jeu."""
+        gagnant = max(self.joueurs, key=lambda j: j.score)
+        print(f"{gagnant.nom} remporte la partie avec {gagnant.score} points.")
 
-    def tour_de_jeu(self, screen_plateau, buttons_images, buttons_plateau):
+    def tour_de_jeu(self, screen_plateau, buttons_images, buttons_plateau, plateau):
         """Gère le déroulement d'une manche de jeu."""
         running = True
 
@@ -124,6 +149,7 @@ class Plateau:
                 running = False
                 break
             elif len(self.pioche) == 0:
+                self.fin_jeu()
                 break
 
             # Gérer les événements Pygame
@@ -141,28 +167,39 @@ class Plateau:
             buttons = displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
             pygame.display.flip()
 
-            # Sélection de la carte
-            carte_index = self.choisir_carte(buttons)
-            if carte_index is None:
-                continue  # Attendre une sélection valide
-            print(f"Carte choisie : {self.joueurs[joueur].main[carte_index]}, Joueur : {self.joueurs[joueur].nom}")
+            carte_index = None
+            borne_index = None
+
+            while carte_index is None or borne_index is None:
+                # Sélection de la carte
+                if carte_index is None:
+                    carte_index = choisir_carte(buttons)
+                    if carte_index is not None:
+                        print(f"Carte choisie : {carte_index}")
+
+                # Sélection de la borne
+                if carte_index is not None and borne_index is None:
+                    borne_index = choisir_borne(buttons_plateau, joueur, plateau)
+                    if borne_index is not None:
+                        print(f"Borne choisie : {borne_index}")
+
+            #Enlever la carte de la main
+            self.joueurs[joueur].jouer_carte(plateau, borne_index, self.joueurs[joueur].main[carte_index])
+
+            #Revendiquer une borne
 
 
+            #Piocher une carte
+            self.joueurs[joueur].piocher(self.pioche)
 
-            if joueur == 0:
-                joueur += 1
-            else:
-                joueur -= 1
-            print(joueur)
+            joueur = 1 - joueur
 
             # Rafraîchir l'écran après chaque tour
             pygame.display.update()
 
 
 
-            '''borne_index = self.choisir_borne(joueur)
-                joueur.jouer_carte(self.plateau, borne_index, joueur.main[carte_index])
-
+            '''
                 # Revendication de borne
                 revendiquer = demander_choix(
                     "Veux-tu revendiquer une borne ? 1) Oui 2) Non\n",
@@ -244,8 +281,6 @@ def displayPlateau(plateau):
                 pygame.quit()
                 sys.exit()  # Arrêt du programme
 
-        plateau.tour_de_jeu(screen_plateau, buttons_images, buttons)
+        plateau.tour_de_jeu(screen_plateau, buttons_images, buttons, plateau)
 
         pygame.display.flip()
-
-

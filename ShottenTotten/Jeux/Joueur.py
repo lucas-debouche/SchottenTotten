@@ -23,6 +23,3 @@ class Joueur:
         if plateau.bornes[numero_borne].controle_par is None:
             plateau.bornes[numero_borne].controle_par = self
             self.borne_controlee += 1
-
-    def __repr__(self):
-        return f"{self.nom} (Score: {self.score}, Bornes contrôlées: {self.borne_controlee})"
