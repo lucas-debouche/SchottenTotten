@@ -45,9 +45,9 @@ def generer_cartes():
     ]
     return cartes_clans, cartes_tactiques
 
-def displayCarte(fenetre, joueur, main):
 
-    #Création rectangle affichage carte joueur 1 et joueur 2
+def displayCarte(fenetre, joueur, main):
+    # Création rectangle affichage carte joueur 1 et joueur 2
     largeur_conteneur = 625
     hauteur_conteneur = 150
     x_conteneur = 350
@@ -60,12 +60,13 @@ def displayCarte(fenetre, joueur, main):
     pygame.draw.rect(fenetre, (255, 0, 0), joueur1)
     pygame.draw.rect(fenetre, (0, 255, 0), joueur2)
 
-    #Recuperation chemin images cartes
+    # Récupération chemin images cartes
     current_dir = os.path.dirname(__file__)
     base_dir = os.path.abspath(os.path.join(current_dir, ".."))
     carte_clan_path = os.path.join(base_dir, "Ressources", "Cartes_Clan")
+    carte_tactique_path = os.path.join(base_dir, "Ressources", "Cartes_Tactiques")
 
-    #Création cartes
+    # Création cartes
     largeur_carte = 85
     hauteur_carte = 130
 
@@ -80,54 +81,32 @@ def displayCarte(fenetre, joueur, main):
 
     positions_joueurs = {
         1: y1_conteneur + 10,
-        2: y2_conteneur + 10,
+        0: y2_conteneur + 10,
     }
 
-    for i in range(len(main)) :
-        x_carte = positions_cartes[i+1]
+    buttons = {}
+    for i in range(len(main)):
+        x_carte = positions_cartes[i + 1]
         y_joueur = positions_joueurs[joueur]
-        carte = os.path.join(carte_clan_path, f"{main[i].couleur}-{main[i].force}.jpg")
+        if isinstance(main[i], CarteClan):
+            carte = os.path.join(carte_clan_path, f"{main[i].couleur}-{main[i].force}.jpg")
+        else:
+            carte = os.path.join(carte_tactique_path, f"{main[i].nom}.jpg")
 
-        carte_button_img = pygame.image.load(carte)
-        carte_button_img = pygame.transform.scale(carte_button_img,(largeur_carte, hauteur_carte))
+        # Vérification et chargement des images
+        if not os.path.exists(carte):
+            print(f"Image introuvable : {carte}")
+            continue
 
+        try:
+            carte_button_img = pygame.image.load(carte)
+        except pygame.error as e:
+            print(f"Erreur lors du chargement de l'image : {carte}\n{e}")
+            continue
+
+        carte_button_img = pygame.transform.scale(carte_button_img, (largeur_carte, hauteur_carte))
         carte_button = pygame.Rect(x_carte, y_joueur, largeur_carte, hauteur_carte)
         fenetre.blit(carte_button_img, (carte_button.x, carte_button.y))
 
-def est_suite(carte1, carte2, carte3):
-    """Vérifie si trois cartes forment une suite de valeurs successives."""
-    valeurs = sorted([carte1[1], carte2[1], carte3[1]])
-    return valeurs[1] == valeurs[0] + 1 and valeurs[2] == valeurs[1] + 1
-
-def est_suite_couleur(cartes):
-    """Vérifie si trois cartes forment une suite de même couleur et de valeurs successives."""
-    couleurs = {carte[0] for carte in cartes}
-    return len(couleurs) == 1 and est_suite(*cartes)
-
-def est_brelan(cartes):
-    """Vérifie si trois cartes ont la même valeur."""
-    valeurs = [carte[1] for carte in cartes]
-    return len(set(valeurs)) == 1
-
-def est_couleur(cartes):
-    """Vérifie si trois cartes ont la même couleur."""
-    couleurs = {carte[0] for carte in cartes}
-    return len(couleurs) == 1
-
-def est_somme(cartes):
-    """Toute combinaison est valide comme somme."""
-    return True,
-
-def determiner_combinaison(cartes):
-    """Détermine la meilleure combinaison parmi Suite couleur, Brelan, Couleur, Suite, et Somme."""
-    if est_suite_couleur(cartes):
-        return 0
-    elif est_brelan(cartes):
-        return 1
-    elif est_couleur(cartes):
-        return 2
-    elif est_suite(*cartes):
-        return 3
-    else:
-        return 4
-
+        buttons[i] = carte_button
+    return buttons

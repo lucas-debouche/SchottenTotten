@@ -47,14 +47,16 @@ class Plateau:
 
     def configurer_joueurs(self):
         """Configure les joueurs et ajoute des IA si nécessaire."""
-        for i in range(1, self.nbr_joueurs + 1):
-            nom = input(f"Nom du joueur {i} : ")
-            self.joueurs.append(Joueur(i, nom))
-
-        # Ajouter des IA pour compléter à 2 joueurs
-        while len(self.joueurs) < 2:
-            self.joueurs.append(Joueur(len(self.joueurs) + 1, f"IA{len(self.joueurs) + 1}"))
-
+        if self.nbr_joueurs == 0:
+            self.joueurs.append(Joueur(0, f"IA{1}"))
+            self.joueurs.append(Joueur(1, f"IA{2}"))
+        #A changer avec la fonction pour demander le nom
+        elif self.nbr_joueurs == 1:
+            self.joueurs.append(Joueur(0, f"IA{1}"))
+            self.joueurs.append(Joueur(1, f"IA{2}"))
+        elif self.nbr_joueurs == 2:
+            self.joueurs.append(Joueur(0, f"IA{1}"))
+            self.joueurs.append(Joueur(1, f"IA{2}"))
 
     def distribuer_cartes(self):
         """Distribue les cartes aux joueurs au début de la partie."""
@@ -81,19 +83,84 @@ class Plateau:
 
         return None, None
 
+    def choisir_carte(self, buttons):
+        """Permet au joueur de sélectionner la carte qu'il veut jouer"""
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if buttons[0].collidepoint(event.pos):
+                    # Prendre l'index de la carte 0 dans la main
+                    return 0
+                if buttons[1].collidepoint(event.pos):
+                    # Prendre l'index de la carte 1 dans la main
+                    return 1
+                if buttons[2].collidepoint(event.pos):
+                    # Prendre l'index de la carte 2 dans la main
+                    return 2
+                if buttons[3].collidepoint(event.pos):
+                    # Prendre l'index de la carte 3 dans la main
+                    return 3
+                if buttons[4].collidepoint(event.pos):
+                    # Prendre l'index de la carte 4 dans la main
+                    return 4
+                if buttons[5].collidepoint(event.pos):
+                    # Prendre l'index de la carte 5 dans la main
+                    return 5
+                if self.nbr_cartes == 7:
+                    if buttons[6].collidepoint(event.pos):
+                        # Prendre l'index de la carte 6 dans la main
+                        return 6
 
-    def tour_de_jeu(self, screen_plateau):
+    def tour_de_jeu(self, screen_plateau, buttons_images, buttons_plateau):
         """Gère le déroulement d'une manche de jeu."""
-        while len(self.pioche) > 0:
+        running = True
+
+        joueur = 0
+
+        while running:
+            # Vérifier les conditions de fin de partie
             gagnant, condition = self.verifier_fin_manche()
             if gagnant:
                 print(f"{gagnant.nom} remporte la manche ({condition}).")
-                return
+                running = False
+                break
+            elif len(self.pioche) == 0:
+                break
 
-            for joueur in self.joueurs:
-                displayCarte(screen_plateau, joueur.id, joueur.main)
-                '''carte_index = self.choisir_carte(joueur) - 1
-                borne_index = self.choisir_borne(joueur)
+            # Gérer les événements Pygame
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+            # Afficher le plateau de jeu
+            screen_plateau.fill((205, 200, 145))  # Fond de la fenêtre
+            # Dessiner les boutons avec leurs images
+            for button_key, button_rect in buttons_plateau.items():
+                screen_plateau.blit(buttons_images[button_key], button_rect.topleft)
+
+            buttons = displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
+            pygame.display.flip()
+
+            # Sélection de la carte
+            carte_index = self.choisir_carte(buttons)
+            if carte_index is None:
+                continue  # Attendre une sélection valide
+            print(f"Carte choisie : {self.joueurs[joueur].main[carte_index]}, Joueur : {self.joueurs[joueur].nom}")
+
+
+
+            if joueur == 0:
+                joueur += 1
+            else:
+                joueur -= 1
+            print(joueur)
+
+            # Rafraîchir l'écran après chaque tour
+            pygame.display.update()
+
+
+
+            '''borne_index = self.choisir_borne(joueur)
                 joueur.jouer_carte(self.plateau, borne_index, joueur.main[carte_index])
 
                 # Revendication de borne
@@ -177,11 +244,7 @@ def displayPlateau(plateau):
                 pygame.quit()
                 sys.exit()  # Arrêt du programme
 
-        # Dessiner les boutons avec leurs images
-        for button_key, button_rect in buttons.items():
-            screen_plateau.blit(buttons_images[button_key], button_rect.topleft)
-
-        plateau.tour_de_jeu(screen_plateau)
+        plateau.tour_de_jeu(screen_plateau, buttons_images, buttons)
 
         pygame.display.flip()
 
