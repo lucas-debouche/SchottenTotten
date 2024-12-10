@@ -29,11 +29,11 @@ def choisir_borne(buttons, joueur_id, plateau):
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for borne_key, borne_rect in buttons.items():
                     if borne_rect.collidepoint(event.pos):
+                        numero_borne = int(borne_key.replace("borne", ""))
                         if joueur_id == 0:
-                            if len(plateau.bornes[borne_key].joueur1_cartes) < 3 and plateau.bornes[borne_key].controle_par is None:
+                            if len(plateau.bornes[numero_borne].joueur1_cartes) < 3 and plateau.bornes[numero_borne].controle_par is None:
                                 try:
                                     # Extraire le numéro de la borne
-                                    numero_borne = int(borne_key.replace("borne", ""))
                                     return numero_borne
                                 except ValueError:
                                     # Si ce n'est pas une borne valide, continuer
@@ -41,10 +41,9 @@ def choisir_borne(buttons, joueur_id, plateau):
                             else:
                                 print(f"La borne {borne_key} est déjà controllée.")
                         elif joueur_id == 1:
-                            if len(plateau.bornes[borne_key].joueur2_cartes) < 3 and plateau.bornes[borne_key].controle_par is None:
+                            if len(plateau.bornes[numero_borne].joueur2_cartes) < 3 and plateau.bornes[numero_borne].controle_par is None:
                                 try:
                                     # Extraire le numéro de la borne
-                                    numero_borne = int(borne_key.replace("borne", ""))
                                     return numero_borne
                                 except ValueError:
                                     # Si ce n'est pas une borne valide, continuer
@@ -187,8 +186,12 @@ class Plateau:
             self.joueurs[joueur].jouer_carte(plateau, borne_index, self.joueurs[joueur].main[carte_index])
 
             #Revendiquer une borne
-
-
+            for borne in self.bornes.values():
+                if borne.controle_par is None:
+                    if len(borne.joueur1_cartes) == 3 and len(borne.joueur2_cartes) == 3:
+                        #Créer le bouton pour revendiquer et l'afficher
+                        pass
+                                    
             #Piocher une carte
             self.joueurs[joueur].piocher(self.pioche)
 
