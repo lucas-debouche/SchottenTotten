@@ -51,7 +51,7 @@ def choisir_borne(buttons, joueur_id, plateau):
                             else:
                                 print(f"La borne {borne_key} est déjà controllée.")
 
-def choisir_carte(buttons):
+def choisir_carte(screen, buttons):
     """Permet au joueur de sélectionner la carte qu'il veut jouer"""
     while True:  # Boucle jusqu'à ce qu'une borne valide soit sélectionnée
         for event in pygame.event.get():
@@ -62,6 +62,8 @@ def choisir_carte(buttons):
                 for borne_key, borne_rect in buttons.items():
                     if borne_rect.collidepoint(event.pos):
                         try:
+                            pygame.draw.rect(screen, (255, 0, 0), borne_rect, width=3)
+                            pygame.display.update(borne_rect)
                             # Extraire le numéro de la carte
                             return borne_key
                         except ValueError:
@@ -137,7 +139,6 @@ class Plateau:
     def tour_de_jeu(self, screen_plateau, buttons_images, buttons_plateau, plateau):
         """Gère le déroulement d'une manche de jeu."""
         running = True
-
         joueur = 0
 
         while running:
@@ -163,7 +164,7 @@ class Plateau:
             for button_key, button_rect in buttons_plateau.items():
                 screen_plateau.blit(buttons_images[button_key], button_rect.topleft)
 
-            buttons = displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
+            buttons = displayCarte(screen_plateau, joueur, self.joueurs[joueur].main, self.pioche)
             pygame.display.flip()
 
             carte_index = None
@@ -172,7 +173,7 @@ class Plateau:
             while carte_index is None or borne_index is None:
                 # Sélection de la carte
                 if carte_index is None:
-                    carte_index = choisir_carte(buttons)
+                    carte_index = choisir_carte(screen_plateau, buttons)
                     if carte_index is not None:
                         print(f"Carte choisie : {carte_index}")
 
@@ -215,23 +216,6 @@ class Plateau:
 
                 # Piocher une carte
                 joueur.piocher(self.pioche)'''
-
-
-def melanger_pioche(cartes_clans, cartes_tactiques):
-    """Mélange les cartes et retourne une pioche."""
-    pioche = cartes_clans + cartes_tactiques
-    random.shuffle(pioche)
-    return deque(pioche)
-
-def load_and_scale_image(path, width, height):
-    """Charge et redimensionne une image."""
-    try:
-        image = pygame.image.load(path)
-        return pygame.transform.scale(image, (width, height))
-    except pygame.error as e:
-        print(f"Erreur lors du chargement de l'image: {path}")
-        raise e
-
 
 def displayPlateau(plateau):
     """Fonction qui affiche le plateau."""
@@ -287,3 +271,24 @@ def displayPlateau(plateau):
         plateau.tour_de_jeu(screen_plateau, buttons_images, buttons, plateau)
 
         pygame.display.flip()
+
+
+def melanger_pioche(cartes_clans, cartes_tactiques):
+    """Mélange les cartes et retourne une pioche."""
+    pioche = cartes_clans + cartes_tactiques
+    random.shuffle(pioche)
+    return deque(pioche)
+
+def afficher_pioche(screen, pioche):
+    smallfont = pygame.font.SysFont('Forte', 35)
+    text_pioche = smallfont.render(str(len(pioche)), True, (139, 69, 19))
+    screen.blit(text_pioche, (160, 250))
+
+def load_and_scale_image(path, width, height):
+    """Charge et redimensionne une image."""
+    try:
+        image = pygame.image.load(path)
+        return pygame.transform.scale(image, (width, height))
+    except pygame.error as e:
+        print(f"Erreur lors du chargement de l'image: {path}")
+        raise e

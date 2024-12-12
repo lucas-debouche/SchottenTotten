@@ -46,7 +46,7 @@ def generer_cartes():
     return cartes_clans, cartes_tactiques
 
 
-def displayCarte(fenetre, joueur, main):
+def displayCarte(fenetre, joueur, main, pioche):
     # Création rectangle affichage carte joueur 1 et joueur 2
     largeur_conteneur = 625
     hauteur_conteneur = 150
@@ -54,17 +54,12 @@ def displayCarte(fenetre, joueur, main):
     y1_conteneur = 25
     y2_conteneur = 575
 
-    joueur1 = pygame.Rect(x_conteneur, y1_conteneur, largeur_conteneur, hauteur_conteneur)
-    joueur2 = pygame.Rect(x_conteneur, y2_conteneur, largeur_conteneur, hauteur_conteneur)
-
-    pygame.draw.rect(fenetre, (255, 0, 0), joueur1)
-    pygame.draw.rect(fenetre, (0, 255, 0), joueur2)
-
     # Récupération chemin images cartes
     current_dir = os.path.dirname(__file__)
     base_dir = os.path.abspath(os.path.join(current_dir, ".."))
     carte_clan_path = os.path.join(base_dir, "Ressources", "Cartes_Clan")
     carte_tactique_path = os.path.join(base_dir, "Ressources", "Cartes_Tactiques")
+    back_card_path = os.path.join(base_dir, "Ressources", "Back_Card.jpg")
 
     # Création cartes
     largeur_carte = 85
@@ -84,10 +79,19 @@ def displayCarte(fenetre, joueur, main):
         0: y2_conteneur + 10,
     }
 
+    print("zefzfo")
+    smallfont = pygame.font.SysFont('Forte', 35)
+    text_pioche = smallfont.render(str(len(pioche)), True, (139, 69, 19))
+    fenetre.blit(text_pioche, (75, 450))
+
     buttons = {}
     for i in range(len(main)):
         x_carte = positions_cartes[i + 1]
         y_joueur = positions_joueurs[joueur]
+
+        adversaire = 1 if joueur == 0 else 0
+        y_adversaire = positions_joueurs[adversaire]
+
         if isinstance(main[i], CarteClan):
             carte = os.path.join(carte_clan_path, f"{main[i].couleur}-{main[i].force}.jpg")
         else:
@@ -104,9 +108,13 @@ def displayCarte(fenetre, joueur, main):
             print(f"Erreur lors du chargement de l'image : {carte}\n{e}")
             continue
 
+        back_card_img = pygame.image.load(back_card_path)
+        back_card_img = pygame.transform.scale(back_card_img, (largeur_carte, hauteur_carte))
+        back_card = pygame.Rect(x_carte, y_adversaire, largeur_carte, hauteur_carte)
         carte_button_img = pygame.transform.scale(carte_button_img, (largeur_carte, hauteur_carte))
         carte_button = pygame.Rect(x_carte, y_joueur, largeur_carte, hauteur_carte)
         fenetre.blit(carte_button_img, (carte_button.x, carte_button.y))
+        fenetre.blit(back_card_img, (back_card.x, back_card.y))
 
         buttons[i] = carte_button
     return buttons
