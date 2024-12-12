@@ -79,7 +79,6 @@ def displayCarte(fenetre, joueur, main, pioche):
         0: y2_conteneur + 10,
     }
 
-    print("zefzfo")
     smallfont = pygame.font.SysFont('Forte', 35)
     text_pioche = smallfont.render(str(len(pioche)), True, (139, 69, 19))
     fenetre.blit(text_pioche, (75, 450))
