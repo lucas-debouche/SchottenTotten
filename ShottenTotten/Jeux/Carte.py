@@ -48,8 +48,6 @@ def generer_cartes():
 
 def displayCarte(fenetre, joueur, main, pioche):
     # Création rectangle affichage carte joueur 1 et joueur 2
-    largeur_conteneur = 625
-    hauteur_conteneur = 150
     x_conteneur = 350
     y1_conteneur = 25
     y2_conteneur = 575

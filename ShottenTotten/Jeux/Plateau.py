@@ -146,7 +146,6 @@ class Plateau:
             gagnant, condition = self.verifier_fin_manche()
             if gagnant:
                 print(f"{gagnant.nom} remporte la manche ({condition}).")
-                running = False
                 break
             elif len(self.pioche) == 0:
                 self.fin_jeu()

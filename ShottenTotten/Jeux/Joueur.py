@@ -1,8 +1,8 @@
 class Joueur:
     """Représente un joueur avec un nom, une main et un score."""
 
-    def __init__(self, id, nom):
-        self.id = id
+    def __init__(self, id_, nom):
+        self.id = id_
         self.nom = nom
         self.main = []
         self.score = 0
