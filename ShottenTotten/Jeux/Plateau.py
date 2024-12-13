@@ -133,8 +133,13 @@ class Plateau:
 
     def fin_jeu(self):
         """Définit la fin du jeu."""
-        gagnant = max(self.joueurs, key=lambda j: j.score)
-        print(f"{gagnant.nom} remporte la partie avec {gagnant.score} points.")
+        if self.joueurs[0].score != self.joueurs[1].score:
+            gagnant = max(self.joueurs, key=lambda j: j.score)
+            print(f"{gagnant.nom} remporte la partie avec {gagnant.score} points.")
+        else :
+            print("Il y a égalité.")
+        pygame.quit()
+        sys.exit()
 
     def tour_de_jeu(self, screen_plateau, buttons_images, buttons_plateau, plateau):
         """Gère le déroulement d'une manche de jeu."""
@@ -197,13 +202,7 @@ class Plateau:
 
             joueur = 1 - joueur
 
-            rect_pioche = pygame.Rect(50, 455, 100, 40)  # Définir les dimensions du rectangle
-            pygame.draw.rect(screen_plateau, (205, 200, 145), rect_pioche)
-
-            smallfont = pygame.font.SysFont('Forte', 35)
-            text_pioche = smallfont.render(str(len(self.pioche)), True, (139, 69, 19))
-            rect_text = text_pioche.get_rect(center=rect_pioche.center)
-            screen_plateau.blit(text_pioche, rect_text.topleft)
+            afficher_pioche(screen_plateau, self.pioche)
 
             # Rafraîchir l'écran après chaque tour
             pygame.display.update()
@@ -282,6 +281,7 @@ def displayPlateau(plateau):
                 pygame.quit()
                 sys.exit()  # Arrêt du programme
 
+        afficher_pioche(screen_plateau, plateau.pioche)
         plateau.tour_de_jeu(screen_plateau, buttons_images, buttons, plateau)
 
         pygame.display.flip()
@@ -294,9 +294,13 @@ def melanger_pioche(cartes_clans, cartes_tactiques):
     return deque(pioche)
 
 def afficher_pioche(screen, pioche):
+    rect_pioche = pygame.Rect(50, 455, 100, 40)  # Définir les dimensions du rectangle
+    pygame.draw.rect(screen, (205, 200, 145), rect_pioche)
+
     smallfont = pygame.font.SysFont('Forte', 35)
     text_pioche = smallfont.render(str(len(pioche)), True, (139, 69, 19))
-    screen.blit(text_pioche, (160, 250))
+    rect_text = text_pioche.get_rect(center=rect_pioche.center)
+    screen.blit(text_pioche, rect_text.topleft)
 
 def load_and_scale_image(path, width, height):
     """Charge et redimensionne une image."""
