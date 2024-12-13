@@ -5,7 +5,7 @@ import os
 Couleurs = {1: "blue", 2: "green", 3: "yellow", 4: "orange", 5: "red", 6: "purple"}
 Capacites = {1: "Troupes d'élites", 2: "Modes de combat", 3: "Ruses"}
 NomsCartesTactiques = {
-    1: ["Joker", "Joker", "Espion", "Porte-Bouclier"],
+    1: ["Joker1", "Joker2", "Espion", "Porte-Bouclier"],
     2: ["Colin-Maillard", "Combat de Boue"],
     3: ["Chasseur de Tête", "Stratège", "Banshee", "Traître"]
 }
@@ -70,6 +70,7 @@ def displayCarte(fenetre, joueur, main, pioche):
         4: x_conteneur + 310,
         5: x_conteneur + 405,
         6: x_conteneur + 500,
+        7: x_conteneur + 595,
     }
 
     positions_joueurs = {
