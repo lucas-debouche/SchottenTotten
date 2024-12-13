@@ -46,7 +46,7 @@ def generer_cartes():
     return cartes_clans, cartes_tactiques
 
 
-def displayCarte(fenetre, joueur, main, pioche):
+def displayCarte(fenetre, joueur, main):
     # Création rectangle affichage carte joueur 1 et joueur 2
     x_conteneur = 350
     y1_conteneur = 25
@@ -77,10 +77,6 @@ def displayCarte(fenetre, joueur, main, pioche):
         1: y1_conteneur + 10,
         0: y2_conteneur + 10,
     }
-
-    smallfont = pygame.font.SysFont('Forte', 35)
-    text_pioche = smallfont.render(str(len(pioche)), True, (139, 69, 19))
-    fenetre.blit(text_pioche, (75, 450))
 
     buttons = {}
     for i in range(len(main)):
@@ -116,3 +112,60 @@ def displayCarte(fenetre, joueur, main, pioche):
 
         buttons[i] = carte_button
     return buttons
+
+def deplacer_carte(fenetre, joueur, carte, borne_index, borne):
+    """
+    Déplace une carte à une position donnée.
+
+    :param fenetre: Surface pygame sur laquelle dessiner la carte.
+    :param carte: Instance de Carte contenant les informations de la carte.
+    :param position: Tuple contenant les coordonnées (x, y) de la nouvelle position.
+    """
+    positions_cartes = {
+        1: 215,
+        2: 325,
+        3: 435,
+        4: 545,
+        5: 655,
+        6: 765,
+        7: 875,
+    }
+
+    nb_carte_borne = len(borne)
+
+    positions_joueurs = {
+        1: 210 - (nb_carte_borne * 30),
+        0: 410 + (nb_carte_borne * 30)
+    }
+
+    x = positions_cartes[borne_index]
+    y = positions_joueurs[joueur]
+
+    largeur_carte = 85
+    hauteur_carte = 130
+
+    # Récupération du chemin de l'image de la carte
+    current_dir = os.path.dirname(__file__)
+    base_dir = os.path.abspath(os.path.join(current_dir, ".."))
+    carte_clan_path = os.path.join(base_dir, "Ressources", "Cartes_Clan")
+    carte_tactique_path = os.path.join(base_dir, "Ressources", "Cartes_Tactiques")
+
+    if isinstance(carte, CarteClan):
+        carte_image_path = os.path.join(carte_clan_path, f"{carte.couleur}-{carte.force}.jpg")
+    else:
+        carte_image_path = os.path.join(carte_tactique_path, f"{carte.nom}.jpg")
+
+    # Vérification et chargement de l'image
+    if not os.path.exists(carte_image_path):
+        print(f"Image introuvable : {carte_image_path}")
+        return
+
+    try:
+        carte_img = pygame.image.load(carte_image_path)
+        carte_img = pygame.transform.scale(carte_img, (largeur_carte, hauteur_carte))
+    except pygame.error as e:
+        print(f"Erreur lors du chargement de l'image : {carte_image_path}\n{e}")
+        return
+
+    # Dessiner la carte à la nouvelle position
+    fenetre.blit(carte_img, (x,y))

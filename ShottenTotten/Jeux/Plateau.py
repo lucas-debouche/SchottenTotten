@@ -5,7 +5,7 @@ import pygame
 import sys
 import os
 
-from ShottenTotten.Jeux.Carte import displayCarte
+from ShottenTotten.Jeux.Carte import displayCarte, deplacer_carte
 from ShottenTotten.Jeux.Joueur import Joueur
 
 
@@ -34,7 +34,7 @@ def choisir_borne(buttons, joueur_id, plateau):
                             if len(plateau.bornes[numero_borne].joueur1_cartes) < 3 and plateau.bornes[numero_borne].controle_par is None:
                                 try:
                                     # Extraire le numéro de la borne
-                                    return numero_borne
+                                    return numero_borne, plateau.bornes[numero_borne].joueur1_cartes
                                 except ValueError:
                                     # Si ce n'est pas une borne valide, continuer
                                     pass
@@ -44,7 +44,7 @@ def choisir_borne(buttons, joueur_id, plateau):
                             if len(plateau.bornes[numero_borne].joueur2_cartes) < 3 and plateau.bornes[numero_borne].controle_par is None:
                                 try:
                                     # Extraire le numéro de la borne
-                                    return numero_borne
+                                    return numero_borne, plateau.bornes[numero_borne].joueur2_cartes
                                 except ValueError:
                                     # Si ce n'est pas une borne valide, continuer
                                     pass
@@ -157,13 +157,11 @@ class Plateau:
                     pygame.quit()
                     sys.exit()
 
-            # Afficher le plateau de jeu
-            screen_plateau.fill((205, 200, 145))  # Fond de la fenêtre
             # Dessiner les boutons avec leurs images
             for button_key, button_rect in buttons_plateau.items():
                 screen_plateau.blit(buttons_images[button_key], button_rect.topleft)
 
-            buttons = displayCarte(screen_plateau, joueur, self.joueurs[joueur].main, self.pioche)
+            buttons = displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
             pygame.display.flip()
 
             carte_index = None
@@ -178,9 +176,11 @@ class Plateau:
 
                 # Sélection de la borne
                 if carte_index is not None and borne_index is None:
-                    borne_index = choisir_borne(buttons_plateau, joueur, plateau)
+                    borne_index, borne_liste = choisir_borne(buttons_plateau, joueur, plateau)
                     if borne_index is not None:
                         print(f"Borne choisie : {borne_index}")
+                        deplacer_carte(screen_plateau, joueur, self.joueurs[joueur].main[carte_index], borne_index, borne_liste)
+
 
             #Enlever la carte de la main
             self.joueurs[joueur].jouer_carte(plateau, borne_index, self.joueurs[joueur].main[carte_index])
@@ -196,6 +196,14 @@ class Plateau:
             self.joueurs[joueur].piocher(self.pioche)
 
             joueur = 1 - joueur
+
+            rect_pioche = pygame.Rect(50, 455, 100, 40)  # Définir les dimensions du rectangle
+            pygame.draw.rect(screen_plateau, (205, 200, 145), rect_pioche)
+
+            smallfont = pygame.font.SysFont('Forte', 35)
+            text_pioche = smallfont.render(str(len(self.pioche)), True, (139, 69, 19))
+            rect_text = text_pioche.get_rect(center=rect_pioche.center)
+            screen_plateau.blit(text_pioche, rect_text.topleft)
 
             # Rafraîchir l'écran après chaque tour
             pygame.display.update()
