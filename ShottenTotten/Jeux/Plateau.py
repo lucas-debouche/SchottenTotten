@@ -237,24 +237,31 @@ def displayPlateau(plateau):
     # Récupération des chemins d'images
     current_dir = os.path.dirname(__file__)
     base_dir = os.path.abspath(os.path.join(current_dir, ".."))
-    resources_dir = os.path.join(base_dir, "Ressources")
+    pioche_path = os.path.join(base_dir, "Ressources")
+    borne_path = os.path.join(base_dir, "Ressources", "Bornes")
     images_paths = {
-        "pioche": os.path.join(resources_dir, "Pioche.png"),
-        "borne1": os.path.join(resources_dir, "Frontiere1.png"),
-        "borne2": os.path.join(resources_dir, "Frontiere2.png"),
-        "borne3": os.path.join(resources_dir, "Frontiere3.png"),
+        "pioche": os.path.join(pioche_path, "Pioche.png"),
+        "borne1": os.path.join(borne_path, "borne_0.jpg"),
+        "borne2": os.path.join(borne_path, "borne_1.jpg"),
+        "borne3": os.path.join(borne_path, "borne_2.jpg"),
+        "borne4": os.path.join(borne_path, "borne_3.jpg"),
+        "borne5": os.path.join(borne_path, "borne_4.jpg"),
+        "borne6": os.path.join(borne_path, "borne_5.jpg"),
+        "borne7": os.path.join(borne_path, "borne_6.jpg"),
+        "borne8": os.path.join(borne_path, "borne_7.jpg"),
+        "borne9": os.path.join(borne_path, "borne_8.jpg"),
     }
 
     # Boutons et leurs positions
     buttons = {
         "pioche": pygame.Rect(50, 300, 85, 150),
-        **{f"borne{i}": pygame.Rect(210 + (i - 1) * 110, 325, 100, 100) for i in range(1, 10)},
+        **{f"borne{i}": pygame.Rect(210 + (i - 1) * 110, 350, 100, 50) for i in range(1, 10)},
     }
 
     # Chargement des images des boutons
     buttons_images = {}
     for i in range(1, 10):
-        image_key = f"borne{((i - 1) % 3) + 1}"  # Utilise un cycle des trois images
+        image_key = f"borne{i}"
         buttons_images[f"borne{i}"] = load_and_scale_image(
             images_paths[image_key],
             buttons[f"borne{i}"].width,
