@@ -49,8 +49,8 @@ def generer_cartes():
 def displayCarte(fenetre, joueur, main):
     # Création rectangle affichage carte joueur 1 et joueur 2
     x_conteneur = 350
-    y1_conteneur = 25
-    y2_conteneur = 575
+    y1_conteneur = 0
+    y2_conteneur = 600
 
     # Récupération chemin images cartes
     current_dir = os.path.dirname(__file__)
@@ -129,6 +129,8 @@ def deplacer_carte(fenetre, joueur, carte, borne_index, borne):
         5: 655,
         6: 765,
         7: 875,
+        8: 985,
+        9: 1095,
     }
 
     nb_carte_borne = len(borne)
