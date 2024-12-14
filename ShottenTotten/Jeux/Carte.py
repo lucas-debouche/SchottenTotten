@@ -114,13 +114,7 @@ def displayCarte(fenetre, joueur, main):
     return buttons
 
 def deplacer_carte(fenetre, joueur, carte, borne_index, borne):
-    """
-    Déplace une carte à une position donnée.
-
-    :param fenetre: Surface pygame sur laquelle dessiner la carte.
-    :param carte: Instance de Carte contenant les informations de la carte.
-    :param position: Tuple contenant les coordonnées (x, y) de la nouvelle position.
-    """
+    """Déplace une carte à une position donnée."""
     positions_cartes = {
         1: 215,
         2: 325,

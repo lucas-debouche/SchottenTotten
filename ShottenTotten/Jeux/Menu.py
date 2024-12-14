@@ -3,6 +3,7 @@ import sys
 import os
 
 from ShottenTotten.Jeux.Carte import generer_cartes
+from ShottenTotten.Jeux.Joueur import Joueur
 from ShottenTotten.Jeux.Plateau import displayPlateau, Plateau, melanger_pioche
 
 plateau = Plateau()
@@ -77,56 +78,52 @@ def displayNom(plateau_):
                 else:
                     nom_joueur2 += event.unicode  # Ajouter le caractère saisi
 
+        # Dessiner les boutons
+
+        shadow_rect = buttons["jouer"].move(4, 4)  # Décalage pour l'ombre
+        pygame.draw.rect(screen_nom, (160, 82, 45), shadow_rect, border_radius=10)
+
+        pygame.draw.rect(screen_nom, (205, 200, 145), buttons["jouer"], border_radius=10)
+        pygame.draw.rect(screen_nom, (139, 69, 19), buttons["jouer"], width=2, border_radius=10)
+        text_jouer = smallfont.render("Jouer", True, (139, 69, 19))
+        text_rect_jouer = text_jouer.get_rect(center=buttons["jouer"].center)
+        screen_nom.blit(text_jouer, text_rect_jouer)
+
+        # Dessiner la zone de texte
+        pygame.draw.rect(screen_nom, input_color1, input_rect1, border_radius=10)
+        pygame.draw.rect(screen_nom, (139, 69, 19), input_rect1, 2, border_radius=10)  # Bordure
+
+        # Afficher le texte saisi
+        text_surface = textfont.render(nom_joueur1, True, (0, 0, 0))
+        screen_nom.blit(text_surface, (input_rect1.x + 10, input_rect1.y + 10))
+
+        # Empêcher le texte de dépasser la largeur de la zone de texte
+        input_rect1.w = max(300, text_surface.get_width() + 20)
+
         if nbr_joueur == 0:
+            plateau.joueurs.append(Joueur(0, f"IA{1}"))
+            plateau.joueurs.append(Joueur(1, f"IA{2}"))
+            plateau.distribuer_cartes()
             displayPlateau(plateau_)
+        elif nbr_joueur == 1:
+            nom_joueur2 = "IA"
         elif nbr_joueur == 2:
-            # Dessiner les boutons
-
-            shadow_rect = buttons["jouer"].move(4, 4)  # Décalage pour l'ombre
-            pygame.draw.rect(screen_nom, (160, 82, 45), shadow_rect, border_radius=10)
-
-            pygame.draw.rect(screen_nom, (205, 200, 145), buttons["jouer"], border_radius=10)
-            pygame.draw.rect(screen_nom, (139, 69, 19), buttons["jouer"], width=2, border_radius=10)
-            text_jouer = smallfont.render("Jouer", True, (139, 69, 19))
-            text_rect_jouer = text_jouer.get_rect(center=buttons["jouer"].center)
-            screen_nom.blit(text_jouer, text_rect_jouer)
-
             # Dessiner la zone de texte
-            pygame.draw.rect(screen_nom, input_color1, input_rect1, border_radius=10)
-            pygame.draw.rect(screen_nom, (139, 69, 19), input_rect1, 2, border_radius=10)  # Bordure
-
-            # Afficher le texte saisi
-            text_surface = textfont.render(nom_joueur1, True, (0, 0, 0))
-            screen_nom.blit(text_surface, (input_rect1.x + 10, input_rect1.y + 10))
-
-            # Empêcher le texte de dépasser la largeur de la zone de texte
-            input_rect1.w = max(300, text_surface.get_width() + 20)
-            # Dessiner les boutons
-
-            shadow_rect = buttons["jouer"].move(4, 4)  # Décalage pour l'ombre
-            pygame.draw.rect(screen_nom, (160, 82, 45), shadow_rect, border_radius=10)
-
-            pygame.draw.rect(screen_nom, (205, 200, 145), buttons["jouer"], border_radius=10)
-            pygame.draw.rect(screen_nom, (139, 69, 19), buttons["jouer"], width=2, border_radius=10)
-            text_jouer = smallfont.render("Jouer", True, (139, 69, 19))
-            text_rect_jouer = text_jouer.get_rect(center=buttons["jouer"].center)
-            screen_nom.blit(text_jouer, text_rect_jouer)
-
-            # Dessiner la zone de texte
-            pygame.draw.rect(screen_nom, input_color1, input_rect1, border_radius=10)
-            pygame.draw.rect(screen_nom, (139, 69, 19), input_rect1, 2, border_radius=10)  # Bordure
             pygame.draw.rect(screen_nom, input_color2, input_rect2, border_radius=10)
             pygame.draw.rect(screen_nom, (139, 69, 19), input_rect2, 2, border_radius=10)  # Bordure
 
             # Afficher le texte saisi
-            text_surface = textfont.render(nom_joueur1, True, (0, 0, 0))
-            screen_nom.blit(text_surface, (input_rect1.x + 10, input_rect1.y + 10))
             text_surface = textfont.render(nom_joueur2, True, (0, 0, 0))
             screen_nom.blit(text_surface, (input_rect2.x + 10, input_rect2.y + 10))
 
             # Empêcher le texte de dépasser la largeur de la zone de texte
-            input_rect1.w = max(300, text_surface.get_width() + 20)
             input_rect2.w = max(300, text_surface.get_width() + 20)
+
+        if nom_joueur1 != "" and nom_joueur2 != "":
+            plateau.joueurs.append(Joueur(0, nom_joueur1))
+            plateau.joueurs.append(Joueur(1, nom_joueur2))
+            plateau.distribuer_cartes()
+            displayPlateau(plateau_)
 
         pygame.display.flip()
 
@@ -270,8 +267,6 @@ class Menu :
                     if buttons["jouer"].collidepoint(event.pos) and self.mode != False and plateau.nbr_joueurs is not None and self.nbr_manche:
                         #retourne les valeurs Mode, Joueurs, Manches pour initialiser le jeu
                         self.initialiser_cartes()
-                        plateau.configurer_joueurs()
-                        plateau.distribuer_cartes()
                         displayNom(plateau)
 
 

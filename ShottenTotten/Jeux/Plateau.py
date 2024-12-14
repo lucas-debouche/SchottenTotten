@@ -6,8 +6,6 @@ import sys
 import os
 
 from ShottenTotten.Jeux.Carte import displayCarte, deplacer_carte
-from ShottenTotten.Jeux.Joueur import Joueur
-
 
 
 class Borne:
@@ -17,58 +15,6 @@ class Borne:
         self.joueur1_cartes = []
         self.joueur2_cartes = []
         self.controle_par = None  # Joueur qui contrôle cette borne
-
-
-def choisir_borne(buttons, joueur_id, plateau):
-    """Permet au joueur de sélectionner la borne où il veut jouer."""
-    while True:  # Boucle jusqu'à ce qu'une borne valide soit sélectionnée
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                for borne_key, borne_rect in buttons.items():
-                    if borne_rect.collidepoint(event.pos):
-                        numero_borne = int(borne_key.replace("borne", ""))
-                        if joueur_id == 0:
-                            if len(plateau.bornes[numero_borne].joueur1_cartes) < 3 and plateau.bornes[numero_borne].controle_par is None:
-                                try:
-                                    # Extraire le numéro de la borne
-                                    return numero_borne, plateau.bornes[numero_borne].joueur1_cartes
-                                except ValueError:
-                                    # Si ce n'est pas une borne valide, continuer
-                                    pass
-                            else:
-                                print(f"La borne {borne_key} est déjà controllée.")
-                        elif joueur_id == 1:
-                            if len(plateau.bornes[numero_borne].joueur2_cartes) < 3 and plateau.bornes[numero_borne].controle_par is None:
-                                try:
-                                    # Extraire le numéro de la borne
-                                    return numero_borne, plateau.bornes[numero_borne].joueur2_cartes
-                                except ValueError:
-                                    # Si ce n'est pas une borne valide, continuer
-                                    pass
-                            else:
-                                print(f"La borne {borne_key} est déjà controllée.")
-
-def choisir_carte(screen, buttons):
-    """Permet au joueur de sélectionner la carte qu'il veut jouer"""
-    while True:  # Boucle jusqu'à ce qu'une borne valide soit sélectionnée
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                for borne_key, borne_rect in buttons.items():
-                    if borne_rect.collidepoint(event.pos):
-                        try:
-                            pygame.draw.rect(screen, (255, 0, 0), borne_rect, width=3)
-                            pygame.display.update(borne_rect)
-                            # Extraire le numéro de la carte
-                            return borne_key
-                        except ValueError:
-                            # Si ce n'est pas une borne valide, continuer
-                            pass
 
 class Plateau:
     """Représente le plateau de jeu avec ses bornes et sa défausse."""
@@ -92,19 +38,6 @@ class Plateau:
             borne.joueur2_cartes.append(carte)
         else:
             raise ValueError("Index du joueur invalide.")
-
-    def configurer_joueurs(self):
-        """Configure les joueurs et ajoute des IA si nécessaire."""
-        if self.nbr_joueurs == 0:
-            self.joueurs.append(Joueur(0, f"IA{1}"))
-            self.joueurs.append(Joueur(1, f"IA{2}"))
-        #A changer avec la fonction pour demander le nom
-        elif self.nbr_joueurs == 1:
-            self.joueurs.append(Joueur(0, f"IA{1}"))
-            self.joueurs.append(Joueur(1, f"IA{2}"))
-        elif self.nbr_joueurs == 2:
-            self.joueurs.append(Joueur(0, f"IA{1}"))
-            self.joueurs.append(Joueur(1, f"IA{2}"))
 
     def distribuer_cartes(self):
         """Distribue les cartes aux joueurs au début de la partie."""
@@ -170,21 +103,52 @@ class Plateau:
             pygame.display.flip()
 
             carte_index = None
+            carte_contour = None
             borne_index = None
+            borne_liste = None
 
-            while carte_index is None or borne_index is None:
-                # Sélection de la carte
-                if carte_index is None:
-                    carte_index = choisir_carte(screen_plateau, buttons)
-                    if carte_index is not None:
-                        print(f"Carte choisie : {carte_index}")
+            while borne_index is None:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        if carte_index is not None:
+                            for borne_key, borne_rect in buttons_plateau.items():
+                                if borne_rect.collidepoint(event.pos):
+                                    numero_borne = int(borne_key.replace("borne", ""))
+                                    if joueur == 0:
+                                        if len(plateau.bornes[numero_borne].joueur1_cartes) < 3 and plateau.bornes[numero_borne].controle_par is None:
+                                            # Extraire le numéro de la borne
+                                            borne_index = numero_borne
+                                            borne_liste = plateau.bornes[numero_borne].joueur1_cartes
+                                        else:
+                                            print("Tu ne peux pas jouer sur cette borne.")
+                                    elif joueur == 1:
+                                        if len(plateau.bornes[numero_borne].joueur2_cartes) < 3 and plateau.bornes[numero_borne].controle_par is None:
+                                            # Extraire le numéro de la borne
+                                            borne_index = numero_borne
+                                            borne_liste = plateau.bornes[numero_borne].joueur2_cartes
+                                        else:
+                                            print("Tu ne peux pas jouer sur cette borne.")
 
-                # Sélection de la borne
-                if carte_index is not None and borne_index is None:
-                    borne_index, borne_liste = choisir_borne(buttons_plateau, joueur, plateau)
-                    if borne_index is not None:
-                        print(f"Borne choisie : {borne_index}")
-                        deplacer_carte(screen_plateau, joueur, self.joueurs[joueur].main[carte_index], borne_index, borne_liste)
+                        for carte_key, carte_rect in buttons.items():
+                            if carte_rect.collidepoint(event.pos):
+                                if carte_contour is not None:
+                                    # Redessiner la carte précédente avec la couleur de fond
+                                    pygame.draw.rect(screen_plateau, (255, 255, 255), carte_contour, width=2)
+                                    pygame.display.update(carte_contour)
+                                # Dessiner le contour de la nouvelle carte sélectionneée
+                                pygame.draw.rect(screen_plateau, (255, 0, 0), carte_rect, width=2)
+                                pygame.display.update(carte_rect)
+                                # Extraire le numéro de la carte
+                                print(f"Carte choisie : {carte_key}")
+                                carte_index = carte_key
+                                carte_contour = carte_rect
+
+            if borne_index is not None:
+                print(f"Borne choisie : {borne_index}")
+                deplacer_carte(screen_plateau, joueur, self.joueurs[joueur].main[carte_index], borne_index, borne_liste)
 
 
             #Enlever la carte de la main
