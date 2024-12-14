@@ -262,6 +262,7 @@ def afficher_pioche(screen, pioche):
     pygame.draw.rect(screen, (205, 200, 145), rect_pioche)
 
     smallfont = pygame.font.SysFont('Forte', 35)
+    print(len(pioche))
     text_pioche = smallfont.render(str(len(pioche)), True, (139, 69, 19))
     rect_text = text_pioche.get_rect(center=rect_pioche.center)
     screen.blit(text_pioche, rect_text.topleft)
