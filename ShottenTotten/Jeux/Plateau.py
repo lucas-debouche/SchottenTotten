@@ -74,10 +74,13 @@ class Plateau:
         pygame.quit()
         sys.exit()
 
-    def tour_de_jeu(self, screen_plateau, buttons_images, buttons_plateau, plateau):
+    def tour_de_jeu(self, screen_plateau, buttons_images, buttons_plateau, plateau, mode):
         """Gère le déroulement d'une manche de jeu."""
         running = True
         joueur = 0
+
+        smallfont = pygame.font.SysFont('Forte', 35)
+        button_revendiquer = {"revendiquer": pygame.Rect(1050, 650, 200, 50)}
 
         while running:
             # Vérifier les conditions de fin de partie
@@ -99,14 +102,33 @@ class Plateau:
             for button_key, button_rect in buttons_plateau.items():
                 screen_plateau.blit(buttons_images[button_key], button_rect.topleft)
 
+            shadow_rect = button_revendiquer["revendiquer"].move(4, 4)  # Décalage pour l'ombre
+            pygame.draw.rect(screen_plateau, (160, 82, 45), shadow_rect, border_radius=10)
+
+            pygame.draw.rect(screen_plateau, (205, 200, 145), button_revendiquer["revendiquer"], border_radius=10)
+            pygame.draw.rect(screen_plateau, (139, 69, 19), button_revendiquer["revendiquer"], width=2, border_radius=10)
+            text_jouer = smallfont.render("Revendiquer", True, (139, 69, 19))
+            text_rect_jouer = text_jouer.get_rect(center=button_revendiquer["revendiquer"].center)
+            screen_plateau.blit(text_jouer, text_rect_jouer)
+
             buttons = displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
             pygame.display.flip()
+
+            
 
             carte_index = None
             carte_contour = None
             borne_index = None
             borne_liste = None
 
+            if mode == "expert":
+                while carte_index is None:
+                        for event in pygame.event.get():
+                            if event.type == pygame.QUIT:
+                                pygame.quit()
+                                sys.exit()
+                            elif button_revendiquer["revendiquer"].collidepoint(event.pos):
+                                print("rev")
             while borne_index is None:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -132,6 +154,8 @@ class Plateau:
                                         else:
                                             print("Tu ne peux pas jouer sur cette borne.")
 
+
+
                         for carte_key, carte_rect in buttons.items():
                             if carte_rect.collidepoint(event.pos):
                                 if carte_contour is not None:
@@ -142,24 +166,22 @@ class Plateau:
                                 pygame.draw.rect(screen_plateau, (255, 0, 0), carte_rect, width=2)
                                 pygame.display.update(carte_rect)
                                 # Extraire le numéro de la carte
-                                print(f"Carte choisie : {carte_key}")
                                 carte_index = carte_key
                                 carte_contour = carte_rect
 
             if borne_index is not None:
-                print(f"Borne choisie : {borne_index}")
                 deplacer_carte(screen_plateau, joueur, self.joueurs[joueur].main[carte_index], borne_index, borne_liste)
-
 
             #Enlever la carte de la main
             self.joueurs[joueur].jouer_carte(plateau, borne_index, self.joueurs[joueur].main[carte_index])
 
-            #Revendiquer une borne
-            for borne in self.bornes.values():
-                if borne.controle_par is None:
-                    if len(borne.joueur1_cartes) == 3 and len(borne.joueur2_cartes) == 3:
-                        #Créer le bouton pour revendiquer et l'afficher
-                        pass
+            if mode != "expert":
+                #Revendiquer une borne
+                for borne in self.bornes.values():
+                    if borne.controle_par is None:
+                        if len(borne.joueur1_cartes) == 3 and len(borne.joueur2_cartes) == 3:
+                            #Créer le bouton pour revendiquer et l'afficher
+                            pass
                                     
             #Piocher une carte
             self.joueurs[joueur].piocher(self.pioche)
@@ -171,7 +193,7 @@ class Plateau:
             # Rafraîchir l'écran après chaque tour
             pygame.display.update()
 
-def displayPlateau(plateau):
+def displayPlateau(plateau, mode):
     """Fonction qui affiche le plateau."""
     pygame.init()
 
@@ -230,7 +252,7 @@ def displayPlateau(plateau):
                 sys.exit()  # Arrêt du programme
 
         afficher_pioche(screen_plateau, plateau.pioche)
-        plateau.tour_de_jeu(screen_plateau, buttons_images, buttons, plateau)
+        plateau.tour_de_jeu(screen_plateau, buttons_images, buttons, plateau, mode)
 
         pygame.display.flip()
 
@@ -246,7 +268,6 @@ def afficher_pioche(screen, pioche):
     pygame.draw.rect(screen, (205, 200, 145), rect_pioche)
 
     smallfont = pygame.font.SysFont('Forte', 35)
-    print(len(pioche))
     text_pioche = smallfont.render(str(len(pioche)), True, (139, 69, 19))
     rect_text = text_pioche.get_rect(center=rect_pioche.center)
     screen.blit(text_pioche, rect_text.topleft)

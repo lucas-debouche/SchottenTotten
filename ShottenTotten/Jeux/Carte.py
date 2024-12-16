@@ -48,7 +48,7 @@ def generer_cartes():
 
 def displayCarte(fenetre, joueur, main):
     # Création rectangle affichage carte joueur 1 et joueur 2
-    x_conteneur = 350
+    x_conteneur = 250
     y1_conteneur = 0
     y2_conteneur = 600
 

@@ -9,7 +9,7 @@ from ShottenTotten.Jeux.Plateau import displayPlateau, Plateau, melanger_pioche
 plateau = Plateau()
 
 
-def displayNom(plateau_):
+def displayNom(plateau_, mode):
     """Fonction qui permet d'ajouter des noms de joueur"""
     nbr_joueur = plateau.nbr_joueurs
     pygame.display.set_caption("Schotten Totten : Nom")
@@ -104,7 +104,7 @@ def displayNom(plateau_):
             plateau.joueurs.append(Joueur(0, f"IA{1}"))
             plateau.joueurs.append(Joueur(1, f"IA{2}"))
             plateau.distribuer_cartes()
-            displayPlateau(plateau_)
+            displayPlateau(plateau_, mode)
         elif nbr_joueur == 1:
             nom_joueur2 = "IA"
         elif nbr_joueur == 2:
@@ -123,7 +123,7 @@ def displayNom(plateau_):
             plateau.joueurs.append(Joueur(0, nom_joueur1))
             plateau.joueurs.append(Joueur(1, nom_joueur2))
             plateau.distribuer_cartes()
-            displayPlateau(plateau_)
+            displayPlateau(plateau_, mode)
 
         pygame.display.flip()
 
@@ -267,7 +267,7 @@ class Menu :
                     if buttons["jouer"].collidepoint(event.pos) and self.mode != False and plateau.nbr_joueurs is not None and self.nbr_manche:
                         #retourne les valeurs Mode, Joueurs, Manches pour initialiser le jeu
                         self.initialiser_cartes()
-                        displayNom(plateau)
+                        displayNom(plateau, self.mode)
 
 
 
