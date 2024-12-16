@@ -171,22 +171,6 @@ class Plateau:
             # Rafraîchir l'écran après chaque tour
             pygame.display.update()
 
-
-
-            '''
-                # Revendication de borne
-                revendiquer = demander_choix(
-                    "Veux-tu revendiquer une borne ? 1) Oui 2) Non\n",
-                    lambda x: x in [1, 2],
-                )
-                if revendiquer == 1:
-                    borne_index = self.choisir_borne_revendiquer(joueur)
-                    self.comparaison_cartes(borne_index)
-                    joueur.revendiquer_borne(self.plateau, borne_index)
-
-                # Piocher une carte
-                joueur.piocher(self.pioche)'''
-
 def displayPlateau(plateau):
     """Fonction qui affiche le plateau."""
     pygame.init()
