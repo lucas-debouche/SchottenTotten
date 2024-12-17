@@ -79,8 +79,8 @@ class Plateau:
         running = True
         joueur = 0
 
-        smallfont = pygame.font.SysFont('Forte', 35)
-        button_revendiquer = {"revendiquer": pygame.Rect(1050, 650, 200, 50)}
+        button_revendiquer = {"revendiquer": pygame.Rect(1050, 600, 200, 50)}
+        button_passer = {"passer": pygame.Rect(1050, 660, 200, 50)}
 
         while running:
             # Vérifier les conditions de fin de partie
@@ -92,6 +92,14 @@ class Plateau:
                 self.fin_jeu()
                 break
 
+            revendicable = False
+
+            # Vérification d'activation du bouton Revendiquer
+            for borne in self.bornes.values():
+                if borne.controle_par is None:
+                    if len(borne.joueur1_cartes) == 3 and len(borne.joueur2_cartes) == 3:
+                        revendicable = True
+
             # Gérer les événements Pygame
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -102,96 +110,97 @@ class Plateau:
             for button_key, button_rect in buttons_plateau.items():
                 screen_plateau.blit(buttons_images[button_key], button_rect.topleft)
 
-            shadow_rect = button_revendiquer["revendiquer"].move(4, 4)  # Décalage pour l'ombre
+            shadow_rect = button_revendiquer["revendiquer"].move(4, 4)
             pygame.draw.rect(screen_plateau, (160, 82, 45), shadow_rect, border_radius=10)
 
-            pygame.draw.rect(screen_plateau, (205, 200, 145), button_revendiquer["revendiquer"], border_radius=10)
-            pygame.draw.rect(screen_plateau, (139, 69, 19), button_revendiquer["revendiquer"], width=2, border_radius=10)
-            text_jouer = smallfont.render("Revendiquer", True, (139, 69, 19))
-            text_rect_jouer = text_jouer.get_rect(center=button_revendiquer["revendiquer"].center)
-            screen_plateau.blit(text_jouer, text_rect_jouer)
+            shadow_rect = button_passer["passer"].move(4, 4)
+            pygame.draw.rect(screen_plateau, (160, 82, 45), shadow_rect, border_radius=10)
+
+            if revendicable and mode == "expert":
+                button_color = (205, 200, 145)
+            else:
+                button_color = (169, 169, 169)  # Grise si non activable
+
+            config_button(screen_plateau, button_color, button_revendiquer["revendiquer"], "Revendiquer")
+            config_button(screen_plateau, (169, 169, 169), button_passer["passer"], "Passer")
 
             buttons = displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
             pygame.display.flip()
-
-            
 
             carte_index = None
             carte_contour = None
             borne_index = None
             borne_liste = None
+            passer = False
 
-            if mode == "expert":
-                while carte_index is None:
-                        for event in pygame.event.get():
-                            if event.type == pygame.QUIT:
-                                pygame.quit()
-                                sys.exit()
-                            elif button_revendiquer["revendiquer"].collidepoint(event.pos):
-                                print("rev")
+            #while not passer:
             while borne_index is None:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         sys.exit()
                     elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                        if carte_index is not None:
-                            for borne_key, borne_rect in buttons_plateau.items():
-                                if borne_rect.collidepoint(event.pos):
-                                    numero_borne = int(borne_key.replace("borne", ""))
-                                    if joueur == 0:
-                                        if len(plateau.bornes[numero_borne].joueur1_cartes) < 3 and plateau.bornes[numero_borne].controle_par is None:
-                                            # Extraire le numéro de la borne
-                                            borne_index = numero_borne
-                                            borne_liste = plateau.bornes[numero_borne].joueur1_cartes
-                                        else:
-                                            print("Tu ne peux pas jouer sur cette borne.")
-                                    elif joueur == 1:
-                                        if len(plateau.bornes[numero_borne].joueur2_cartes) < 3 and plateau.bornes[numero_borne].controle_par is None:
-                                            # Extraire le numéro de la borne
-                                            borne_index = numero_borne
-                                            borne_liste = plateau.bornes[numero_borne].joueur2_cartes
-                                        else:
-                                            print("Tu ne peux pas jouer sur cette borne.")
 
+                            if carte_index is None:
+                                if mode == "expert" and revendicable:
+                                    if button_revendiquer["revendiquer"].collidepoint(event.pos):
+                                        print("Borne revendiquée!")
+                            else:
+                                for borne_key, borne_rect in buttons_plateau.items():
+                                    if borne_rect.collidepoint(event.pos):
+                                        numero_borne = int(borne_key.replace("borne", ""))
+                                        if joueur == 0:
+                                            if len(plateau.bornes[numero_borne].joueur1_cartes) < 3 and plateau.bornes[
+                                                numero_borne].controle_par is None:
+                                                borne_index = numero_borne
+                                                borne_liste = plateau.bornes[numero_borne].joueur1_cartes
+                                            else:
+                                                print("Tu ne peux pas jouer sur cette borne.")
+                                        elif joueur == 1:
+                                            if len(plateau.bornes[numero_borne].joueur2_cartes) < 3 and plateau.bornes[
+                                                numero_borne].controle_par is None:
+                                                borne_index = numero_borne
+                                                borne_liste = plateau.bornes[numero_borne].joueur2_cartes
+                                            else:
+                                                print("Tu ne peux pas jouer sur cette borne.")
+                            for carte_key, carte_rect in buttons.items():
+                                if carte_rect.collidepoint(event.pos):
+                                    config_button(screen_plateau, (169, 169, 169), button_revendiquer["revendiquer"], "Revendiquer")
+                                    if carte_contour is not None:
+                                        pygame.draw.rect(screen_plateau, (255, 255, 255), carte_contour, width=2)
+                                        pygame.display.update(carte_contour)
+                                    pygame.draw.rect(screen_plateau, (255, 0, 0), carte_rect, width=2)
+                                    pygame.display.update(carte_rect)
+                                    carte_index = carte_key
+                                    carte_contour = carte_rect
 
-
-                        for carte_key, carte_rect in buttons.items():
-                            if carte_rect.collidepoint(event.pos):
-                                if carte_contour is not None:
-                                    # Redessiner la carte précédente avec la couleur de fond
-                                    pygame.draw.rect(screen_plateau, (255, 255, 255), carte_contour, width=2)
-                                    pygame.display.update(carte_contour)
-                                # Dessiner le contour de la nouvelle carte sélectionneée
-                                pygame.draw.rect(screen_plateau, (255, 0, 0), carte_rect, width=2)
-                                pygame.display.update(carte_rect)
-                                # Extraire le numéro de la carte
-                                carte_index = carte_key
-                                carte_contour = carte_rect
+                        #if carte_index is not None and borne_index is not None:
+                         #   config_button(screen_plateau, (205, 200, 145), button_passer["passer"], "Passer")
+                          #  if button_passer["passer"].collidepoint(event.pos):
+                           #     passer = True
 
             if borne_index is not None:
-                deplacer_carte(screen_plateau, joueur, self.joueurs[joueur].main[carte_index], borne_index, borne_liste)
+                deplacer_carte(screen_plateau, joueur, self.joueurs[joueur].main[carte_index], borne_index,
+                               borne_liste)
 
-            #Enlever la carte de la main
             self.joueurs[joueur].jouer_carte(plateau, borne_index, self.joueurs[joueur].main[carte_index])
-
-            if mode != "expert":
-                #Revendiquer une borne
-                for borne in self.bornes.values():
-                    if borne.controle_par is None:
-                        if len(borne.joueur1_cartes) == 3 and len(borne.joueur2_cartes) == 3:
-                            #Créer le bouton pour revendiquer et l'afficher
-                            pass
-                                    
-            #Piocher une carte
             self.joueurs[joueur].piocher(self.pioche)
 
+            if revendicable and mode != "expert":
+                button_color = (205, 200, 145)
+            else:
+                button_color = (169, 169, 169)  # Grise si non activable
+
+            #config_button_revendiquer(screen_plateau, button_color, button_revendiquer["revendiquer"])
+            pygame.display.flip()
+
+            if mode != "expert":
+                pass
+
             joueur = 1 - joueur
-
             afficher_pioche(screen_plateau, self.pioche)
-
-            # Rafraîchir l'écran après chaque tour
             pygame.display.update()
+
 
 def displayPlateau(plateau, mode):
     """Fonction qui affiche le plateau."""
@@ -280,3 +289,13 @@ def load_and_scale_image(path, width, height):
     except pygame.error as e:
         print(f"Erreur lors du chargement de l'image: {path}")
         raise e
+
+def config_button(screen_plateau, button_color, button, text):
+    smallfont = pygame.font.SysFont('Forte', 35)
+    pygame.draw.rect(screen_plateau, button_color, button, border_radius=10)
+    pygame.draw.rect(screen_plateau, (139, 69, 19), button, width=2, border_radius=10)
+    text_jouer = smallfont.render(text, True, (139, 69, 19))
+    text_rect_jouer = text_jouer.get_rect(center=button.center)
+    screen_plateau.blit(text_jouer, text_rect_jouer)
+    pygame.display.update(button)
+
