@@ -132,6 +132,7 @@ class Plateau:
             borne_index = None
             borne_liste = None
             passer = False
+            carte_rect_list = []
 
             #while not passer:
             while borne_index is None:
@@ -164,6 +165,7 @@ class Plateau:
                                             else:
                                                 print("Tu ne peux pas jouer sur cette borne.")
                             for carte_key, carte_rect in buttons.items():
+                                carte_rect_list.append(carte_rect)
                                 if carte_rect.collidepoint(event.pos):
                                     config_button(screen_plateau, (169, 169, 169), button_revendiquer["revendiquer"], "Revendiquer")
                                     if carte_contour is not None:
@@ -177,6 +179,8 @@ class Plateau:
 
             if borne_index is not None:
                 deplacer_carte(screen_plateau, joueur, self.joueurs[joueur].main[carte_index], borne_index, borne_liste)
+                pygame.draw.rect(screen_plateau, (205, 200, 145), carte_rect_list[carte_index], width=0)
+                pygame.display.update(carte_rect_list[carte_index])
 
             self.joueurs[joueur].jouer_carte(plateau, borne_index, self.joueurs[joueur].main[carte_index])
             self.joueurs[joueur].piocher(self.pioche)
