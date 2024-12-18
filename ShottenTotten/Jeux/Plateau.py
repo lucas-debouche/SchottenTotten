@@ -129,17 +129,18 @@ class Plateau:
 
             carte_index = None
             carte_contour = None
-            borne_contour = None
             borne_index = None
             borne_liste = None
             passer = False
 
-            while not passer:
+            #while not passer:
+            while borne_index is None:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         sys.exit()
                     elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+
                             if carte_index is None:
                                 if mode == "expert" and revendicable:
                                     if button_revendiquer["revendiquer"].collidepoint(event.pos):
@@ -151,36 +152,31 @@ class Plateau:
                                         if joueur == 0:
                                             if len(plateau.bornes[numero_borne].joueur1_cartes) < 3 and plateau.bornes[
                                                 numero_borne].controle_par is None:
-                                                config_contour(borne_contour, screen_plateau, borne_rect, (205, 200, 145))
                                                 borne_index = numero_borne
                                                 borne_liste = plateau.bornes[numero_borne].joueur1_cartes
-                                                borne_contour = borne_rect
                                             else:
                                                 print("Tu ne peux pas jouer sur cette borne.")
                                         elif joueur == 1:
                                             if len(plateau.bornes[numero_borne].joueur2_cartes) < 3 and plateau.bornes[
                                                 numero_borne].controle_par is None:
-                                                config_contour(borne_contour, screen_plateau, borne_rect, (205, 200, 145))
                                                 borne_index = numero_borne
                                                 borne_liste = plateau.bornes[numero_borne].joueur2_cartes
-                                                borne_contour = borne_rect
                                             else:
                                                 print("Tu ne peux pas jouer sur cette borne.")
                             for carte_key, carte_rect in buttons.items():
                                 if carte_rect.collidepoint(event.pos):
                                     config_button(screen_plateau, (169, 169, 169), button_revendiquer["revendiquer"], "Revendiquer")
-                                    config_contour(carte_contour, screen_plateau, carte_rect, (255, 255, 255))
+                                    if carte_contour is not None:
+                                        pygame.draw.rect(screen_plateau, (255, 255, 255), carte_contour, width=2)
+                                        pygame.display.update(carte_contour)
+                                    pygame.draw.rect(screen_plateau, (255, 0, 0), carte_rect, width=2)
+                                    pygame.display.update(carte_rect)
                                     carte_index = carte_key
                                     carte_contour = carte_rect
 
-                            if carte_index is not None and borne_index is not None:
-                                config_button(screen_plateau, (205, 200, 145), button_passer["passer"], "Passer")
-                                if button_passer["passer"].collidepoint(event.pos):
-                                    passer = True
 
             if borne_index is not None:
-                deplacer_carte(screen_plateau, joueur, self.joueurs[joueur].main[carte_index], borne_index,
-                               borne_liste)
+                deplacer_carte(screen_plateau, joueur, self.joueurs[joueur].main[carte_index], borne_index, borne_liste)
 
             self.joueurs[joueur].jouer_carte(plateau, borne_index, self.joueurs[joueur].main[carte_index])
             self.joueurs[joueur].piocher(self.pioche)
@@ -199,6 +195,16 @@ class Plateau:
             joueur = 1 - joueur
             afficher_pioche(screen_plateau, self.pioche)
             pygame.display.update()
+
+            while not passer:
+                config_button(screen_plateau, (205, 200, 145), button_passer["passer"], "Passer")
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        if button_passer["passer"].collidepoint(event.pos):
+                            passer = True
 
 
 def displayPlateau(plateau, mode):
@@ -297,11 +303,4 @@ def config_button(screen_plateau, button_color, button, text):
     text_rect_jouer = text_jouer.get_rect(center=button.center)
     screen_plateau.blit(text_jouer, text_rect_jouer)
     pygame.display.update(button)
-
-def config_contour(contour, screen_plateau , rect, color):
-    if contour is not None:
-        pygame.draw.rect(screen_plateau, color, contour, width=2)
-        pygame.display.update(contour)
-    pygame.draw.rect(screen_plateau, (255, 0, 0), rect, width=2)
-    pygame.display.update(rect)
 
