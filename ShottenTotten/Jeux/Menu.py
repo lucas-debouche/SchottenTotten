@@ -65,7 +65,7 @@ def displayNom(plateau_, mode):
 
                 if buttons["jouer"].collidepoint(event.pos):
                     # Lancer le plateau quand le bouton jouer est présser
-                    displayPlateau(plateau)
+                    displayPlateau(plateau, mode)
 
             elif event.type == pygame.KEYDOWN and active1:
                 if event.key == pygame.K_BACKSPACE:
