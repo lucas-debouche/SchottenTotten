@@ -20,10 +20,11 @@ class Joueur:
         if pioche:
             self.main.append(pioche.popleft())  # Utilisation optimisée avec deque
 
-    def revendiquer_borne(self, screen, plateau, numero_borne):
+    def revendiquer_borne(self, plateau, numero_borne):
         """Méthode pour revendiquer une borne."""
         if plateau.bornes[numero_borne].controle_par is None:
             plateau.bornes[numero_borne].controle_par = self
+            print(f"Borne {numero_borne} controllée par {self.nom}")
             self.borne_controlee += 1
 
 

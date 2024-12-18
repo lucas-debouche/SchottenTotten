@@ -9,7 +9,7 @@ from ShottenTotten.Jeux.Plateau import displayPlateau, Plateau, melanger_pioche
 plateau = Plateau()
 
 
-def displayNom(plateau_, mode):
+def displayNom(plateau_, mode, nbr_manche):
     """Fonction qui permet d'ajouter des noms de joueur"""
     nbr_joueur = plateau.nbr_joueurs
     pygame.display.set_caption("Schotten Totten : Nom")
@@ -65,7 +65,7 @@ def displayNom(plateau_, mode):
 
                 if buttons["jouer"].collidepoint(event.pos):
                     # Lancer le plateau quand le bouton jouer est présser
-                    displayPlateau(plateau, mode)
+                    displayPlateau(plateau, mode, nbr_manche)
 
             elif event.type == pygame.KEYDOWN and active1:
                 if event.key == pygame.K_BACKSPACE:
@@ -104,7 +104,7 @@ def displayNom(plateau_, mode):
             plateau.joueurs.append(Joueur(0, f"IA{1}"))
             plateau.joueurs.append(Joueur(1, f"IA{2}"))
             plateau.distribuer_cartes()
-            displayPlateau(plateau_, mode)
+            displayPlateau(plateau_, mode, nbr_manche)
         elif nbr_joueur == 1:
             nom_joueur2 = "IA"
         elif nbr_joueur == 2:
@@ -123,7 +123,7 @@ def displayNom(plateau_, mode):
             plateau.joueurs.append(Joueur(0, nom_joueur1))
             plateau.joueurs.append(Joueur(1, nom_joueur2))
             plateau.distribuer_cartes()
-            displayPlateau(plateau_, mode)
+            displayPlateau(plateau_, mode, nbr_manche)
 
         pygame.display.flip()
 
@@ -267,7 +267,7 @@ class Menu :
                     if buttons["jouer"].collidepoint(event.pos) and self.mode != False and plateau.nbr_joueurs is not None and self.nbr_manche:
                         #retourne les valeurs Mode, Joueurs, Manches pour initialiser le jeu
                         self.initialiser_cartes()
-                        displayNom(plateau, self.mode)
+                        displayNom(plateau, self.mode, self.nbr_manche)
 
 
 
