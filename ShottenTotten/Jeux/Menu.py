@@ -48,23 +48,26 @@ def displayNom(mode, nbr_manche):
                 sys.exit()  # Arrêt du programme
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if input_rect1.collidepoint(event.pos):
-                    active1 = True  # Activation de la zone de texte
+                    active1 = True
+                    active2 = False  # Désactivation du deuxième champ
                     input_color1 = input_color_active
-                else:
-                    active1 = False # Désactivation de la zone de texte
-                    input_color1 = input_color_inactive
-
-                if input_rect2.collidepoint(event.pos):
-                    active1 = False
-                    active2 = True  # Activation de la zone de texte
+                    input_color2 = input_color_inactive
+                elif input_rect2.collidepoint(event.pos):
+                    active2 = True
+                    active1 = False  # Désactivation du premier champ
                     input_color2 = input_color_active
+                    input_color1 = input_color_inactive
                 else:
+                    active1 = False
                     active2 = False
+                    input_color1 = input_color_inactive
                     input_color2 = input_color_inactive
 
                 if buttons["jouer"].collidepoint(event.pos):
-                    # Lancer le plateau quand le bouton jouer est présser
-                    plateau.commencer_nouvelle_manche(mode, nbr_manche)
+                    if nom_joueur1 != "" and nom_joueur2 != "":
+                        plateau.joueurs.append(Joueur(0, nom_joueur1))
+                        plateau.joueurs.append(Joueur(1, nom_joueur2))
+                        plateau.commencer_nouvelle_manche(mode, nbr_manche)
 
             elif event.type == pygame.KEYDOWN and active1:
                 if event.key == pygame.K_BACKSPACE:
@@ -91,11 +94,6 @@ def displayNom(mode, nbr_manche):
             nom_joueur2 = "IA"
         elif nbr_joueur == 2:
             input_nom(screen_nom, input_color2, input_rect2, textfont, nom_joueur2)
-
-        if nom_joueur1 != "" and nom_joueur2 != "":
-            plateau.joueurs.append(Joueur(0, nom_joueur1))
-            plateau.joueurs.append(Joueur(1, nom_joueur2))
-            plateau.commencer_nouvelle_manche(mode, nbr_manche)
 
         pygame.display.flip()
 

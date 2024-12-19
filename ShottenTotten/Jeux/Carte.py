@@ -1,3 +1,5 @@
+from collections import deque
+
 import pygame
 import os
 
@@ -27,24 +29,24 @@ class CarteTactique:
 
 def generer_cartes():
     """Génère toutes les cartes de clans et tactiques."""
-    cartes_clans = [
+    cartes_clans = deque([
         CarteClan(couleur, force)
         for couleur in Couleurs.values()
         for force in range(1, 10)
-    ]
+    ])
 
-    cartes_tactiques = [
+    cartes_tactiques = deque([
         CarteTactique(Capacites[capacite], nom)
         for capacite, list_nom in NomsCartesTactiques.items()
         if capacite in Capacites
         for nom in list_nom
-    ]
+    ])
     return cartes_clans, cartes_tactiques
 
 
 def displayCarte(fenetre, joueur, main):
     # Création rectangle affichage carte joueur 1 et joueur 2
-    x_conteneur = 250
+    x_conteneur = 450
     y1_conteneur = 0
     y2_conteneur = 600
 
@@ -112,15 +114,15 @@ def displayCarte(fenetre, joueur, main):
 def deplacer_carte(fenetre, joueur, carte, borne_index, borne):
     """Déplace une carte à une position donnée."""
     positions_cartes = {
-        1: 215,
-        2: 325,
-        3: 435,
-        4: 545,
-        5: 655,
-        6: 765,
-        7: 875,
-        8: 985,
-        9: 1095,
+        1: 417.5,
+        2: 527.5,
+        3: 637.5,
+        4: 747.5,
+        5: 857.5,
+        6: 967.5,
+        7: 1077.5,
+        8: 1187.5,
+        9: 1297.5,
     }
 
     nb_carte_borne = len(borne)
@@ -161,3 +163,90 @@ def deplacer_carte(fenetre, joueur, carte, borne_index, borne):
 
     # Dessiner la carte à la nouvelle position
     fenetre.blit(carte_img, (x,y))
+
+def displayChoixValeurs(screen, screen_width, screen_height):
+    popup_height = 400
+    popup_width = 400
+
+    popup_surface = pygame.Surface((popup_width, popup_height))
+
+    # Variables d'état
+    popup_open = True
+
+    # Boucle principale
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if not popup_open:
+                    popup_open = True  # Ouvrir la "fenêtre secondaire"
+
+        # Simuler une fenêtre secondaire
+        if popup_open:
+            # Dessiner la fenêtre secondaire
+            popup_surface.fill((205, 200, 145))
+            pygame.draw.rect(popup_surface, (205, 200, 145), (50, 50, 300, 200))  # Un bouton sur la "popup"
+            screen.blit(popup_surface, ((screen_width - popup_width) // 2, (screen_height - popup_height) // 2))
+
+        # Mettre à jour l'affichage
+        pygame.display.flip()
+
+
+def capacite_joker(joueur):
+    joueur.nbr_carte_tactique += 1
+    joueur.nbr_joker += 1
+
+
+def capacite_espion(joueur):
+    joueur.nbr_carte_tactique += 1
+
+
+def capacite_porte_bouclier(joueur):
+    joueur.nbr_carte_tactique += 1
+
+
+def capacite_colin_maillard(joueur):
+    joueur.nbr_carte_tactique += 1
+
+
+def capacite_combat_de_boue(joueur):
+    joueur.nbr_carte_tactique += 1
+
+
+def capacite_chasseur_de_tete(joueur):
+    joueur.nbr_carte_tactique += 1
+
+
+def capacite_stratege(joueur):
+    joueur.nbr_carte_tactique += 1
+
+
+def capacite_banshee(joueur):
+    joueur.nbr_carte_tactique += 1
+
+
+def capacite_traitre(joueur):
+    joueur.nbr_carte_tactique += 1
+
+
+def capacite_cartes_tactique(nom_carte, joueur):
+    if nom_carte == "Joker1" or nom_carte == "Joker2" :
+        capacite_joker(joueur)
+    elif nom_carte == "Espion":
+        capacite_espion(joueur)
+    elif nom_carte == "Porte-Bouclier":
+        capacite_porte_bouclier(joueur)
+    elif nom_carte == "Colin-Maillard":
+        capacite_colin_maillard(joueur)
+    elif nom_carte == "Combat de Boue":
+        capacite_combat_de_boue(joueur)
+    elif nom_carte == "Chasseur de Tête":
+        capacite_chasseur_de_tete(joueur)
+    elif nom_carte == "Stratège":
+        capacite_stratege(joueur)
+    elif nom_carte == "Banshee":
+        capacite_banshee(joueur)
+    elif nom_carte == "Traître":
+        capacite_traitre(joueur)
