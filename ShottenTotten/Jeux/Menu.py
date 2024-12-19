@@ -2,14 +2,13 @@ import pygame
 import sys
 import os
 
-from ShottenTotten.Jeux.Carte import generer_cartes
 from ShottenTotten.Jeux.Joueur import Joueur
-from ShottenTotten.Jeux.Plateau import displayPlateau, Plateau, melanger_pioche
+from ShottenTotten.Jeux.Plateau import Plateau
 
 plateau = Plateau()
 
 
-def displayNom(plateau_, mode, nbr_manche):
+def displayNom(mode, nbr_manche):
     """Fonction qui permet d'ajouter des noms de joueur"""
     nbr_joueur = plateau.nbr_joueurs
     pygame.display.set_caption("Schotten Totten : Nom")
@@ -46,7 +45,7 @@ def displayNom(plateau_, mode, nbr_manche):
             if event.type == pygame.QUIT:
                 menu_running = False
                 pygame.quit()
-                sys.exit()  # Arret du programme
+                sys.exit()  # Arrêt du programme
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if input_rect1.collidepoint(event.pos):
                     active1 = True  # Activation de la zone de texte
@@ -65,7 +64,7 @@ def displayNom(plateau_, mode, nbr_manche):
 
                 if buttons["jouer"].collidepoint(event.pos):
                     # Lancer le plateau quand le bouton jouer est présser
-                    displayPlateau(plateau, mode, nbr_manche)
+                    plateau.commencer_nouvelle_manche(mode, nbr_manche)
 
             elif event.type == pygame.KEYDOWN and active1:
                 if event.key == pygame.K_BACKSPACE:
@@ -80,50 +79,23 @@ def displayNom(plateau_, mode, nbr_manche):
 
         # Dessiner les boutons
 
-        shadow_rect = buttons["jouer"].move(4, 4)  # Décalage pour l'ombre
-        pygame.draw.rect(screen_nom, (160, 82, 45), shadow_rect, border_radius=10)
+        button_play(buttons["jouer"], screen_nom, smallfont)
 
-        pygame.draw.rect(screen_nom, (205, 200, 145), buttons["jouer"], border_radius=10)
-        pygame.draw.rect(screen_nom, (139, 69, 19), buttons["jouer"], width=2, border_radius=10)
-        text_jouer = smallfont.render("Jouer", True, (139, 69, 19))
-        text_rect_jouer = text_jouer.get_rect(center=buttons["jouer"].center)
-        screen_nom.blit(text_jouer, text_rect_jouer)
-
-        # Dessiner la zone de texte
-        pygame.draw.rect(screen_nom, input_color1, input_rect1, border_radius=10)
-        pygame.draw.rect(screen_nom, (139, 69, 19), input_rect1, 2, border_radius=10)  # Bordure
-
-        # Afficher le texte saisi
-        text_surface = textfont.render(nom_joueur1, True, (0, 0, 0))
-        screen_nom.blit(text_surface, (input_rect1.x + 10, input_rect1.y + 10))
-
-        # Empêcher le texte de dépasser la largeur de la zone de texte
-        input_rect1.w = max(300, text_surface.get_width() + 20)
+        input_nom(screen_nom, input_color1, input_rect1, textfont, nom_joueur1)
 
         if nbr_joueur == 0:
             plateau.joueurs.append(Joueur(0, f"IA{1}"))
             plateau.joueurs.append(Joueur(1, f"IA{2}"))
-            plateau.distribuer_cartes()
-            displayPlateau(plateau_, mode, nbr_manche)
+            plateau.commencer_nouvelle_manche(mode, nbr_manche)
         elif nbr_joueur == 1:
             nom_joueur2 = "IA"
         elif nbr_joueur == 2:
-            # Dessiner la zone de texte
-            pygame.draw.rect(screen_nom, input_color2, input_rect2, border_radius=10)
-            pygame.draw.rect(screen_nom, (139, 69, 19), input_rect2, 2, border_radius=10)  # Bordure
-
-            # Afficher le texte saisi
-            text_surface = textfont.render(nom_joueur2, True, (0, 0, 0))
-            screen_nom.blit(text_surface, (input_rect2.x + 10, input_rect2.y + 10))
-
-            # Empêcher le texte de dépasser la largeur de la zone de texte
-            input_rect2.w = max(300, text_surface.get_width() + 20)
+            input_nom(screen_nom, input_color2, input_rect2, textfont, nom_joueur2)
 
         if nom_joueur1 != "" and nom_joueur2 != "":
             plateau.joueurs.append(Joueur(0, nom_joueur1))
             plateau.joueurs.append(Joueur(1, nom_joueur2))
-            plateau.distribuer_cartes()
-            displayPlateau(plateau_, mode, nbr_manche)
+            plateau.commencer_nouvelle_manche(mode, nbr_manche)
 
         pygame.display.flip()
 
@@ -134,23 +106,16 @@ class Menu :
         self.mode = False
         self.nbr_manche = None
 
-    def initialiser_cartes(self):
-        """Initialise les cartes de clans et tactiques, puis mélange la pioche."""
-        cartes_clans, cartes_tactiques = generer_cartes()
-        if self.mode == "classic":
-            cartes_tactiques = []
-        plateau.pioche = melanger_pioche(cartes_clans, cartes_tactiques)
-
-    def displayAcceuil(self):
-        """Fonction qui affiche l'acceuil de bienvenue"""
+    def displayAccueil(self):
+        """Fonction qui affiche l'accueil de bienvenue"""
         pygame.init()
 
         pygame.display.set_caption("Schotten Totten")
-        screen_acceuil = pygame.display.set_mode((600,750))
+        screen_accueil = pygame.display.set_mode((600,750))
 
         current_dir = os.path.dirname(__file__)
         base_dir = os.path.abspath(os.path.join(current_dir, ".."))
-        background_path = os.path.join(base_dir, "Ressources", "Acceuil.png")
+        background_path = os.path.join(base_dir, "Ressources", "Accueil.png")
         background = pygame.image.load(background_path)
 
         #Création des boutons
@@ -160,7 +125,7 @@ class Menu :
         menu_running = True
 
         while menu_running:
-            screen_acceuil.blit(background, (0, 0))
+            screen_accueil.blit(background, (0, 0))
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -173,17 +138,17 @@ class Menu :
                         self.displayMenu()
 
             #Dessiner les boutons
-            pygame.draw.rect(screen_acceuil, (205, 200, 145), buttons["Jouer"])
+            pygame.draw.rect(screen_accueil, (205, 200, 145), buttons["Jouer"])
             text_jouer = smallfont.render("Jouer", True, (255, 45, 0))
-            screen_acceuil.blit(text_jouer, (buttons["Jouer"].x + 20, buttons["Jouer"].y + 5))
+            screen_accueil.blit(text_jouer, (buttons["Jouer"].x + 20, buttons["Jouer"].y + 5))
 
             pygame.display.flip()
 
     def displayMenu(self):
-        """Fonction qui affiche le menu et permet de récuperer les infos pour initialiser la partie souhaité"""
-        os.environ['SDL_VIDEO_CENTERED'] = '1' #Centrer la fenetre sur l'ecran
+        """Fonction qui affiche le menu et permet de récupérer les infos pour initialiser la partie souhaitée"""
+        os.environ['SDL_VIDEO_CENTERED'] = '1' #Centrer la fenêtre sur l'écran
 
-        #Initialisation de de la fenetre
+        #Initialisation de la fenêtre
         window_height = 750
         window_width = 1280
 
@@ -247,27 +212,26 @@ class Menu :
                         self.mode = "expert"
                         plateau.nbr_cartes = 7
                     if buttons["jvsj"].collidepoint(event.pos):
-                        #Selction joueur contre joueur
+                        #Sélection joueur contre joueur
                         plateau.nbr_joueurs = 2
                     elif buttons["jvsia"].collidepoint(event.pos):
-                        #Selction joueur contre ia
+                        #Sélection joueur contre ia
                         plateau.nbr_joueurs = 1
                     elif buttons["iavsia"].collidepoint(event.pos):
-                        #Selction joueur contre ia
+                        #Sélection joueur contre ia
                         plateau.nbr_joueurs = 0
                     if buttons["manche1"].collidepoint(event.pos):
-                        #Selction 1 manche
+                        #Sélection 1 manche
                         self.nbr_manche = 1
                     elif buttons["manche3"].collidepoint(event.pos):
-                        # Selction 3 manches
+                        #Sélection 3 manches
                         self.nbr_manche = 3
                     elif buttons["manche5"].collidepoint(event.pos):
-                        #Selction 5 manches
+                        #Sélection 5 manches
                         self.nbr_manche = 5
                     if buttons["jouer"].collidepoint(event.pos) and self.mode != False and plateau.nbr_joueurs is not None and self.nbr_manche:
                         #retourne les valeurs Mode, Joueurs, Manches pour initialiser le jeu
-                        self.initialiser_cartes()
-                        displayNom(plateau, self.mode, self.nbr_manche)
+                        displayNom(self.mode, self.nbr_manche)
 
 
 
@@ -353,13 +317,28 @@ class Menu :
             text_rect_manche5 = text_manche5.get_rect(center=buttons["manche5"].center)
             screen_menu.blit(text_manche5, text_rect_manche5)
 
-            shadow_rect = buttons["jouer"].move(4, 4)  # Décalage pour l'ombre
-            pygame.draw.rect(screen_menu, (160, 82, 45), shadow_rect, border_radius=10)
-
-            pygame.draw.rect(screen_menu, (205, 200, 145), buttons["jouer"], border_radius=10)
-            pygame.draw.rect(screen_menu, (139, 69, 19), buttons["jouer"], width=2, border_radius=10)
-            text_jouer = smallfont.render("Jouer", True, (139, 69, 19))
-            text_rect_jouer = text_jouer.get_rect(center=buttons["jouer"].center)
-            screen_menu.blit(text_jouer, text_rect_jouer)
+            button_play(buttons["jouer"], screen_menu, smallfont)
 
             pygame.display.flip()
+
+
+def button_play(button, screen, smallfont):
+    shadow_rect = button.move(4, 4)  # Décalage pour l'ombre
+    pygame.draw.rect(screen, (160, 82, 45), shadow_rect, border_radius=10)
+
+    pygame.draw.rect(screen, (205, 200, 145), button, border_radius=10)
+    pygame.draw.rect(screen, (139, 69, 19), button, width=2, border_radius=10)
+    text_jouer = smallfont.render("Jouer", True, (139, 69, 19))
+    text_rect_jouer = text_jouer.get_rect(center=button.center)
+    screen.blit(text_jouer, text_rect_jouer)
+
+def input_nom(screen, input_color, input_rect, textfont, nom_joueur):
+    pygame.draw.rect(screen, input_color, input_rect, border_radius=10)
+    pygame.draw.rect(screen, (139, 69, 19), input_rect, 2, border_radius=10)  # Bordure
+
+    # Afficher le texte saisi
+    text_surface = textfont.render(nom_joueur, True, (0, 0, 0))
+    screen.blit(text_surface, (input_rect.x + 10, input_rect.y + 10))
+
+    # Empêcher le texte de dépasser la largeur de la zone de texte
+    input_rect.w = max(300, text_surface.get_width() + 20)

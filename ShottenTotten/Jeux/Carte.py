@@ -17,10 +17,6 @@ class CarteClan:
         self.couleur = couleur
         self.force = force
 
-    def __repr__(self):
-        return f"{self.couleur} (Force: {self.force})"
-
-
 class CarteTactique:
     """Représente une carte tactique avec une capacité et un nom."""
 

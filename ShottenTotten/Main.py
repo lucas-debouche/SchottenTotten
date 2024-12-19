@@ -3,7 +3,7 @@ from Jeux.Menu import Menu
 def main():
     # Initialisation du jeu
     menu = Menu()
-    menu.displayAcceuil()
+    menu.displayAccueil()
 
 
 if __name__ == "__main__":
