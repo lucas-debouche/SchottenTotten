@@ -173,30 +173,50 @@ def displayChoixValeurs(screen, screen_width, screen_height):
     # Variables d'état
     popup_open = True
 
+    button_valider = {"valider": pygame.Rect(1250, 660, 200, 50)}
+
+    choix_couleur = None
+    choix_force = None
+
     # Boucle principale
-    running = True
-    while running:
+    valider = False
+    while not valider:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if not popup_open:
-                    popup_open = True  # Ouvrir la "fenêtre secondaire"
+                valider = True
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if choix_couleur is not None and choix_force is not None:
+                    config_button(popup_surface, (205, 200, 145), button_valider["valider"], "Valider")
+                    if button_valider["valider"].collidepoint(event.pos):
+                        valider = True
+                        popup_open = False
+                else:
+                    pass
+                    #if "choix menu déroulant pour la couleur est valide":
+                        #choix_couleur = "couleur choisie dans le menu déroulant"
+                    # if "choix menu déroulant pour la force est valide":
+                        # choix_force = "force choisie dans le menu déroulant"
+
 
         # Simuler une fenêtre secondaire
         if popup_open:
             # Dessiner la fenêtre secondaire
             popup_surface.fill((205, 200, 145))
-            pygame.draw.rect(popup_surface, (205, 200, 145), (50, 50, 300, 200))  # Un bouton sur la "popup"
+            shadow_rect = button_valider["valider"].move(4, 4)
+            pygame.draw.rect(popup_surface, (160, 82, 45), shadow_rect, border_radius = 10)
+            config_button(popup_surface, (169, 169, 169), button_valider["valider"], "Valider")
             screen.blit(popup_surface, ((screen_width - popup_width) // 2, (screen_height - popup_height) // 2))
 
         # Mettre à jour l'affichage
         pygame.display.flip()
 
+    return choix_couleur, choix_force
 
-def capacite_joker(joueur):
+def capacite_joker(joueur, screen, screen_width, screen_height):
     joueur.nbr_carte_tactique += 1
     joueur.nbr_joker += 1
+    choix_couleur, choix_force = displayChoixValeurs(screen, screen_width, screen_height)
+    return choix_couleur, choix_force
 
 
 def capacite_espion(joueur):
@@ -231,9 +251,10 @@ def capacite_traitre(joueur):
     joueur.nbr_carte_tactique += 1
 
 
-def capacite_cartes_tactique(nom_carte, joueur):
+def capacite_cartes_tactique(nom_carte, joueur, screen, screen_width, screen_height):
     if nom_carte == "Joker1" or nom_carte == "Joker2" :
-        capacite_joker(joueur)
+        choix_couleur, choix_force = capacite_joker(joueur, screen, screen_width, screen_height)
+        return choix_couleur, choix_force
     elif nom_carte == "Espion":
         capacite_espion(joueur)
     elif nom_carte == "Porte-Bouclier":
@@ -250,3 +271,13 @@ def capacite_cartes_tactique(nom_carte, joueur):
         capacite_banshee(joueur)
     elif nom_carte == "Traître":
         capacite_traitre(joueur)
+
+
+def config_button(screen_plateau, button_color, button, text):
+    smallfont = pygame.font.SysFont('Forte', 35)
+    pygame.draw.rect(screen_plateau, button_color, button, border_radius=10)
+    pygame.draw.rect(screen_plateau, (139, 69, 19), button, width=2, border_radius=10)
+    text_jouer = smallfont.render(text, True, (139, 69, 19))
+    text_rect_jouer = text_jouer.get_rect(center=button.center)
+    screen_plateau.blit(text_jouer, text_rect_jouer)
+    pygame.display.update(button)

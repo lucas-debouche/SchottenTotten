@@ -5,7 +5,8 @@ import pygame
 import sys
 import os
 
-from ShottenTotten.Jeux.Carte import displayCarte, deplacer_carte, generer_cartes, CarteClan, capacite_cartes_tactique
+from ShottenTotten.Jeux.Carte import displayCarte, deplacer_carte, generer_cartes, CarteClan, capacite_cartes_tactique, \
+    config_button
 
 
 class Borne:
@@ -215,7 +216,7 @@ class Plateau:
 
         return 0
 
-    def tour_de_jeu(self, screen_plateau, buttons_images, buttons_plateau, plateau, mode, nbr_manche):
+    def tour_de_jeu(self, screen_plateau, buttons_images, buttons_plateau, plateau, mode, nbr_manche, screen_width, screen_height):
         """Gère le déroulement d'une manche de jeu."""
 
 
@@ -311,10 +312,13 @@ class Plateau:
                         pygame.draw.rect(screen_plateau, (205, 200, 145), carte_rect_list[carte_index], width=0)
                         pygame.display.update(carte_rect_list[carte_index])
                     elif self.joueurs[1 - joueur].nbr_carte_tactique - 1 < self.joueurs[joueur].nbr_carte_tactique < self.joueurs[1 - joueur].nbr_carte_tactique + 1:
-                        capacite_cartes_tactique(self.joueurs[joueur].main[carte_index].nom, self.joueurs[joueur])
+                        capacite_cartes_tactique(self.joueurs[joueur].main[carte_index].nom, self.joueurs[joueur], screen_plateau, screen_width, screen_height)
+                    else:
+                        print("Il ne peut y avoir qu'une carte tactique de différence.")
 
                 self.joueurs[joueur].jouer_carte(plateau, borne_index, self.joueurs[joueur].main[carte_index])
-                #self.joueurs[joueur].piocher(self.pioche_clan, self.pioche_tactique)
+
+                self.joueurs[joueur].piocher(self.pioche_clan, self.pioche_tactique, buttons)
 
                 joueur = 1 - joueur
                 pygame.display.update()
@@ -348,9 +352,6 @@ class Plateau:
             nombre_manche += 1
             self.commencer_nouvelle_manche(mode, nbr_manche)
         self.fin_jeu()
-
-    def displayChoix(self):
-        pass
 
     def displayPlateau(self, mode, nbr_manche):
         """Fonction qui affiche le plateau."""
@@ -415,11 +416,9 @@ class Plateau:
 
             afficher_pioche(50, screen_plateau, self.pioche_clan, "clan", 40)
             if mode != "classic":
-                buttons_images["pioche_tactique"] = load_and_scale_image(
-                    images_paths["pioche_tactique"], buttons["pioche_tactique"].width, buttons["pioche_tactique"].height
-                )
+                buttons_images["pioche_tactique"] = load_and_scale_image(images_paths["pioche_tactique"], buttons["pioche_tactique"].width, buttons["pioche_tactique"].height)
                 afficher_pioche(200, screen_plateau, self.pioche_tactique, "tactique", 20)
-            self.tour_de_jeu(screen_plateau, buttons_images, buttons, self, mode, nbr_manche)
+            self.tour_de_jeu(screen_plateau, buttons_images, buttons, self, mode, nbr_manche, window_width, window_height)
 
             pygame.display.flip()
 
@@ -455,14 +454,7 @@ def load_and_scale_image(path, width, height):
         print(f"Erreur lors du chargement de l'image: {path}")
         raise e
 
-def config_button(screen_plateau, button_color, button, text):
-    smallfont = pygame.font.SysFont('Forte', 35)
-    pygame.draw.rect(screen_plateau, button_color, button, border_radius=10)
-    pygame.draw.rect(screen_plateau, (139, 69, 19), button, width=2, border_radius=10)
-    text_jouer = smallfont.render(text, True, (139, 69, 19))
-    text_rect_jouer = text_jouer.get_rect(center=button.center)
-    screen_plateau.blit(text_jouer, text_rect_jouer)
-    pygame.display.update(button)
+
 
 
 
