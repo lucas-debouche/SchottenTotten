@@ -1,3 +1,4 @@
+import sys
 from collections import deque
 
 import pygame
@@ -164,17 +165,16 @@ def deplacer_carte(fenetre, joueur, carte, borne_index, borne):
     # Dessiner la carte à la nouvelle position
     fenetre.blit(carte_img, (x,y))
 
+
 def displayChoixValeurs(screen, screen_width, screen_height):
+    # Dimensions et surface de la popup
     popup_height = 400
     popup_width = 400
-
     popup_surface = pygame.Surface((popup_width, popup_height))
 
-    # Variables d'état
+
     popup_open = True
-
-    button_valider = {"valider": pygame.Rect(1250, 660, 200, 50)}
-
+    button_valider = {"valider": pygame.Rect(150, 300, 100, 100)}
     choix_couleur = None
     choix_force = None
 
@@ -183,34 +183,43 @@ def displayChoixValeurs(screen, screen_width, screen_height):
     while not valider:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                valider = True
+                pygame.quit()
+                sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if choix_couleur is not None and choix_force is not None:
-                    config_button(popup_surface, (205, 200, 145), button_valider["valider"], "Valider")
+                    # Vérifie si le bouton "Valider" est cliqué
                     if button_valider["valider"].collidepoint(event.pos):
+                        print("okkkk")
                         valider = True
                         popup_open = False
                 else:
+                    # Simule la validation des menus déroulants (à compléter)
+                    # Exemple pour choix_couleur :
+                    # if "menu couleur est validé":
+                    #     choix_couleur = "valeur choisie"
+                    # if "menu force est validé":
+                    #     choix_force = "valeur choisie"
                     pass
-                    #if "choix menu déroulant pour la couleur est valide":
-                        #choix_couleur = "couleur choisie dans le menu déroulant"
-                    # if "choix menu déroulant pour la force est valide":
-                        # choix_force = "force choisie dans le menu déroulant"
 
-
-        # Simuler une fenêtre secondaire
+        # Affichage de la popup
         if popup_open:
-            # Dessiner la fenêtre secondaire
-            popup_surface.fill((165, 140, 100))
+            popup_surface.fill((165, 140, 100))  # Fond de la popup
+
+            # Ombre pour le bouton Valider
             shadow_rect = button_valider["valider"].move(4, 4)
-            pygame.draw.rect(popup_surface, (160, 82, 45), shadow_rect, border_radius = 10)
-            config_button(popup_surface, (169, 169, 169), button_valider["valider"], "Valider")
+            pygame.draw.rect(popup_surface, (100, 50, 25), shadow_rect, border_radius=10)
+
+            # Bouton Valider
+            config_button(popup_surface, (205, 200, 145), button_valider["valider"], "Valider")
+
+            # Blit de la popup sur l'écran principal
             screen.blit(popup_surface, ((screen_width - popup_width) // 2, (screen_height - popup_height) // 2))
 
         # Mettre à jour l'affichage
         pygame.display.flip()
 
     return choix_couleur, choix_force
+
 
 def capacite_joker(joueur, screen, screen_width, screen_height):
     joueur.nbr_carte_tactique += 1
