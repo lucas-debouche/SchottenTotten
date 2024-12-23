@@ -7,6 +7,7 @@ import os
 
 from ShottenTotten.Jeux.Carte import displayCarte, deplacer_carte, generer_cartes, CarteClan, capacite_cartes_tactique, \
     config_button
+from ShottenTotten.Jeux.Joueur import load_and_scale_image
 
 
 class Borne:
@@ -317,11 +318,15 @@ class Plateau:
                         print("Il ne peut y avoir qu'une carte tactique de différence.")
 
                 self.joueurs[joueur].jouer_carte(plateau, borne_index, self.joueurs[joueur].main[carte_index])
+                pygame.display.update()
 
-                self.joueurs[joueur].piocher(self.pioche_clan, self.pioche_tactique, buttons)
+                #afficher fleche
+                self.joueurs[joueur].piocher(self.pioche_clan, self.pioche_tactique, buttons_plateau, screen_plateau)
+
 
                 joueur = 1 - joueur
-                pygame.display.update()
+
+
 
                 revendicable = self.verif_borne_revendicable()
 
@@ -416,7 +421,7 @@ class Plateau:
 
             afficher_pioche(50, screen_plateau, self.pioche_clan, "clan", 40)
             if mode != "classic":
-                buttons_images["pioche_tactique"] = load_and_scale_image(images_paths["pioche_tactique"], buttons["pioche_tactique"].width, buttons["pioche_tactique"].height)
+                buttons_images["pioche_tactique"] = (load_and_scale_image(images_paths["pioche_tactique"], buttons["pioche_tactique"].width, buttons["pioche_tactique"].height))
                 afficher_pioche(200, screen_plateau, self.pioche_tactique, "tactique", 20)
             self.tour_de_jeu(screen_plateau, buttons_images, buttons, self, mode, nbr_manche, window_width, window_height)
 
@@ -430,29 +435,22 @@ def melanger_pioche(cartes_clans, cartes_tactiques):
     return deque(pioche)
 
 def afficher_pioche(x, screen, pioche, mode, decalage_x):
-    rect_pioche = pygame.Rect(x, 455, 100, 40)  # Définir les dimensions du rectangle
-    pygame.draw.rect(screen, (205, 200, 145), rect_pioche)
+    rect_ = pygame.Rect(x, 455, 100, 40)  # Définir les dimensions du rectangle
+    pygame.draw.rect(screen, (205, 200, 145), rect_)
 
     smallfont = pygame.font.SysFont('Forte', 35)
     nombre_pioche = smallfont.render(str(len(pioche)), True, (139, 69, 19))
-    rect_text = nombre_pioche.get_rect(center=rect_pioche.center)
+    rect_text = nombre_pioche.get_rect(center=rect_.center)
     if mode == "tactique":
-        rect_text.x -= rect_pioche.width // 2 - 20
+        rect_text.x -= rect_.width // 2 - 20
     screen.blit(nombre_pioche, rect_text.topleft)
     nom_pioche = smallfont.render(mode, True, (139, 69, 19))
-    rect_text = nom_pioche.get_rect(center=rect_pioche.center)
-    rect_text.y -= rect_pioche.height // 2 + 180
-    rect_text.x -= rect_pioche.width // 2 - decalage_x
+    rect_text = nom_pioche.get_rect(center=rect_.center)
+    rect_text.y -= rect_.height // 2 + 180
+    rect_text.x -= rect_.width // 2 - decalage_x
     screen.blit(nom_pioche, rect_text.topleft)
 
-def load_and_scale_image(path, width, height):
-    """Charge et redimensionne une image."""
-    try:
-        image = pygame.image.load(path)
-        return pygame.transform.scale(image, (width, height))
-    except pygame.error as e:
-        print(f"Erreur lors du chargement de l'image: {path}")
-        raise e
+
 
 
 

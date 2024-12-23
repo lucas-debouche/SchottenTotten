@@ -201,7 +201,7 @@ def displayChoixValeurs(screen, screen_width, screen_height):
         # Simuler une fenêtre secondaire
         if popup_open:
             # Dessiner la fenêtre secondaire
-            popup_surface.fill((205, 200, 145))
+            popup_surface.fill((165, 140, 100))
             shadow_rect = button_valider["valider"].move(4, 4)
             pygame.draw.rect(popup_surface, (160, 82, 45), shadow_rect, border_radius = 10)
             config_button(popup_surface, (169, 169, 169), button_valider["valider"], "Valider")
