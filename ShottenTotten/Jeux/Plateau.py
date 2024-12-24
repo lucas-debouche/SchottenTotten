@@ -5,8 +5,8 @@ import pygame
 import sys
 import os
 
-from ShottenTotten.Jeux.Carte import displayCarte, deplacer_carte, generer_cartes, CarteClan, capacite_cartes_tactique, \
-    config_button
+from ShottenTotten.Jeux.Carte import displayCarte, deplacer_carte, generer_cartes, capacite_cartes_tactique, \
+    config_button, CarteTactique
 from ShottenTotten.Jeux.Joueur import load_and_scale_image
 
 
@@ -307,19 +307,19 @@ class Plateau:
                                         carte_contour = carte_rect
 
                 if borne_index is not None:
-                    if isinstance(self.joueurs[joueur].main[carte_index], CarteClan):
-                        deplacer_carte(screen_plateau, joueur, self.joueurs[joueur].main[carte_index], borne_index, borne_liste)
-                        pygame.draw.rect(screen_plateau, (205, 200, 145), carte_rect_list[carte_index], width=0)
-                        pygame.display.update(carte_rect_list[carte_index])
-                    elif self.joueurs[1 - joueur].nbr_carte_tactique - 1 < self.joueurs[joueur].nbr_carte_tactique < self.joueurs[1 - joueur].nbr_carte_tactique + 1:
-                        carte = capacite_cartes_tactique(self.joueurs[joueur].main[carte_index].nom, self.joueurs[joueur], screen_plateau, screen_width, screen_height, buttons)
-                        self.joueurs[joueur].main[carte_index] = carte
-                        self.displayPlateau(mode, nbr_manche, True)
-                        displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
-                        pygame.display.flip()
+                    if isinstance(self.joueurs[joueur].main[carte_index], CarteTactique):
+                        if self.joueurs[1 - joueur].nbr_carte_tactique - 1 < self.joueurs[joueur].nbr_carte_tactique < self.joueurs[1 - joueur].nbr_carte_tactique + 1:
+                            carte = capacite_cartes_tactique(self.joueurs[joueur].main[carte_index].nom, self.joueurs[joueur], screen_plateau, screen_width, screen_height)
+                            self.joueurs[joueur].main[carte_index] = carte
+                            self.displayPlateau(mode, nbr_manche, True)
+                            displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
+                        else:
+                            print("Il ne peut y avoir qu'une carte tactique de différence.")
+                    deplacer_carte(screen_plateau, joueur, self.joueurs[joueur].main[carte_index], borne_index, borne_liste)
+                    pygame.draw.rect(screen_plateau, (205, 200, 145), carte_rect_list[carte_index], width=0)
+                    pygame.display.update(carte_rect_list[carte_index])
 
-                    else:
-                        print("Il ne peut y avoir qu'une carte tactique de différence.")
+
 
                 self.joueurs[joueur].jouer_carte(plateau, borne_index, self.joueurs[joueur].main[carte_index])
                 pygame.display.update()
@@ -410,7 +410,7 @@ class Plateau:
         buttons_images["pioche_clan"] = load_and_scale_image(
             images_paths["pioche_clan"], buttons["pioche_clan"].width, buttons["pioche_clan"].height
         )
-
+        print("menu running = true")
 
         menu_running = True
 
@@ -427,10 +427,13 @@ class Plateau:
             if mode != "classic":
                 buttons_images["pioche_tactique"] = (load_and_scale_image(images_paths["pioche_tactique"], buttons["pioche_tactique"].width, buttons["pioche_tactique"].height))
                 afficher_pioche(200, screen_plateau, self.pioche_tactique, "tactique", 20)
-            if not game_running:
-                self.tour_de_jeu(screen_plateau, buttons_images, buttons, self, mode, nbr_manche, window_width, window_height)
 
             pygame.display.flip()
+
+            if not game_running:
+                self.tour_de_jeu(screen_plateau, buttons_images, buttons, self, mode, nbr_manche, window_width, window_height)
+            else:
+                break
 
 
 def melanger_pioche(cartes_clans, cartes_tactiques):

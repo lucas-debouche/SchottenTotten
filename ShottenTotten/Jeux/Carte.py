@@ -1,8 +1,9 @@
-import sys
 from collections import deque
 
 import pygame
 import os
+
+from ShottenTotten.Jeux.Popup import Popup
 
 # Configurations globales pour les cartes
 Couleurs = {1: "blue", 2: "green", 3: "yellow", 4: "orange", 5: "red", 6: "purple"}
@@ -166,109 +167,12 @@ def deplacer_carte(fenetre, joueur, carte, borne_index, borne):
     fenetre.blit(carte_img, (x,y))
 
 
-def displayChoixValeurs(screen, screen_width, screen_height):
-
-
-    couleurs = ["Rouge", "Vert", "Jaune", "Violet", "Bleu", "Orange"]
-    force = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
-    menu1_open = False
-    menu2_open = False
-
-    # Centre la popup
-    popup_x = screen_width // 2
-    popup_y = screen_height // 2
-
-    # Boutons et menus relatifs à la popup
-    menu1_rect = {"couleur": pygame.Rect(popup_x - 190, popup_y - 200, 150, 50)}
-    menu2_rect = {"force": pygame.Rect(popup_x + 40, popup_y - 200, 150, 50)}
-
-    options1_rects = {i : pygame.Rect(menu1_rect["couleur"].x, menu1_rect["couleur"].y + (i + 1) * menu1_rect["couleur"].height, menu1_rect["couleur"].width, menu1_rect["couleur"].height) for i in range(len(couleurs))}
-    options2_rects = {i : pygame.Rect(menu2_rect["force"].x, menu2_rect["force"].y + (i + 1) * menu2_rect["force"].height, menu2_rect["force"].width, menu2_rect["force"].height) for i in range(len(force))}
-
-    choix_couleur = None
-    choix_force = None
-    button_valider = {"valider": pygame.Rect(popup_x - 75, popup_y + 240, 150, 50)}
-
-    # Boucle principale
-    valider = False
-    while not valider:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                # Vérifie si le bouton "Valider" est cliqué
-                if button_valider["valider"].collidepoint(event.pos) and choix_couleur and choix_force:
-                    valider = True
-                # Gestion des menus déroulants
-                elif menu1_rect["couleur"].collidepoint(event.pos):
-                    menu1_open = not menu1_open
-                elif menu1_open:
-                    for i, rect in options1_rects.items():
-                        if rect.collidepoint(event.pos):
-                            choix_couleur = couleurs[i]
-                            menu1_open = False
-                elif menu2_rect["force"].collidepoint(event.pos):
-                    menu2_open = not menu2_open
-                elif menu2_open:
-                    for i, rect in options2_rects.items():
-                        if rect.collidepoint(event.pos):
-                            choix_force = force[i]
-                            menu2_open = False
-
-        # Affichage
-        screen.fill((165, 140, 100))  # Efface l'écran principal
-
-        # Affiche les menus
-        pygame.draw.rect(screen, (205, 200, 145), menu1_rect["couleur"])  # Fond clair
-        pygame.draw.rect(screen, (0, 0, 0), menu1_rect["couleur"], width=2)  # Bordure noire
-        if not choix_couleur:
-            menu1_text = pygame.font.Font(None, 36).render("Couleur", True, (0, 0, 0))
-        else:
-            menu1_text = pygame.font.Font(None, 36).render(str(choix_couleur), True, (0, 0, 0))
-        screen.blit(menu1_text, menu1_text.get_rect(center=menu1_rect["couleur"].center))
-
-        pygame.draw.rect(screen, (205, 200, 145), menu2_rect["force"])  # Fond clair
-        pygame.draw.rect(screen, (0, 0, 0), menu2_rect["force"], width=2)  # Bordure noire
-        if not choix_force:
-            menu2_text = pygame.font.Font(None, 36).render("Force", True, (0, 0, 0))
-        else:
-            menu2_text = pygame.font.Font(None, 36).render(str(choix_force), True, (0, 0, 0))
-        screen.blit(menu2_text, menu2_text.get_rect(center=menu2_rect["force"].center))
-
-
-        # Bouton Valider
-        pygame.draw.rect(screen, (205, 200, 145), button_valider["valider"])  # Fond clair
-        pygame.draw.rect(screen, (0, 0, 0), button_valider["valider"], width=2)  # Bordure noire
-        text_surface = pygame.font.Font(None, 36).render("Valider", True, (0, 0, 0))
-        screen.blit(text_surface, text_surface.get_rect(center = button_valider["valider"].center))
-
-        if menu1_open:
-            menuX_open(options1_rects, screen, couleurs, None)
-        if menu2_open:
-            menuX_open(options2_rects, screen, force, None)
-
-        pygame.display.flip()
-
-    return choix_couleur, choix_force
-
-
-def menuX_open(optionsx_rects, screen, liste, nom):
-    for i, rect in optionsx_rects.items():
-        pygame.draw.rect(screen, (205, 200, 145), rect)  # Fond clair
-        pygame.draw.rect(screen, (0, 0, 0), rect, width=2)  # Bordure noire
-        if liste :
-            option_surface = pygame.font.Font(None, 36).render(liste[i], True, (0, 0, 0))
-        else:
-            option_surface = pygame.font.Font(None, 36).render(nom, True, (0, 0, 0))
-        option_rect = option_surface.get_rect(center=rect.center)
-        screen.blit(option_surface, option_rect)
-
-
 def capacite_joker(joueur, screen, screen_width, screen_height):
     joueur.nbr_carte_tactique += 1
     joueur.nbr_joker += 1
-    choix_couleur, choix_force = displayChoixValeurs(screen, screen_width, screen_height)
+
+    popup = Popup(screen, screen_width, screen_height)
+    choix_couleur, choix_force = popup.show()
     return choix_couleur, choix_force
 
 
@@ -304,7 +208,7 @@ def capacite_traitre(joueur):
     joueur.nbr_carte_tactique += 1
 
 
-def capacite_cartes_tactique(nom_carte, joueur, screen, screen_width, screen_height, rect_carte):
+def capacite_cartes_tactique(nom_carte, joueur, screen, screen_width, screen_height):
     if nom_carte == "Joker1" or nom_carte == "Joker2" :
         choix_couleur, choix_force = capacite_joker(joueur, screen, screen_width, screen_height)
         trad_couleur(choix_couleur)
