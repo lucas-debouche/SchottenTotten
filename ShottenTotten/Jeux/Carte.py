@@ -179,15 +179,15 @@ def displayChoixValeurs(screen, screen_width, screen_height):
     popup_y = screen_height // 2
 
     # Boutons et menus relatifs à la popup
-    menu1_rect = {"couleur": pygame.Rect(popup_x - 175, popup_y - 200, 150, 50)}
-    menu2_rect = {"force": pygame.Rect(popup_x + 125, popup_y - 200, 150, 50)}
+    menu1_rect = {"couleur": pygame.Rect(popup_x - 190, popup_y - 200, 150, 50)}
+    menu2_rect = {"force": pygame.Rect(popup_x + 40, popup_y - 200, 150, 50)}
 
     options1_rects = {i : pygame.Rect(menu1_rect["couleur"].x, menu1_rect["couleur"].y + (i + 1) * menu1_rect["couleur"].height, menu1_rect["couleur"].width, menu1_rect["couleur"].height) for i in range(len(couleurs))}
     options2_rects = {i : pygame.Rect(menu2_rect["force"].x, menu2_rect["force"].y + (i + 1) * menu2_rect["force"].height, menu2_rect["force"].width, menu2_rect["force"].height) for i in range(len(force))}
 
     choix_couleur = None
     choix_force = None
-    button_valider = {"valider": pygame.Rect(popup_x, popup_y + 240, 150, 50)}
+    button_valider = {"valider": pygame.Rect(popup_x - 75, popup_y + 240, 150, 50)}
 
     # Boucle principale
     valider = False
