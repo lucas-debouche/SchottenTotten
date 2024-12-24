@@ -220,7 +220,6 @@ class Plateau:
     def tour_de_jeu(self, screen_plateau, buttons_images, buttons_plateau, plateau, mode, nbr_manche, screen_width, screen_height):
         """Gère le déroulement d'une manche de jeu."""
 
-
         button_revendiquer = {"revendiquer": pygame.Rect(1250, 600, 200, 50)}
         button_passer = {"passer": pygame.Rect(1250, 660, 200, 50)}
 
@@ -313,7 +312,8 @@ class Plateau:
                         pygame.draw.rect(screen_plateau, (205, 200, 145), carte_rect_list[carte_index], width=0)
                         pygame.display.update(carte_rect_list[carte_index])
                     elif self.joueurs[1 - joueur].nbr_carte_tactique - 1 < self.joueurs[joueur].nbr_carte_tactique < self.joueurs[1 - joueur].nbr_carte_tactique + 1:
-                        capacite_cartes_tactique(self.joueurs[joueur].main[carte_index].nom, self.joueurs[joueur], screen_plateau, screen_width, screen_height)
+                        carte = capacite_cartes_tactique(self.joueurs[joueur].main[carte_index].nom, self.joueurs[joueur], screen_plateau, screen_width, screen_height, buttons)
+                        self.joueurs[joueur].main[carte_index] = carte
                         self.displayPlateau(mode, nbr_manche, True)
                         displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
                         pygame.display.flip()

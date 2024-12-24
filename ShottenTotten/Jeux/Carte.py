@@ -169,7 +169,7 @@ def deplacer_carte(fenetre, joueur, carte, borne_index, borne):
 def displayChoixValeurs(screen, screen_width, screen_height):
 
 
-    couleurs = ["Rouge", "Vert", "Jaune", "Violet", "Bleu", "Marron"]
+    couleurs = ["Rouge", "Vert", "Jaune", "Violet", "Bleu", "Orange"]
     force = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
     menu1_open = False
     menu2_open = False
@@ -304,10 +304,11 @@ def capacite_traitre(joueur):
     joueur.nbr_carte_tactique += 1
 
 
-def capacite_cartes_tactique(nom_carte, joueur, screen, screen_width, screen_height):
+def capacite_cartes_tactique(nom_carte, joueur, screen, screen_width, screen_height, rect_carte):
     if nom_carte == "Joker1" or nom_carte == "Joker2" :
         choix_couleur, choix_force = capacite_joker(joueur, screen, screen_width, screen_height)
-        return choix_couleur, choix_force
+        trad_couleur(choix_couleur)
+        return CarteClan(choix_couleur, choix_force)
     elif nom_carte == "Espion":
         capacite_espion(joueur)
     elif nom_carte == "Porte-Bouclier":
@@ -334,3 +335,17 @@ def config_button(screen_plateau, button_color, button, text):
     text_rect_jouer = text_jouer.get_rect(center=button.center)
     screen_plateau.blit(text_jouer, text_rect_jouer)
     pygame.display.update(button)
+
+def trad_couleur(couleur):
+    if couleur == "Rouge":
+        return "red"
+    elif couleur == "Bleu":
+        return "blue"
+    elif couleur == "Violet":
+        return "purple"
+    elif couleur == "Jaune":
+        return "yellow"
+    elif couleur == "Vert":
+        return "green"
+    elif couleur == "Orange":
+        return "orange"
