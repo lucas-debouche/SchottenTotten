@@ -59,7 +59,7 @@ class Plateau:
 
         self.initialiser_cartes(mode)
         self.distribuer_cartes()
-        self.displayPlateau(mode, nbr_manche)
+        self.displayPlateau(mode, nbr_manche, False)
 
     def distribuer_cartes(self):
         """Distribue les cartes aux joueurs au début de la partie."""
@@ -314,6 +314,10 @@ class Plateau:
                         pygame.display.update(carte_rect_list[carte_index])
                     elif self.joueurs[1 - joueur].nbr_carte_tactique - 1 < self.joueurs[joueur].nbr_carte_tactique < self.joueurs[1 - joueur].nbr_carte_tactique + 1:
                         capacite_cartes_tactique(self.joueurs[joueur].main[carte_index].nom, self.joueurs[joueur], screen_plateau, screen_width, screen_height)
+                        self.displayPlateau(mode, nbr_manche, True)
+                        displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
+                        pygame.display.flip()
+
                     else:
                         print("Il ne peut y avoir qu'une carte tactique de différence.")
 
@@ -358,7 +362,7 @@ class Plateau:
             self.commencer_nouvelle_manche(mode, nbr_manche)
         self.fin_jeu()
 
-    def displayPlateau(self, mode, nbr_manche):
+    def displayPlateau(self, mode, nbr_manche, game_running):
         """Fonction qui affiche le plateau."""
         pygame.init()
 
@@ -423,7 +427,8 @@ class Plateau:
             if mode != "classic":
                 buttons_images["pioche_tactique"] = (load_and_scale_image(images_paths["pioche_tactique"], buttons["pioche_tactique"].width, buttons["pioche_tactique"].height))
                 afficher_pioche(200, screen_plateau, self.pioche_tactique, "tactique", 20)
-            self.tour_de_jeu(screen_plateau, buttons_images, buttons, self, mode, nbr_manche, window_width, window_height)
+            if not game_running:
+                self.tour_de_jeu(screen_plateau, buttons_images, buttons, self, mode, nbr_manche, window_width, window_height)
 
             pygame.display.flip()
 
