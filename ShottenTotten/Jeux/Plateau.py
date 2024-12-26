@@ -60,7 +60,7 @@ class Plateau:
 
         self.initialiser_cartes(mode)
         self.distribuer_cartes()
-        self.displayPlateau(mode, nbr_manche, False)
+        self.displayPlateau(mode, nbr_manche, False, {})
 
     def distribuer_cartes(self):
         """Distribue les cartes aux joueurs au début de la partie."""
@@ -225,6 +225,7 @@ class Plateau:
             running = True
             joueur = 0
             carte_deplacee = []
+            image_borne = {}
             while running:
                 revendicable = self.verif_borne_revendicable()
 
@@ -280,7 +281,7 @@ class Plateau:
                                     for borne_key, borne_rect in buttons_plateau.items():
                                         if borne_rect.collidepoint(event.pos):
                                             numero_borne = int(borne_key.replace("borne", ""))
-                                            if (self.joueurs[joueur].main[carte_index].capacite == "Modes de combat"  and not self.bornes[numero_borne].borne) or isinstance(self.joueurs[joueur].main[carte_index], CarteClan) or self.joueurs[joueur].main[carte_index].capacite != "Modes de combat":
+                                            if isinstance(self.joueurs[joueur].main[carte_index], CarteClan) or self.joueurs[joueur].main[carte_index].capacite != "Modes de combat" or (self.joueurs[joueur].main[carte_index].capacite == "Modes de combat"  and not self.bornes[numero_borne].borne):
                                                 if joueur == 0:
                                                     if len(self.bornes[numero_borne].joueur1_cartes) < 3 and self.bornes[
                                                         numero_borne].controle_par is None:
@@ -308,7 +309,7 @@ class Plateau:
                         carte, capacite = capacite_cartes_tactique(self.joueurs[joueur].main[carte_index], self.joueurs[joueur], screen_plateau, screen_width, screen_height)
                         if capacite == "Troupes d'élites":
                             self.joueurs[joueur].main[carte_index] = carte
-                            self.displayPlateau(mode, nbr_manche, True)
+                            self.displayPlateau(mode, nbr_manche, True, image_borne)
                             config_button(screen_plateau, (169, 169, 169), button_passer["passer"], "Passer")
                             config_button(screen_plateau, (169, 169, 169), button_revendiquer["revendiquer"],"Revendiquer")
                             displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
@@ -321,7 +322,7 @@ class Plateau:
                             carte_tactique = os.path.join(carte_tactique_path, f"{self.joueurs[joueur].main[carte_index].nom}.jpg")
                             image_key = f"borne{borne_index}"
                             buttons_images[image_key] = load_and_scale_image(carte_tactique,100,50, capacite)
-                            pygame.display.flip()
+                            image_borne[image_key] = carte_tactique
 
                     carte_choisi = self.joueurs[joueur].jouer_carte(self, borne_index, self.joueurs[joueur].main[carte_index], capacite)
 
@@ -374,7 +375,7 @@ class Plateau:
             self.commencer_nouvelle_manche(mode, nbr_manche)
         self.fin_jeu()
 
-    def displayPlateau(self, mode, nbr_manche, game_running):
+    def displayPlateau(self, mode, nbr_manche, game_running, image_borne):
         """Fonction qui affiche le plateau."""
         pygame.init()
 
@@ -402,8 +403,9 @@ class Plateau:
         buttons_images = {}
         for i in range(1, 10):
             image_key = f"borne{i}"
-            buttons_images[image_key] = load_and_scale_image(
-                images_paths[image_key],100,50, None)
+            buttons_images[image_key] = load_and_scale_image(images_paths[image_key],100,50, None)
+        for borne_key, borne_path  in image_borne.items():
+            buttons_images[borne_key] = load_and_scale_image(borne_path,100,50, "Modes de combat")
         buttons_images["pioche_clan"] = load_and_scale_image(images_paths["pioche_clan"], 85, 150, None)
         buttons_images["pioche_tactique"] = load_and_scale_image(images_paths["pioche_tactique"], 85, 150, None)
 
