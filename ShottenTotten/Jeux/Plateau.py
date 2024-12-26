@@ -6,8 +6,11 @@ import sys
 import os
 
 from ShottenTotten.Jeux.Carte import displayCarte, deplacer_carte, generer_cartes, capacite_cartes_tactique, \
-    config_button, CarteTactique, CarteClan
+    config_button, CarteTactique, CarteClan, chemin
 from ShottenTotten.Jeux.Joueur import load_and_scale_image
+
+
+current_dir, base_dir, carte_clan_path, carte_tactique_path, back_card_path = chemin()
 
 class Borne:
     """Représente une borne sur le plateau avec des cartes et un contrôle."""
@@ -52,6 +55,8 @@ class Plateau:
         random.shuffle(self.pioche_tactique)
 
     def commencer_nouvelle_manche(self, mode, nbr_manche):
+
+
         for joueur in self.joueurs:
             joueur.main = []
             joueur.borne_controlee = 0
@@ -109,16 +114,16 @@ class Plateau:
         pygame.quit()
         sys.exit()
 
-    def verif_borne_revendicable(self):
+    def verif_borne_revendicable(self, combat_de_boue):
         # Vérification d'activation du bouton Revendiquer
         liste = []
         for bornes in self.bornes.items():
             if bornes[1].controle_par is None:
-                if len(bornes[1].joueur1_cartes) == 3 and len(bornes[1].joueur2_cartes) == 3:
+                if len(bornes[1].joueur1_cartes) == combat_de_boue and len(bornes[1].joueur2_cartes) == combat_de_boue:
                     liste.append(bornes[0])
         return liste
 
-    def choix_revendiquer(self, buttons_plateau, revendicable, joueur, screen_plateau):
+    def choix_revendiquer(self, buttons_plateau, revendicable, joueur, screen_plateau, nom_carte_tactique):
         revendiquer = False
         # mettre en "couleur" les bornes revendicables
         while not revendiquer:
@@ -132,7 +137,7 @@ class Plateau:
                         if borne_rect.collidepoint(event.pos):
                             numero_borne = int(borne_key.replace("borne", ""))
                             if numero_borne in revendicable:
-                                self.revendiquer_borne(numero_borne, joueur, screen_plateau, borne_rect)
+                                self.revendiquer_borne(numero_borne, joueur, screen_plateau, borne_rect, nom_carte_tactique)
                                 revendiquer = True
             # Ajouter une condition pour éviter de rester bloqué
             if revendiquer:
@@ -142,11 +147,11 @@ class Plateau:
         self.bornes[numero_borne].controle_par = self.joueurs[joueur]
         self.joueurs[joueur].borne_controlee += 1
 
-    def revendiquer_borne(self, numero_borne, joueur, screen_plateau, borne_rect):
+    def revendiquer_borne(self, numero_borne, joueur, screen_plateau, borne_rect, nom_carte_tactique):
         """Méthode pour revendiquer une borne."""
         if self.bornes[numero_borne].controle_par is None:
-            main_joueur1 = self.evaluer_mains(0, numero_borne)
-            main_joueur2 = self.evaluer_mains(1, numero_borne)
+            main_joueur1 = self.evaluer_mains(0, numero_borne, nom_carte_tactique)
+            main_joueur2 = self.evaluer_mains(1, numero_borne, nom_carte_tactique)
             if main_joueur1 > main_joueur2:
                 self.gagnant_revendiquer(numero_borne, joueur)
                 pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
@@ -180,39 +185,42 @@ class Plateau:
                         pygame.display.update(borne_rect)
 
 
-    def evaluer_mains(self, joueur, numero_borne):
+    def evaluer_mains(self, joueur, numero_borne, nom_carte_tactique):
         """Vérifie la meilleure combinaison possible parmi les cartes fournies."""
-        # Trier les cartes par valeur
-        if joueur == 0:
-            combinaison = sorted(self.bornes[numero_borne].joueur1_cartes, key=lambda x: x.force)
-        else:
-            combinaison = sorted(self.bornes[numero_borne].joueur2_cartes, key=lambda x: x.force)
+        if not nom_carte_tactique:
+            # Trier les cartes par valeur
+            if joueur == 0:
+                combinaison = sorted(self.bornes[numero_borne].joueur1_cartes, key=lambda x: x.force)
+            else:
+                combinaison = sorted(self.bornes[numero_borne].joueur2_cartes, key=lambda x: x.force)
 
 
-        forces = [carte.force for carte in combinaison]
-        couleurs = [carte.couleur for carte in combinaison]
+            forces = [carte.force for carte in combinaison]
+            couleurs = [carte.couleur for carte in combinaison]
 
-        # Vérifier Suite couleur (trois cartes de la même couleur successives)
-        if len(set(couleurs)) == 1 and forces == list(range(forces[0], forces[0] + 3)):
-            return 5
+            # Vérifier Suite couleur (trois cartes de la même couleur successives)
+            if len(set(couleurs)) == 1 and forces == list(range(forces[0], forces[0] + 3)):
+                return 5
 
-        # Vérifier Brelan (trois cartes de la même valeur)
-        if any(forces.count(force) == 3 for force in forces):
-            return 4
+            # Vérifier Brelan (trois cartes de la même valeur)
+            if any(forces.count(force) == 3 for force in forces):
+                return 4
 
-        # Vérifier Couleur (trois cartes de la même couleur)
-        if len(set(couleurs)) == 1:
-            return 3
+            # Vérifier Couleur (trois cartes de la même couleur)
+            if len(set(couleurs)) == 1:
+                return 3
 
-        # Vérifier Suite (trois valeurs successives de couleurs quelconques)
-        if forces == list(range(forces[0], forces[0] + 3)):
-            return 2
+            # Vérifier Suite (trois valeurs successives de couleurs quelconques)
+            if forces == list(range(forces[0], forces[0] + 3)):
+                return 2
 
-        # Vérifier Somme (trois cartes quelconques)
-        if len(combinaison) == 3:
-            return 1
+            # Vérifier Somme (trois cartes quelconques)
+            if len(combinaison) == 3:
+                return 1
 
-        return 0
+            return 0
+        elif nom_carte_tactique == "Colin-Maillard":
+            return 0
 
     def tour_de_jeu(self, screen_plateau, buttons_images, buttons_plateau, mode, nbr_manche, screen_width, screen_height):
         """Gère le déroulement d'une manche de jeu."""
@@ -226,8 +234,10 @@ class Plateau:
             joueur = 0
             carte_deplacee = []
             image_borne = {}
+            nom_carte_tactique = None
+            combat_de_boue = 3
             while running:
-                revendicable = self.verif_borne_revendicable()
+                revendicable = self.verif_borne_revendicable(combat_de_boue)
 
                 # Gérer les événements Pygame
                 for event in pygame.event.get():
@@ -275,7 +285,7 @@ class Plateau:
                                 if carte_index is None:
                                     if mode == "expert" and revendicable != []:
                                         if button_revendiquer["revendiquer"].collidepoint(event.pos):
-                                            self.choix_revendiquer(buttons_plateau, revendicable, joueur, screen_plateau)
+                                            self.choix_revendiquer(buttons_plateau, revendicable, joueur, screen_plateau, nom_carte_tactique)
                                             running = self.verifier_fin_manche()
                                 else:
                                     for borne_key, borne_rect in buttons_plateau.items():
@@ -283,15 +293,13 @@ class Plateau:
                                             numero_borne = int(borne_key.replace("borne", ""))
                                             if isinstance(self.joueurs[joueur].main[carte_index], CarteClan) or self.joueurs[joueur].main[carte_index].capacite != "Modes de combat" or (self.joueurs[joueur].main[carte_index].capacite == "Modes de combat"  and not self.bornes[numero_borne].borne):
                                                 if joueur == 0:
-                                                    if len(self.bornes[numero_borne].joueur1_cartes) < 3 and self.bornes[
+                                                    if len(self.bornes[numero_borne].joueur1_cartes) < combat_de_boue and self.bornes[
                                                         numero_borne].controle_par is None:
                                                         borne_index = numero_borne
-                                                        borne_liste = self.bornes[numero_borne].joueur1_cartes
                                                 elif joueur == 1:
-                                                    if len(self.bornes[numero_borne].joueur2_cartes) < 3 and self.bornes[
+                                                    if len(self.bornes[numero_borne].joueur2_cartes) < combat_de_boue and self.bornes[
                                                         numero_borne].controle_par is None:
                                                         borne_index = numero_borne
-                                                        borne_liste = self.bornes[numero_borne].joueur2_cartes
                                 for carte_key, carte_rect in buttons.items():
                                     carte_rect_list.append(carte_rect)
                                     if carte_rect.collidepoint(event.pos):
@@ -306,19 +314,21 @@ class Plateau:
                 capacite = None
                 if borne_index is not None:
                     if isinstance(self.joueurs[joueur].main[carte_index], CarteTactique):
-                        carte, capacite = capacite_cartes_tactique(self.joueurs[joueur].main[carte_index], self.joueurs[joueur], screen_plateau, screen_width, screen_height)
+                        carte, capacite, nom_carte_tactique, nbr_carte = capacite_cartes_tactique(self.joueurs[joueur].main[carte_index], self.joueurs[joueur], screen_plateau, screen_width, screen_height)
+                        if nbr_carte:
+                            combat_de_boue = nbr_carte
                         if capacite == "Troupes d'élites":
                             self.joueurs[joueur].main[carte_index] = carte
                             self.displayPlateau(mode, nbr_manche, True, image_borne)
                             config_button(screen_plateau, (169, 169, 169), button_passer["passer"], "Passer")
                             config_button(screen_plateau, (169, 169, 169), button_revendiquer["revendiquer"],"Revendiquer")
                             displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
-                            for carte in carte_deplacee:
-                                deplacer_carte(screen_plateau, carte[0], carte[1], carte[2], carte[3])
+                            for i in range(1, 10):
+                                for carte in self.bornes[i].joueur1_cartes:
+                                    deplacer_carte(screen_plateau, 0, carte, i, self.bornes[i].joueur1_cartes)
+                                for carte in self.bornes[i].joueur2_cartes:
+                                    deplacer_carte(screen_plateau, 1, carte, i, self.bornes[i].joueur2_cartes)
                         elif capacite == "Modes de combat":
-                            current_dir = os.path.dirname(__file__)
-                            base_dir = os.path.abspath(os.path.join(current_dir, ".."))
-                            carte_tactique_path = os.path.join(base_dir, "Ressources", "Cartes_Tactiques")
                             carte_tactique = os.path.join(carte_tactique_path, f"{self.joueurs[joueur].main[carte_index].nom}.jpg")
                             image_key = f"borne{borne_index}"
                             buttons_images[image_key] = load_and_scale_image(carte_tactique,100,50, capacite)
@@ -328,11 +338,13 @@ class Plateau:
 
                     if capacite != "Modes de combat":
                         carte_deplacee.append((joueur, carte_choisi, borne_index, borne_liste))
-                        deplacer_carte(screen_plateau, joueur, carte_choisi, borne_index, borne_liste)
+                        if joueur == 0:
+                            deplacer_carte(screen_plateau, joueur, carte_choisi, borne_index, self.bornes[borne_index].joueur1_cartes)
+                        else:
+                            deplacer_carte(screen_plateau, joueur, carte_choisi, borne_index, self.bornes[borne_index].joueur2_cartes)
+
                         pygame.draw.rect(screen_plateau, (205, 200, 145), carte_rect_list[carte_index], width=0)
                         pygame.display.update(carte_rect_list[carte_index])
-
-
 
 
                 pygame.display.update()
@@ -345,7 +357,7 @@ class Plateau:
 
 
 
-                revendicable = self.verif_borne_revendicable()
+                revendicable = self.verif_borne_revendicable(combat_de_boue)
 
                 while not passer:
                     config_button(screen_plateau, (205, 200, 145), button_passer["passer"], "Passer")
@@ -362,15 +374,15 @@ class Plateau:
                                 passer = True
                             elif mode != "expert" and revendicable:
                                 if button_revendiquer["revendiquer"].collidepoint(event.pos):
-                                    self.choix_revendiquer(buttons_plateau, revendicable, joueur, screen_plateau)
-                                    revendicable = self.verif_borne_revendicable()
+                                    self.choix_revendiquer(buttons_plateau, revendicable, joueur, screen_plateau, nom_carte_tactique)
+                                    revendicable = self.verif_borne_revendicable(combat_de_boue)
                                     running = self.verifier_fin_manche()
                                     if not running:
                                         passer = True
                                         break
-                afficher_pioche(50, screen_plateau, self.pioche_clan, "clan", 40)
+                afficher_pioche(50, screen_plateau, self.pioche_clan, "clan")
                 if mode != "classic":
-                    afficher_pioche(200, screen_plateau, self.pioche_tactique, "tactique", 20)
+                    afficher_pioche(200, screen_plateau, self.pioche_tactique, "tactique")
             nombre_manche += 1
             self.commencer_nouvelle_manche(mode, nbr_manche)
         self.fin_jeu()
@@ -385,12 +397,7 @@ class Plateau:
         pygame.display.set_caption("Schotten Totten : Jeux")
         screen_plateau = pygame.display.set_mode((window_width, window_height))
 
-        # Création d'une surface hors écran
-        offscreen_surface = pygame.Surface((window_width, window_height))
-
         # Récupération des chemins d'images
-        current_dir = os.path.dirname(__file__)
-        base_dir = os.path.abspath(os.path.join(current_dir, ".."))
         pioche_path = os.path.join(base_dir, "Ressources")
         borne_path = os.path.join(base_dir, "Ressources", "Bornes")
         images_paths = {
@@ -408,10 +415,12 @@ class Plateau:
             buttons_images[borne_key] = load_and_scale_image(borne_path,100,50, "Modes de combat")
         buttons_images["pioche_clan"] = load_and_scale_image(images_paths["pioche_clan"], 85, 150, None)
         buttons_images["pioche_tactique"] = load_and_scale_image(images_paths["pioche_tactique"], 85, 150, None)
+        buttons_images["defausse"] = load_and_scale_image(os.path.join(base_dir, "Ressources", "Back_Card.jpg"), 85, 150, None)
 
         buttons = {
-            "pioche_clan": pygame.Rect(50, 300, 85, 150),
-            "pioche_tactique": pygame.Rect(180, 300, 85, 150),
+            "pioche_clan": pygame.Rect(20, 300, 85, 150),
+            "pioche_tactique": pygame.Rect(150, 300, 85, 150),
+            "defausse" : pygame.Rect(280, 300, 85, 150),
             **{f"borne{i}": pygame.Rect(410 + (i - 1) * 110, 350, 100, 50) for i in range(1, 10)},
         }
 
@@ -419,18 +428,17 @@ class Plateau:
 
         while menu_running:
             # Efface la surface hors écran
-            offscreen_surface.fill((205, 200, 145))  # Fond de la surface
+            screen_plateau.fill((205, 200, 145))  # Fond de la surface
 
             # Affichage des composants sur la surface hors écran
             for button_key, button_rect in buttons.items():
-                offscreen_surface.blit(buttons_images[button_key], button_rect.topleft)
+                screen_plateau.blit(buttons_images[button_key], button_rect.topleft)
 
-            afficher_pioche(50, offscreen_surface, self.pioche_clan, "clan", 40)
+            afficher_pioche(60, screen_plateau, self.pioche_clan, "clan")
             if mode != "classic":
-                afficher_pioche(200, offscreen_surface, self.pioche_tactique, "tactique", 20)
+                afficher_pioche(190, screen_plateau, self.pioche_tactique, "tactique")
+                afficher_pioche(325, screen_plateau, self.defausse, "defausse")
 
-            # Copier la surface hors écran sur l'écran principal
-            screen_plateau.blit(offscreen_surface, (0, 0))
             pygame.display.flip()
 
             for event in pygame.event.get():
@@ -451,20 +459,19 @@ def melanger_pioche(cartes_clans, cartes_tactiques):
     random.shuffle(pioche)
     return deque(pioche)
 
-def afficher_pioche(x, screen, pioche, mode, decalage_x):
+def afficher_pioche(x, screen, pioche, mode):
     rect_ = pygame.Rect(x, 455, 100, 40)  # Définir les dimensions du rectangle
     pygame.draw.rect(screen, (205, 200, 145), rect_)
 
     smallfont = pygame.font.SysFont('Forte', 35)
     nombre_pioche = smallfont.render(str(len(pioche)), True, (139, 69, 19))
     rect_text = nombre_pioche.get_rect(center=rect_.center)
-    if mode == "tactique":
-        rect_text.x -= rect_.width // 2 - 20
+    rect_text.x -= rect_.width // 2
     screen.blit(nombre_pioche, rect_text.topleft)
     nom_pioche = smallfont.render(mode, True, (139, 69, 19))
     rect_text = nom_pioche.get_rect(center=rect_.center)
     rect_text.y -= rect_.height // 2 + 180
-    rect_text.x -= rect_.width // 2 - decalage_x
+    rect_text.x -= rect_.width // 2
     screen.blit(nom_pioche, rect_text.topleft)
 
 

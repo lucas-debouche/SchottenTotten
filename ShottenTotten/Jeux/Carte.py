@@ -52,12 +52,7 @@ def displayCarte(fenetre, joueur, main):
     y1_conteneur = 0
     y2_conteneur = 600
 
-    # Récupération chemin images cartes
-    current_dir = os.path.dirname(__file__)
-    base_dir = os.path.abspath(os.path.join(current_dir, ".."))
-    carte_clan_path = os.path.join(base_dir, "Ressources", "Cartes_Clan")
-    carte_tactique_path = os.path.join(base_dir, "Ressources", "Cartes_Tactiques")
-    back_card_path = os.path.join(base_dir, "Ressources", "Back_Card.jpg")
+    current_dir, base_dir, carte_clan_path, carte_tactique_path, back_card_path = chemin()
 
     # Création cartes
     largeur_carte = 85
@@ -204,21 +199,20 @@ def capacite_cartes_tactique(carte, joueur, screen, screen_width, screen_height)
         joueur.nbr_joker += 1
         choix_couleur, choix_force = capacite_elite(joueur, screen, screen_width, screen_height, "joker")
         choix_couleur = trad_couleur(choix_couleur)
-        return CarteClan(choix_couleur, choix_force), "Troupes d'élites"
+        return CarteClan(choix_couleur, choix_force), "Troupes d'élites", None, None
     elif carte.nom == "Espion":
         choix_couleur, choix_force = capacite_elite(joueur, screen, screen_width, screen_height, "espion")
         choix_couleur = trad_couleur(choix_couleur)
-        return CarteClan(choix_couleur, choix_force), "Troupes d'élites"
+        return CarteClan(choix_couleur, choix_force), "Troupes d'élites", None, None
     elif carte.nom == "Porte-Bouclier":
         choix_couleur, choix_force = capacite_elite(joueur, screen, screen_width, screen_height, "porte-bouclier")
         choix_couleur = trad_couleur(choix_couleur)
-        return CarteClan(choix_couleur, choix_force), "Troupes d'élites"
+        return CarteClan(choix_couleur, choix_force), "Troupes d'élites", None, None
     elif carte.nom == "Colin-Maillard":
-        capacite_colin_maillard(joueur)
-        return carte, "Modes de combat"
+        return carte, "Modes de combat", carte.nom, None
     elif carte.nom == "Combat de Boue":
         capacite_combat_de_boue(joueur)
-        return carte, "Modes de combat"
+        return carte, "Modes de combat", carte.nom, 4
     elif carte.nom == "Chasseur de Tête":
         capacite_chasseur_de_tete(joueur)
     elif carte.nom == "Stratège":
@@ -251,3 +245,12 @@ def trad_couleur(couleur):
         return "green"
     elif couleur == "Orange":
         return "orange"
+
+def chemin():
+    # Récupération chemin images cartes
+    current_dir = os.path.dirname(__file__)
+    base_dir = os.path.abspath(os.path.join(current_dir, ".."))
+    carte_clan_path = os.path.join(base_dir, "Ressources", "Cartes_Clan")
+    carte_tactique_path = os.path.join(base_dir, "Ressources", "Cartes_Tactiques")
+    back_card_path = os.path.join(base_dir, "Ressources", "Back_Card.jpg")
+    return current_dir, base_dir, carte_clan_path, carte_tactique_path, back_card_path
