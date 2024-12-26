@@ -20,6 +20,7 @@ class Joueur:
         """Méthode pour jouer une carte."""
         plateau.ajouter_carte(numero_borne, self.id, carte)
         self.main.remove(carte)
+        return carte
 
     def distribuer(self, pioche):
         """Méthode pour piocher une carte."""
@@ -44,7 +45,6 @@ class Joueur:
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     for pioche_key, pioche_rect in buttons.items():
                         if pioche_rect.collidepoint(event.pos):
-                            print(f"{pioche_key} cliqué !")
                             if pioche_key == "pioche_clan" and len(pioche_clan) > 0:
                                 self.main.append(pioche_clan.popleft())
                                 piocher = True

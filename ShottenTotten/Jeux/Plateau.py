@@ -115,7 +115,6 @@ class Plateau:
             if bornes[1].controle_par is None:
                 if len(bornes[1].joueur1_cartes) == 3 and len(bornes[1].joueur2_cartes) == 3:
                     liste.append(bornes[0])
-        print(liste)
         return liste
 
     def choix_revendiquer(self, buttons_plateau, revendicable, joueur, screen_plateau):
@@ -134,15 +133,12 @@ class Plateau:
                             if numero_borne in revendicable:
                                 self.revendiquer_borne(numero_borne, joueur, screen_plateau, borne_rect)
                                 revendiquer = True
-                            else:
-                                print("Cette borne n'est pas revendicable.")
             # Ajouter une condition pour éviter de rester bloqué
             if revendiquer:
                 break
 
     def gagnant_revendiquer(self, numero_borne, joueur):
         self.bornes[numero_borne].controle_par = self.joueurs[joueur]
-        print(f"Borne {numero_borne} contrôlée par {self.joueurs[joueur].nom}")
         self.joueurs[joueur].borne_controlee += 1
 
     def revendiquer_borne(self, numero_borne, joueur, screen_plateau, borne_rect):
@@ -227,6 +223,7 @@ class Plateau:
         while nombre_manche != nbr_manche:
             running = True
             joueur = 0
+            carte_deplacee = []
             while running:
                 revendicable = self.verif_borne_revendicable()
 
@@ -265,6 +262,8 @@ class Plateau:
                 passer = False
                 carte_rect_list = []
 
+
+
                 while borne_index is None:
                     for event in pygame.event.get():
                         if event.type == pygame.QUIT:
@@ -285,15 +284,11 @@ class Plateau:
                                                     numero_borne].controle_par is None:
                                                     borne_index = numero_borne
                                                     borne_liste = plateau.bornes[numero_borne].joueur1_cartes
-                                                else:
-                                                    print("Tu ne peux pas jouer sur cette borne.")
                                             elif joueur == 1:
                                                 if len(plateau.bornes[numero_borne].joueur2_cartes) < 3 and plateau.bornes[
                                                     numero_borne].controle_par is None:
                                                     borne_index = numero_borne
                                                     borne_liste = plateau.bornes[numero_borne].joueur2_cartes
-                                                else:
-                                                    print("Tu ne peux pas jouer sur cette borne.")
                                 for carte_key, carte_rect in buttons.items():
                                     carte_rect_list.append(carte_rect)
                                     if carte_rect.collidepoint(event.pos):
@@ -308,20 +303,24 @@ class Plateau:
 
                 if borne_index is not None:
                     if isinstance(self.joueurs[joueur].main[carte_index], CarteTactique):
-                        if self.joueurs[1 - joueur].nbr_carte_tactique - 1 < self.joueurs[joueur].nbr_carte_tactique < self.joueurs[1 - joueur].nbr_carte_tactique + 1:
-                            carte = capacite_cartes_tactique(self.joueurs[joueur].main[carte_index].nom, self.joueurs[joueur], screen_plateau, screen_width, screen_height)
-                            self.joueurs[joueur].main[carte_index] = carte
-                            self.displayPlateau(mode, nbr_manche, True)
-                            displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
-                        else:
-                            print("Il ne peut y avoir qu'une carte tactique de différence.")
-                    deplacer_carte(screen_plateau, joueur, self.joueurs[joueur].main[carte_index], borne_index, borne_liste)
+                        carte = capacite_cartes_tactique(self.joueurs[joueur].main[carte_index].nom, self.joueurs[joueur], screen_plateau, screen_width, screen_height)
+                        self.joueurs[joueur].main[carte_index] = carte
+                        self.displayPlateau(mode, nbr_manche, True)
+                        config_button(screen_plateau, (169, 169, 169), button_passer["passer"], "Passer")
+                        config_button(screen_plateau, (169, 169, 169), button_revendiquer["revendiquer"], "Revendiquer")
+                        displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
+                        for carte in carte_deplacee:
+                            deplacer_carte(screen_plateau, carte[0], carte[1], carte[2], carte[3])
+
+                    carte_choisi = self.joueurs[joueur].jouer_carte(plateau, borne_index, self.joueurs[joueur].main[carte_index])
+                    carte_deplacee.append((joueur, carte_choisi, borne_index, borne_liste))
+                    deplacer_carte(screen_plateau, joueur, carte_choisi, borne_index, borne_liste)
                     pygame.draw.rect(screen_plateau, (205, 200, 145), carte_rect_list[carte_index], width=0)
                     pygame.display.update(carte_rect_list[carte_index])
 
 
 
-                self.joueurs[joueur].jouer_carte(plateau, borne_index, self.joueurs[joueur].main[carte_index])
+
                 pygame.display.update()
 
                 #afficher fleche
@@ -372,6 +371,9 @@ class Plateau:
         pygame.display.set_caption("Schotten Totten : Jeux")
         screen_plateau = pygame.display.set_mode((window_width, window_height))
 
+        # Création d'une surface hors écran
+        offscreen_surface = pygame.Surface((window_width, window_height))
+
         # Récupération des chemins d'images
         current_dir = os.path.dirname(__file__)
         base_dir = os.path.abspath(os.path.join(current_dir, ".."))
@@ -379,43 +381,49 @@ class Plateau:
         borne_path = os.path.join(base_dir, "Ressources", "Bornes")
         images_paths = {
             "pioche_clan": os.path.join(pioche_path, "Pioche.png"),
-            "pioche_tactique" : os.path.join(pioche_path, "Pioche.png"),
-            "borne1": os.path.join(borne_path, "borne_0.jpg"),
-            "borne2": os.path.join(borne_path, "borne_1.jpg"),
-            "borne3": os.path.join(borne_path, "borne_2.jpg"),
-            "borne4": os.path.join(borne_path, "borne_3.jpg"),
-            "borne5": os.path.join(borne_path, "borne_4.jpg"),
-            "borne6": os.path.join(borne_path, "borne_5.jpg"),
-            "borne7": os.path.join(borne_path, "borne_6.jpg"),
-            "borne8": os.path.join(borne_path, "borne_7.jpg"),
-            "borne9": os.path.join(borne_path, "borne_8.jpg"),
-        }
-
-        # Boutons et leurs positions
-        buttons = {
-            "pioche_clan": pygame.Rect(50, 300, 85, 150),
-            "pioche_tactique": pygame.Rect(180, 300, 85, 150),
-            **{f"borne{i}": pygame.Rect(410 + (i - 1) * 110, 350, 100, 50) for i in range(1, 10)},
+            "pioche_tactique": os.path.join(pioche_path, "Pioche.png"),
+            **{f"borne{i}": os.path.join(borne_path, f"borne_{i - 1}.jpg") for i in range(1, 10)},
         }
 
         # Chargement des images des boutons
         buttons_images = {}
         for i in range(1, 10):
             image_key = f"borne{i}"
-            buttons_images[f"borne{i}"] = load_and_scale_image(
+            buttons_images[image_key] = load_and_scale_image(
                 images_paths[image_key],
-                buttons[f"borne{i}"].width,
-                buttons[f"borne{i}"].height,
+                100,
+                50
             )
         buttons_images["pioche_clan"] = load_and_scale_image(
-            images_paths["pioche_clan"], buttons["pioche_clan"].width, buttons["pioche_clan"].height
+            images_paths["pioche_clan"], 85, 150
         )
-        print("menu running = true")
+        buttons_images["pioche_tactique"] = load_and_scale_image(
+            images_paths["pioche_tactique"], 85, 150
+        )
+
+        buttons = {
+            "pioche_clan": pygame.Rect(50, 300, 85, 150),
+            "pioche_tactique": pygame.Rect(180, 300, 85, 150),
+            **{f"borne{i}": pygame.Rect(410 + (i - 1) * 110, 350, 100, 50) for i in range(1, 10)},
+        }
 
         menu_running = True
 
         while menu_running:
-            screen_plateau.fill((205, 200, 145))  # Fond de la fenêtre
+            # Efface la surface hors écran
+            offscreen_surface.fill((205, 200, 145))  # Fond de la surface
+
+            # Affichage des composants sur la surface hors écran
+            for button_key, button_rect in buttons.items():
+                offscreen_surface.blit(buttons_images[button_key], button_rect.topleft)
+
+            afficher_pioche(50, offscreen_surface, self.pioche_clan, "clan", 40)
+            if mode != "classic":
+                afficher_pioche(200, offscreen_surface, self.pioche_tactique, "tactique", 20)
+
+            # Copier la surface hors écran sur l'écran principal
+            screen_plateau.blit(offscreen_surface, (0, 0))
+            pygame.display.flip()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -423,15 +431,9 @@ class Plateau:
                     pygame.quit()
                     sys.exit()  # Arrêt du programme
 
-            afficher_pioche(50, screen_plateau, self.pioche_clan, "clan", 40)
-            if mode != "classic":
-                buttons_images["pioche_tactique"] = (load_and_scale_image(images_paths["pioche_tactique"], buttons["pioche_tactique"].width, buttons["pioche_tactique"].height))
-                afficher_pioche(200, screen_plateau, self.pioche_tactique, "tactique", 20)
-
-            pygame.display.flip()
-
             if not game_running:
-                self.tour_de_jeu(screen_plateau, buttons_images, buttons, self, mode, nbr_manche, window_width, window_height)
+                self.tour_de_jeu(screen_plateau, buttons_images, buttons, self, mode, nbr_manche, window_width,
+                                 window_height)
             else:
                 break
 
