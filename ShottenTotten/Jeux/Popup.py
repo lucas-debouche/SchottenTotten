@@ -2,13 +2,18 @@ import sys
 import pygame
 
 class Popup:
-    def __init__(self, screen, screen_width, screen_height):
+    def __init__(self, screen, screen_width, screen_height, troupe):
         self.screen = screen
         self.screen_width = screen_width
         self.screen_height = screen_height
 
         self.couleurs = ["Rouge", "Vert", "Jaune", "Violet", "Bleu", "Orange"]
-        self.force = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        if troupe == "joker":
+            self.force = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        elif troupe == "espion":
+            self.force = ["7"]
+        elif troupe == "porte-bouclier":
+            self.force = ["1", "2", "3"]
         self.menu1_open = False
         self.menu2_open = False
 

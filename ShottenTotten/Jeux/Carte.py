@@ -126,8 +126,10 @@ def deplacer_carte(fenetre, joueur, carte, borne_index, borne):
         8: 1187.5,
         9: 1297.5,
     }
-
-    nb_carte_borne = len(borne)
+    nb_carte_borne = 0
+    for bornes in borne:
+        if carte != bornes:
+            nb_carte_borne += 1
 
     positions_joueurs = {
         1: 210 - (nb_carte_borne * 30),
@@ -166,23 +168,12 @@ def deplacer_carte(fenetre, joueur, carte, borne_index, borne):
     # Dessiner la carte à la nouvelle position
     fenetre.blit(carte_img, (x,y))
 
-
-def capacite_joker(joueur, screen, screen_width, screen_height):
+def capacite_elite(joueur, screen, screen_width, screen_height, troupe):
     joueur.nbr_carte_tactique += 1
-    joueur.nbr_joker += 1
 
-    popup = Popup(screen, screen_width, screen_height)
+    popup = Popup(screen, screen_width, screen_height, troupe)
     choix_couleur, choix_force = popup.show()
     return choix_couleur, choix_force
-
-
-def capacite_espion(joueur):
-    joueur.nbr_carte_tactique += 1
-
-
-def capacite_porte_bouclier(joueur):
-    joueur.nbr_carte_tactique += 1
-
 
 def capacite_colin_maillard(joueur):
     joueur.nbr_carte_tactique += 1
@@ -210,13 +201,18 @@ def capacite_traitre(joueur):
 
 def capacite_cartes_tactique(nom_carte, joueur, screen, screen_width, screen_height):
     if nom_carte == "Joker1" or nom_carte == "Joker2" :
-        choix_couleur, choix_force = capacite_joker(joueur, screen, screen_width, screen_height)
-        trad_couleur(choix_couleur)
+        joueur.nbr_joker += 1
+        choix_couleur, choix_force = capacite_elite(joueur, screen, screen_width, screen_height, "joker")
+        choix_couleur = trad_couleur(choix_couleur)
         return CarteClan(choix_couleur, choix_force)
     elif nom_carte == "Espion":
-        capacite_espion(joueur)
+        choix_couleur, choix_force = capacite_elite(joueur, screen, screen_width, screen_height, "espion")
+        choix_couleur = trad_couleur(choix_couleur)
+        return CarteClan(choix_couleur, choix_force)
     elif nom_carte == "Porte-Bouclier":
-        capacite_porte_bouclier(joueur)
+        choix_couleur, choix_force = capacite_elite(joueur, screen, screen_width, screen_height, "porte-bouclier")
+        choix_couleur = trad_couleur(choix_couleur)
+        return CarteClan(choix_couleur, choix_force)
     elif nom_carte == "Colin-Maillard":
         capacite_colin_maillard(joueur)
     elif nom_carte == "Combat de Boue":
