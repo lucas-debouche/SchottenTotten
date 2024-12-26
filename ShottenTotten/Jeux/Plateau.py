@@ -6,9 +6,8 @@ import sys
 import os
 
 from ShottenTotten.Jeux.Carte import displayCarte, deplacer_carte, generer_cartes, capacite_cartes_tactique, \
-    config_button, CarteTactique
+    config_button, CarteTactique, CarteClan
 from ShottenTotten.Jeux.Joueur import load_and_scale_image
-
 
 class Borne:
     """Représente une borne sur le plateau avec des cartes et un contrôle."""
@@ -16,6 +15,7 @@ class Borne:
     def __init__(self):
         self.joueur1_cartes = []
         self.joueur2_cartes = []
+        self.borne = []
         self.controle_par = None  # Joueur qui contrôle cette borne
 
 class Plateau:
@@ -30,17 +30,18 @@ class Plateau:
         self.joueurs = []
         self.nbr_joueurs = None
 
-    def ajouter_carte(self, numero_borne, joueur_index, carte):
+    def ajouter_carte(self, numero_borne, joueur_index, carte, capacite):
         """Ajoute une carte à une borne pour un joueur."""
-        if numero_borne not in self.bornes:
-            raise ValueError(f"Borne {numero_borne} n'existe pas.")
         borne = self.bornes[numero_borne]
-        if joueur_index == 0:
-            borne.joueur1_cartes.append(carte)
-        elif joueur_index == 1:
-            borne.joueur2_cartes.append(carte)
+        if capacite == "Modes de combat":
+            borne.borne.append(carte)
+        elif capacite == "Ruses":
+            pass
         else:
-            raise ValueError("Index du joueur invalide.")
+            if joueur_index == 0:
+                borne.joueur1_cartes.append(carte)
+            elif joueur_index == 1:
+                borne.joueur2_cartes.append(carte)
 
     def initialiser_cartes(self, mode):
         """Initialise les cartes de clans et tactiques, puis mélange la pioche."""
@@ -213,7 +214,7 @@ class Plateau:
 
         return 0
 
-    def tour_de_jeu(self, screen_plateau, buttons_images, buttons_plateau, plateau, mode, nbr_manche, screen_width, screen_height):
+    def tour_de_jeu(self, screen_plateau, buttons_images, buttons_plateau, mode, nbr_manche, screen_width, screen_height):
         """Gère le déroulement d'une manche de jeu."""
 
         button_revendiquer = {"revendiquer": pygame.Rect(1250, 600, 200, 50)}
@@ -279,16 +280,17 @@ class Plateau:
                                     for borne_key, borne_rect in buttons_plateau.items():
                                         if borne_rect.collidepoint(event.pos):
                                             numero_borne = int(borne_key.replace("borne", ""))
-                                            if joueur == 0:
-                                                if len(plateau.bornes[numero_borne].joueur1_cartes) < 3 and plateau.bornes[
-                                                    numero_borne].controle_par is None:
-                                                    borne_index = numero_borne
-                                                    borne_liste = plateau.bornes[numero_borne].joueur1_cartes
-                                            elif joueur == 1:
-                                                if len(plateau.bornes[numero_borne].joueur2_cartes) < 3 and plateau.bornes[
-                                                    numero_borne].controle_par is None:
-                                                    borne_index = numero_borne
-                                                    borne_liste = plateau.bornes[numero_borne].joueur2_cartes
+                                            if (self.joueurs[joueur].main[carte_index].capacite == "Modes de combat"  and not self.bornes[numero_borne].borne) or isinstance(self.joueurs[joueur].main[carte_index], CarteClan) or self.joueurs[joueur].main[carte_index].capacite != "Modes de combat":
+                                                if joueur == 0:
+                                                    if len(self.bornes[numero_borne].joueur1_cartes) < 3 and self.bornes[
+                                                        numero_borne].controle_par is None:
+                                                        borne_index = numero_borne
+                                                        borne_liste = self.bornes[numero_borne].joueur1_cartes
+                                                elif joueur == 1:
+                                                    if len(self.bornes[numero_borne].joueur2_cartes) < 3 and self.bornes[
+                                                        numero_borne].controle_par is None:
+                                                        borne_index = numero_borne
+                                                        borne_liste = self.bornes[numero_borne].joueur2_cartes
                                 for carte_key, carte_rect in buttons.items():
                                     carte_rect_list.append(carte_rect)
                                     if carte_rect.collidepoint(event.pos):
@@ -300,23 +302,34 @@ class Plateau:
                                         pygame.display.update(carte_rect)
                                         carte_index = carte_key
                                         carte_contour = carte_rect
-
+                capacite = None
                 if borne_index is not None:
                     if isinstance(self.joueurs[joueur].main[carte_index], CarteTactique):
-                        carte = capacite_cartes_tactique(self.joueurs[joueur].main[carte_index].nom, self.joueurs[joueur], screen_plateau, screen_width, screen_height)
-                        self.joueurs[joueur].main[carte_index] = carte
-                        self.displayPlateau(mode, nbr_manche, True)
-                        config_button(screen_plateau, (169, 169, 169), button_passer["passer"], "Passer")
-                        config_button(screen_plateau, (169, 169, 169), button_revendiquer["revendiquer"], "Revendiquer")
-                        displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
-                        for carte in carte_deplacee:
-                            deplacer_carte(screen_plateau, carte[0], carte[1], carte[2], carte[3])
+                        carte, capacite = capacite_cartes_tactique(self.joueurs[joueur].main[carte_index], self.joueurs[joueur], screen_plateau, screen_width, screen_height)
+                        if capacite == "Troupes d'élites":
+                            self.joueurs[joueur].main[carte_index] = carte
+                            self.displayPlateau(mode, nbr_manche, True)
+                            config_button(screen_plateau, (169, 169, 169), button_passer["passer"], "Passer")
+                            config_button(screen_plateau, (169, 169, 169), button_revendiquer["revendiquer"],"Revendiquer")
+                            displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
+                            for carte in carte_deplacee:
+                                deplacer_carte(screen_plateau, carte[0], carte[1], carte[2], carte[3])
+                        elif capacite == "Modes de combat":
+                            current_dir = os.path.dirname(__file__)
+                            base_dir = os.path.abspath(os.path.join(current_dir, ".."))
+                            carte_tactique_path = os.path.join(base_dir, "Ressources", "Cartes_Tactiques")
+                            carte_tactique = os.path.join(carte_tactique_path, f"{self.joueurs[joueur].main[carte_index].nom}.jpg")
+                            image_key = f"borne{borne_index}"
+                            buttons_images[image_key] = load_and_scale_image(carte_tactique,100,50, capacite)
+                            pygame.display.flip()
 
-                    carte_choisi = self.joueurs[joueur].jouer_carte(plateau, borne_index, self.joueurs[joueur].main[carte_index])
-                    carte_deplacee.append((joueur, carte_choisi, borne_index, borne_liste))
-                    deplacer_carte(screen_plateau, joueur, carte_choisi, borne_index, borne_liste)
-                    pygame.draw.rect(screen_plateau, (205, 200, 145), carte_rect_list[carte_index], width=0)
-                    pygame.display.update(carte_rect_list[carte_index])
+                    carte_choisi = self.joueurs[joueur].jouer_carte(self, borne_index, self.joueurs[joueur].main[carte_index], capacite)
+
+                    if capacite != "Modes de combat":
+                        carte_deplacee.append((joueur, carte_choisi, borne_index, borne_liste))
+                        deplacer_carte(screen_plateau, joueur, carte_choisi, borne_index, borne_liste)
+                        pygame.draw.rect(screen_plateau, (205, 200, 145), carte_rect_list[carte_index], width=0)
+                        pygame.display.update(carte_rect_list[carte_index])
 
 
 
@@ -390,16 +403,9 @@ class Plateau:
         for i in range(1, 10):
             image_key = f"borne{i}"
             buttons_images[image_key] = load_and_scale_image(
-                images_paths[image_key],
-                100,
-                50
-            )
-        buttons_images["pioche_clan"] = load_and_scale_image(
-            images_paths["pioche_clan"], 85, 150
-        )
-        buttons_images["pioche_tactique"] = load_and_scale_image(
-            images_paths["pioche_tactique"], 85, 150
-        )
+                images_paths[image_key],100,50, None)
+        buttons_images["pioche_clan"] = load_and_scale_image(images_paths["pioche_clan"], 85, 150, None)
+        buttons_images["pioche_tactique"] = load_and_scale_image(images_paths["pioche_tactique"], 85, 150, None)
 
         buttons = {
             "pioche_clan": pygame.Rect(50, 300, 85, 150),
@@ -432,8 +438,7 @@ class Plateau:
                     sys.exit()  # Arrêt du programme
 
             if not game_running:
-                self.tour_de_jeu(screen_plateau, buttons_images, buttons, self, mode, nbr_manche, window_width,
-                                 window_height)
+                self.tour_de_jeu(screen_plateau, buttons_images, buttons, mode, nbr_manche, window_width, window_height)
             else:
                 break
 

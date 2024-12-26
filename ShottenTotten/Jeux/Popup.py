@@ -91,15 +91,15 @@ class Popup:
             self.screen.blit(text_surface, text_surface.get_rect(center=self.button_valider["valider"].center))
 
             if self.menu1_open:
-                menuX_open(self.options1_rects, self.screen, self.couleurs, None)
+                menuX_open(self.options1_rects, self.screen, self.couleurs)
             if self.menu2_open:
-                menuX_open(self.options2_rects, self.screen, self.force, None)
+                menuX_open(self.options2_rects, self.screen, self.force)
 
             pygame.display.flip()
 
         return self.choix_couleur, self.choix_force
 
-def menuX_open(options_rects, screen, options, selected_index):
+def menuX_open(options_rects, screen, options):
     for i, rect in options_rects.items():
         pygame.draw.rect(screen, (205, 200, 145), rect)
         pygame.draw.rect(screen, (0, 0, 0), rect, width=2)  # Bordure noire

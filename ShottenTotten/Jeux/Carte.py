@@ -199,31 +199,33 @@ def capacite_traitre(joueur):
     joueur.nbr_carte_tactique += 1
 
 
-def capacite_cartes_tactique(nom_carte, joueur, screen, screen_width, screen_height):
-    if nom_carte == "Joker1" or nom_carte == "Joker2" :
+def capacite_cartes_tactique(carte, joueur, screen, screen_width, screen_height):
+    if carte.nom == "Joker1" or carte.nom == "Joker2" :
         joueur.nbr_joker += 1
         choix_couleur, choix_force = capacite_elite(joueur, screen, screen_width, screen_height, "joker")
         choix_couleur = trad_couleur(choix_couleur)
-        return CarteClan(choix_couleur, choix_force)
-    elif nom_carte == "Espion":
+        return CarteClan(choix_couleur, choix_force), "Troupes d'élites"
+    elif carte.nom == "Espion":
         choix_couleur, choix_force = capacite_elite(joueur, screen, screen_width, screen_height, "espion")
         choix_couleur = trad_couleur(choix_couleur)
-        return CarteClan(choix_couleur, choix_force)
-    elif nom_carte == "Porte-Bouclier":
+        return CarteClan(choix_couleur, choix_force), "Troupes d'élites"
+    elif carte.nom == "Porte-Bouclier":
         choix_couleur, choix_force = capacite_elite(joueur, screen, screen_width, screen_height, "porte-bouclier")
         choix_couleur = trad_couleur(choix_couleur)
-        return CarteClan(choix_couleur, choix_force)
-    elif nom_carte == "Colin-Maillard":
+        return CarteClan(choix_couleur, choix_force), "Troupes d'élites"
+    elif carte.nom == "Colin-Maillard":
         capacite_colin_maillard(joueur)
-    elif nom_carte == "Combat de Boue":
+        return carte, "Modes de combat"
+    elif carte.nom == "Combat de Boue":
         capacite_combat_de_boue(joueur)
-    elif nom_carte == "Chasseur de Tête":
+        return carte, "Modes de combat"
+    elif carte.nom == "Chasseur de Tête":
         capacite_chasseur_de_tete(joueur)
-    elif nom_carte == "Stratège":
+    elif carte.nom == "Stratège":
         capacite_stratege(joueur)
-    elif nom_carte == "Banshee":
+    elif carte.nom == "Banshee":
         capacite_banshee(joueur)
-    elif nom_carte == "Traître":
+    elif carte.nom == "Traître":
         capacite_traitre(joueur)
 
 

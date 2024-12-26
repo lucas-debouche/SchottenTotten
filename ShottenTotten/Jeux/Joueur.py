@@ -16,9 +16,9 @@ class Joueur:
         self.nbr_joker = 0
         self.nbr_carte_tactique = 0
 
-    def jouer_carte(self, plateau, numero_borne, carte):
+    def jouer_carte(self, plateau, numero_borne, carte, capacite):
         """Méthode pour jouer une carte."""
-        plateau.ajouter_carte(numero_borne, self.id, carte)
+        plateau.ajouter_carte(numero_borne, self.id, carte, capacite)
         self.main.remove(carte)
         return carte
 
@@ -63,15 +63,17 @@ def afficher_indication_pioche(screen):
     fleche_rect = pygame.Rect(100, 530, 120, 120)  # Rectangle pour position et dimensions.
 
     # Charger et redimensionner l'image
-    image_fleche = load_and_scale_image(image_path, fleche_rect.width, fleche_rect.height)
+    image_fleche = load_and_scale_image(image_path, fleche_rect.width, fleche_rect.height, None)
 
     # Afficher l'image à l'écran
     screen.blit(image_fleche, (fleche_rect.x, fleche_rect.y))
 
-def load_and_scale_image(path, width, height):
+def load_and_scale_image(path, width, height, capacite):
     """Charge et redimensionne une image."""
     try:
         image = pygame.image.load(path)
+        if capacite:
+            image = pygame.transform.rotate(image, -90)
         return pygame.transform.scale(image, (width, height))
     except pygame.error as e:
         print(f"Erreur lors du chargement de l'image: {path}")
