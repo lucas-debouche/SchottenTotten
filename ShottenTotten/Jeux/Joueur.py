@@ -14,6 +14,16 @@ class Joueur:
         self.score = 0
         self.borne_controlee = 0
 
+    def clone(self):
+        """
+        Crée une copie complète de l'état actuel du joueur.
+        """
+        nouveau_joueur = Joueur(self.nom, self.id)
+        nouveau_joueur.main = self.main[:]  # Copie indépendante des cartes
+        nouveau_joueur.borne_controlee = self.borne_controlee
+        nouveau_joueur.score = self.score
+        return nouveau_joueur
+
     def jouer_carte(self, plateau, numero_borne, carte, capacite):
         """Méthode pour jouer une carte."""
         if carte in self.main:

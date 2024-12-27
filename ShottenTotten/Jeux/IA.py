@@ -3,19 +3,6 @@ import numpy as np
 
 # --- Alpha-Bêta Pruning ---
 def alpha_beta_pruning(state, depth, alpha, beta, maximizing_player, evaluate, generate_actions, apply_action):
-    """
-    Alpha-Bêta Pruning pour la prise de décision optimale.
-
-    :param state: État actuel du jeu.
-    :param depth: Profondeur maximale de l'exploration.
-    :param alpha: Meilleur score trouvé pour le joueur max.
-    :param beta: Meilleur score trouvé pour le joueur min.
-    :param maximizing_player: Booléen, True si c'est le tour du joueur max.
-    :param evaluate: Fonction d'évaluation de l'état.
-    :param generate_actions: Fonction qui génère les actions possibles pour un état donné.
-    :param apply_action: Fonction qui applique une action pour produire un nouvel état.
-    :return: Meilleure action et score associé.
-    """
     if depth == 0 or is_terminal_state(state):
         return None, evaluate(state)
 
@@ -23,7 +10,7 @@ def alpha_beta_pruning(state, depth, alpha, beta, maximizing_player, evaluate, g
         max_eval = float('-inf')
         best_action = None
         for action in generate_actions(state):
-            new_state = apply_action(state, action)
+            new_state = apply_action(state, action)  # Utiliser une copie de l'état
             _, eval_score = alpha_beta_pruning(new_state, depth - 1, alpha, beta, False, evaluate, generate_actions, apply_action)
             if eval_score > max_eval:
                 max_eval = eval_score
@@ -36,7 +23,7 @@ def alpha_beta_pruning(state, depth, alpha, beta, maximizing_player, evaluate, g
         min_eval = float('inf')
         best_action = None
         for action in generate_actions(state):
-            new_state = apply_action(state, action)
+            new_state = apply_action(state, action)  # Utiliser une copie de l'état
             _, eval_score = alpha_beta_pruning(new_state, depth - 1, alpha, beta, True, evaluate, generate_actions, apply_action)
             if eval_score < min_eval:
                 min_eval = eval_score
@@ -133,14 +120,13 @@ def generate_actions(state):
 
 def apply_action(state, action):
     """
-    Applique une action et retourne un nouvel état.
+    Applique une action à une copie de l'état et retourne ce nouvel état.
     """
     carte, borne = action
-    nouveau_plateau = state.clone()
-    joueur_courant = nouveau_plateau.joueur_courant()
-    nouveau_plateau.jouer_c(carte, borne, joueur_courant)
-    nouveau_plateau.joueur_actuel = 1 - nouveau_plateau.joueur_actuel
-    return nouveau_plateau
+    nouveau_state = state.clone()  # Crée une copie indépendante de l'état
+    joueur = nouveau_state.joueur_actuel
+    nouveau_state.appliquer_action_jeu(action, joueur)  # Applique l'action sur la copie
+    return nouveau_state
 
 
 def is_terminal_state(state):

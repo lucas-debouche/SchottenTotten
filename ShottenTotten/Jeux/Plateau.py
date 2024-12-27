@@ -89,18 +89,24 @@ class Plateau:
         return self.joueurs[joueur].jouer_carte(self, borne, carte, capacite)
 
     def appliquer_action_jeu(self, action, joueur):
-        """Applique une action effectuée par un joueur IA."""
+        """
+        Applique une action effectuée par un joueur IA.
+        """
         carte, borne = action
-        if isinstance(carte, CarteTactique):
-            capacite = carte.capacite
+        print(f"Action appliquée : Carte={carte.force}-{carte.couleur}, Borne={borne}, Joueur={joueur}")
+        print(f"Main du joueur avant : {[f'{c.force}-{c.couleur}' for c in self.joueurs[joueur].main]}")
+
+        if carte in self.joueurs[joueur].main:
+            self.ajouter_carte(borne, joueur, carte, None)
+            self.joueurs[joueur].main.remove(carte)
         else:
-            capacite = None
-        self.ajouter_carte(borne, joueur, carte, capacite)
-        self.joueurs[joueur].main.remove(carte)  # Retirer la carte de la main
+            raise ValueError(f"La carte {carte.force}-{carte.couleur} n'est pas dans la main du joueur.")
+
+        print(f"Main du joueur après : {[f'{c.force}-{c.couleur}' for c in self.joueurs[joueur].main]}")
 
     def clone(self):
         """
-        Crée une copie profonde de l'état actuel du plateau.
+        Crée une copie complète de l'état actuel du plateau.
         """
         nouveau_plateau = Plateau(nombre_bornes=len(self.bornes))
         nouveau_plateau.bornes = {k: v for k, v in self.bornes.items()}
@@ -108,7 +114,7 @@ class Plateau:
         nouveau_plateau.pioche_clan = deque(self.pioche_clan)
         nouveau_plateau.pioche_tactique = deque(self.pioche_tactique)
         nouveau_plateau.nbr_cartes = self.nbr_cartes
-        nouveau_plateau.joueurs = self.joueurs[:]
+        nouveau_plateau.joueurs = [joueur.clone() for joueur in self.joueurs]  # Ajoutez une méthode clone dans Joueur
         nouveau_plateau.nbr_joueurs = self.nbr_joueurs
         nouveau_plateau.joueur_actuel = self.joueur_actuel
         return nouveau_plateau
