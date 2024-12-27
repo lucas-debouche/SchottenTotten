@@ -125,7 +125,7 @@ def generate_actions(state):
     main = state.main_joueur(joueur_courant)
 
     for carte in main:
-        for borne in range(state.nombre_bornes()):
+        for borne in range(1, state.nombre_bornes()+1):
             if state.peut_jouer_carte(borne, joueur_courant):
                 actions.append((carte, borne))  # (Carte à jouer, Borne cible)
 
@@ -139,13 +139,13 @@ def apply_action(state, action):
     :return: Nouveau Plateau après application de l'action.
     """
     carte, borne = action
-    nouveau_plateau = state.clone()  # Créer une copie du plateau pour ne pas modifier l'original
+    #nouveau_plateau = state.clone()  # Créer une copie du plateau pour ne pas modifier l'original
     joueur_courant = state.joueur_courant()
 
-    nouveau_plateau.jouer_carte(carte, borne, joueur_courant)
-    nouveau_plateau.fin_tour()  # Passer au joueur suivant
+    state.jouer_c(carte, borne, joueur_courant)
+    #nouveau_plateau.fin_tour()  # Passer au joueur suivant
 
-    return nouveau_plateau
+    #return nouveau_plateau
 
 def is_terminal_state(state):
     """
@@ -154,7 +154,7 @@ def is_terminal_state(state):
     :return: True si l'état est terminal, False sinon.
     """
     # Toutes les bornes sont revendiquées
-    if all(state.gagnant_borne(borne) is not None for borne in range(1, state.nombre_bornes() + 1)):
+    if all(state.gagnant_borne(borne) is not None for borne in range(1, 10)):
         return True
 
     # Vérifier si un joueur a atteint les bornes nécessaires pour gagner

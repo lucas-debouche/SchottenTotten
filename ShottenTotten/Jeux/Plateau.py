@@ -8,6 +8,7 @@ import os
 from ShottenTotten.Jeux.Carte import displayCarte, deplacer_carte, generer_cartes, config_button, CarteTactique, CarteClan, chemin, jouer_carte_troupes_elites
 from ShottenTotten.Jeux.Joueur import load_and_scale_image
 from ShottenTotten.Jeux.Popup import Popup
+from ShottenTotten.Jeux.IA import *
 
 current_dir, base_dir, carte_clan_path, carte_tactique_path, back_card_path = chemin()
 
@@ -31,6 +32,65 @@ class Plateau:
         self.nbr_cartes = None
         self.joueurs = []
         self.nbr_joueurs = None
+        self.joueur_actuel = None
+
+    def nombre_bornes(self):
+        """Retourne le nombre total de bornes sur le plateau."""
+        return len(self.bornes)
+
+    def gagnant_borne(self, numero_borne):
+        """Détermine le gagnant d'une borne spécifique."""
+        print('zefzf')
+        borne = self.bornes[numero_borne]
+        if borne.controle_par is not None:
+            return "max" if borne.controle_par == self.joueurs[0] else "min"
+        return None
+
+    def bornes_a_gagner(self):
+        """Retourne le nombre de bornes qu'un joueur doit contrôler pour gagner la partie."""
+        return (len(self.bornes) // 2) + 1  # Majorité des bornes
+
+    def joueur_courant(self):
+        """ Retourne le joueur qui doit jouer actuellement."""
+        return self.joueurs[self.joueur_actuel]
+
+    def main_joueur(self, joueur):
+        """ Retourne la main du joueur spécifié."""
+        if isinstance(joueur, int):
+            return self.joueurs[joueur].main
+        elif joueur in self.joueurs:
+            return joueur.main
+
+    def peut_jouer_carte(self, borne, joueur):
+        """ Vérifie si un joueur peut jouer une carte sur une borne spécifique."""
+        if isinstance(joueur, int):
+            joueur = self.joueurs[joueur]
+
+        cartes_joueur = self.bornes[borne].joueur1_cartes if joueur == self.joueurs[0] else self.bornes[borne].joueur2_cartes
+
+        # Vérifier que la borne n'est pas déjà revendiquée
+        if self.bornes[borne].controle_par is not None:
+            return False
+
+        # Vérifier si le joueur a déjà joué le maximum de cartes autorisées sur cette borne
+        combat_de_boue = 3  # Exemple : 3 cartes max par borne
+        if len(cartes_joueur) >= combat_de_boue:
+            return False
+
+        return True
+
+    def jouer_c (self, carte, borne, joueur):
+        if isinstance(carte, CarteTactique):
+            capacite = carte.capacite
+        else:
+            capacite = None
+        return joueur.jouer_carte(self, borne, carte, capacite)
+
+    def appliquer_action_jeu(self, action, joueur):
+        """Applique une action effectuée par un joueur IA."""
+        carte, borne = action
+        self.ajouter_carte(borne, joueur, carte, None)
+        self.joueurs[joueur].main.remove(carte)  # Retirer la carte de la main
 
     def ajouter_carte(self, numero_borne, joueur_index, carte, capacite):
         """Ajoute une carte à une borne pour un joueur."""
@@ -231,12 +291,29 @@ class Plateau:
         while nombre_manche != nbr_manche:
             running = True
             joueur = 0
+            self.joueur_actuel = joueur
             carte_deplacee = []
             image_borne = {}
             nom_carte_tactique = None
             combat_de_boue = 3
             while running:
                 revendicable = self.verif_borne_revendicable(combat_de_boue)
+
+                if self.joueurs[joueur].nom == "IA":
+                    action, _ = alpha_beta_pruning(
+                        state=self,
+                        depth=3,  # Profondeur d'exploration de l'IA
+                        alpha=float('-inf'),
+                        beta=float('inf'),
+                        maximizing_player=(joueur == 0),
+                        evaluate=evaluate,
+                        generate_actions=generate_actions,
+                        apply_action=apply_action,
+                    )
+                    # Appliquer l'action choisie par l'IA
+                    self.appliquer_action_jeu(action, joueur)
+                    pygame.display.update()
+                    passer = True  # L'IA termine immédiatement son tour
 
                 # Gérer les événements Pygame
                 for event in pygame.event.get():
@@ -359,6 +436,7 @@ class Plateau:
 
 
                 joueur = 1 - joueur
+                self.joueur_actuel = joueur
 
 
 
