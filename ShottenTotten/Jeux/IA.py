@@ -133,28 +133,25 @@ def generate_actions(state):
 
 def apply_action(state, action):
     """
-    Applique une action et retourne le nouvel état.
-    :param state: Instance de la classe Plateau représentant l'état du jeu.
-    :param action: Tuple (carte, borne).
-    :return: Nouveau Plateau après application de l'action.
+    Applique une action et retourne un nouvel état.
     """
     carte, borne = action
-    #nouveau_plateau = state.clone()  # Créer une copie du plateau pour ne pas modifier l'original
-    joueur_courant = state.joueur_courant()
+    nouveau_plateau = state.clone()
+    joueur_courant = nouveau_plateau.joueur_courant()
+    nouveau_plateau.jouer_c(carte, borne, joueur_courant)
+    nouveau_plateau.joueur_actuel = 1 - nouveau_plateau.joueur_actuel
+    return nouveau_plateau
 
-    state.jouer_c(carte, borne, joueur_courant)
-    #nouveau_plateau.fin_tour()  # Passer au joueur suivant
-
-    #return nouveau_plateau
 
 def is_terminal_state(state):
     """
     Vérifie si l'état est terminal.
-    :param state: Instance de la classe Plateau représentant l'état du jeu.
-    :return: True si l'état est terminal, False sinon.
     """
+    if state is None:
+        raise ValueError("L'état 'state' est None. Vérifiez l'initialisation du plateau.")
+
     # Toutes les bornes sont revendiquées
-    if all(state.gagnant_borne(borne) is not None for borne in range(1, 10)):
+    if all(state.gagnant_borne(borne) is not None for borne in range(1, state.nombre_bornes() + 1)):
         return True
 
     # Vérifier si un joueur a atteint les bornes nécessaires pour gagner

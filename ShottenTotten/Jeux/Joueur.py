@@ -16,9 +16,10 @@ class Joueur:
 
     def jouer_carte(self, plateau, numero_borne, carte, capacite):
         """Méthode pour jouer une carte."""
-        plateau.ajouter_carte(numero_borne, self.id, carte, capacite)
-        self.main.remove(carte)
-        return carte
+        if carte in self.main:
+            plateau.ajouter_carte(numero_borne, self.id, carte, capacite)
+            self.main.remove(carte)
+            return carte
 
     def distribuer(self, pioche):
         """Méthode pour piocher une carte."""

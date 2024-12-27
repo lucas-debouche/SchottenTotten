@@ -40,10 +40,11 @@ class Plateau:
 
     def gagnant_borne(self, numero_borne):
         """Détermine le gagnant d'une borne spécifique."""
-        print('zefzf')
-        borne = self.bornes[numero_borne]
+        borne = self.bornes.get(numero_borne)
+        if not borne:
+            return None  # Aucun gagnant si la borne n'existe pas
         if borne.controle_par is not None:
-            return "max" if borne.controle_par == self.joueurs[0] else "min"
+            return 'max' if borne.controle_par == self.joueurs[0] else 'min'
         return None
 
     def bornes_a_gagner(self):
@@ -52,7 +53,7 @@ class Plateau:
 
     def joueur_courant(self):
         """ Retourne le joueur qui doit jouer actuellement."""
-        return self.joueurs[self.joueur_actuel]
+        return self.joueur_actuel
 
     def main_joueur(self, joueur):
         """ Retourne la main du joueur spécifié."""
@@ -84,13 +85,43 @@ class Plateau:
             capacite = carte.capacite
         else:
             capacite = None
-        return joueur.jouer_carte(self, borne, carte, capacite)
+
+        return self.joueurs[joueur].jouer_carte(self, borne, carte, capacite)
 
     def appliquer_action_jeu(self, action, joueur):
         """Applique une action effectuée par un joueur IA."""
         carte, borne = action
-        self.ajouter_carte(borne, joueur, carte, None)
+        if isinstance(carte, CarteTactique):
+            capacite = carte.capacite
+        else:
+            capacite = None
+        self.ajouter_carte(borne, joueur, carte, capacite)
         self.joueurs[joueur].main.remove(carte)  # Retirer la carte de la main
+
+    def clone(self):
+        """
+        Crée une copie profonde de l'état actuel du plateau.
+        """
+        nouveau_plateau = Plateau(nombre_bornes=len(self.bornes))
+        nouveau_plateau.bornes = {k: v for k, v in self.bornes.items()}
+        nouveau_plateau.defausse = self.defausse[:]
+        nouveau_plateau.pioche_clan = deque(self.pioche_clan)
+        nouveau_plateau.pioche_tactique = deque(self.pioche_tactique)
+        nouveau_plateau.nbr_cartes = self.nbr_cartes
+        nouveau_plateau.joueurs = self.joueurs[:]
+        nouveau_plateau.nbr_joueurs = self.nbr_joueurs
+        nouveau_plateau.joueur_actuel = self.joueur_actuel
+        return nouveau_plateau
+
+    def score_combinaison(self, joueur, borne):
+        """
+        Évalue la force de la combinaison de cartes d'un joueur sur une borne.
+        """
+        cartes = self.bornes[borne+1].joueur1_cartes if joueur == "max" else self.bornes[borne+1].joueur2_cartes
+        if len(cartes) < 3:
+            return sum(carte.force for carte in cartes)  # Somme brute si pas de combinaison complète
+        # Ajoutez des règles pour évaluer les combinaisons (suite, couleur, etc.)
+        return 0  # Placeholder, remplacez par vos règles
 
     def ajouter_carte(self, numero_borne, joueur_index, carte, capacite):
         """Ajoute une carte à une borne pour un joueur."""
@@ -300,6 +331,9 @@ class Plateau:
                 revendicable = self.verif_borne_revendicable(combat_de_boue)
 
                 if self.joueurs[joueur].nom == "IA":
+                    print("main IA")
+                    for carte in self.joueurs[joueur].main:
+                        print(carte.force, carte.couleur)
                     action, _ = alpha_beta_pruning(
                         state=self,
                         depth=3,  # Profondeur d'exploration de l'IA
@@ -312,6 +346,7 @@ class Plateau:
                     )
                     # Appliquer l'action choisie par l'IA
                     self.appliquer_action_jeu(action, joueur)
+                    print('fini')
                     pygame.display.update()
                     passer = True  # L'IA termine immédiatement son tour
 
