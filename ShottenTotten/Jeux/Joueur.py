@@ -13,8 +13,6 @@ class Joueur:
         self.main = []
         self.score = 0
         self.borne_controlee = 0
-        self.nbr_joker = 0
-        self.nbr_carte_tactique = 0
 
     def jouer_carte(self, plateau, numero_borne, carte, capacite):
         """Méthode pour jouer une carte."""

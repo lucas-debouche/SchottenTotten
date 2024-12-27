@@ -48,7 +48,10 @@ def generer_cartes():
 
 def displayCarte(fenetre, joueur, main):
     # Création rectangle affichage carte joueur 1 et joueur 2
-    x_conteneur = 450
+    if joueur == 2:
+        x_conteneur = 100
+    else:
+        x_conteneur = 450
     y1_conteneur = 0
     y2_conteneur = 600
 
@@ -66,11 +69,15 @@ def displayCarte(fenetre, joueur, main):
         5: x_conteneur + 405,
         6: x_conteneur + 500,
         7: x_conteneur + 595,
+        8: x_conteneur + 680,
+        9: x_conteneur + 775,
+        10: x_conteneur + 870,
     }
 
     positions_joueurs = {
         1: y1_conteneur + 10,
         0: y2_conteneur + 10,
+        2: y2_conteneur,
     }
 
     buttons = {}
@@ -163,65 +170,25 @@ def deplacer_carte(fenetre, joueur, carte, borne_index, borne):
     # Dessiner la carte à la nouvelle position
     fenetre.blit(carte_img, (x,y))
 
-def capacite_elite(joueur, screen, screen_width, screen_height, troupe):
-    joueur.nbr_carte_tactique += 1
-
+def capacite_elite(screen, screen_width, screen_height, troupe):
     popup = Popup(screen, screen_width, screen_height, troupe)
-    choix_couleur, choix_force = popup.show()
+    choix_couleur, choix_force = popup.show("Troupes d'élites")
+    print(choix_couleur, choix_force)
     return choix_couleur, choix_force
 
-def capacite_colin_maillard(joueur):
-    joueur.nbr_carte_tactique += 1
-
-
-def capacite_combat_de_boue(joueur):
-    joueur.nbr_carte_tactique += 1
-
-
-def capacite_chasseur_de_tete(joueur):
-    joueur.nbr_carte_tactique += 1
-
-
-def capacite_stratege(joueur):
-    joueur.nbr_carte_tactique += 1
-
-
-def capacite_banshee(joueur):
-    joueur.nbr_carte_tactique += 1
-
-
-def capacite_traitre(joueur):
-    joueur.nbr_carte_tactique += 1
-
-
-def capacite_cartes_tactique(carte, joueur, screen, screen_width, screen_height):
+def jouer_carte_troupes_elites(carte, screen, screen_width, screen_height):
     if carte.nom == "Joker1" or carte.nom == "Joker2" :
-        joueur.nbr_joker += 1
-        choix_couleur, choix_force = capacite_elite(joueur, screen, screen_width, screen_height, "joker")
+        choix_couleur, choix_force = capacite_elite(screen, screen_width, screen_height, "joker")
         choix_couleur = trad_couleur(choix_couleur)
-        return CarteClan(choix_couleur, choix_force), "Troupes d'élites", None, None
+        return CarteClan(choix_couleur, choix_force)
     elif carte.nom == "Espion":
-        choix_couleur, choix_force = capacite_elite(joueur, screen, screen_width, screen_height, "espion")
+        choix_couleur, choix_force = capacite_elite(screen, screen_width, screen_height, "espion")
         choix_couleur = trad_couleur(choix_couleur)
-        return CarteClan(choix_couleur, choix_force), "Troupes d'élites", None, None
+        return CarteClan(choix_couleur, choix_force)
     elif carte.nom == "Porte-Bouclier":
-        choix_couleur, choix_force = capacite_elite(joueur, screen, screen_width, screen_height, "porte-bouclier")
+        choix_couleur, choix_force = capacite_elite(screen, screen_width, screen_height, "porte-bouclier")
         choix_couleur = trad_couleur(choix_couleur)
-        return CarteClan(choix_couleur, choix_force), "Troupes d'élites", None, None
-    elif carte.nom == "Colin-Maillard":
-        return carte, "Modes de combat", carte.nom, None
-    elif carte.nom == "Combat de Boue":
-        capacite_combat_de_boue(joueur)
-        return carte, "Modes de combat", carte.nom, 4
-    elif carte.nom == "Chasseur de Tête":
-        capacite_chasseur_de_tete(joueur)
-    elif carte.nom == "Stratège":
-        capacite_stratege(joueur)
-    elif carte.nom == "Banshee":
-        capacite_banshee(joueur)
-    elif carte.nom == "Traître":
-        capacite_traitre(joueur)
-
+        return CarteClan(choix_couleur, choix_force)
 
 def config_button(screen_plateau, button_color, button, text):
     smallfont = pygame.font.SysFont('Forte', 35)

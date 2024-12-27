@@ -5,10 +5,9 @@ import pygame
 import sys
 import os
 
-from ShottenTotten.Jeux.Carte import displayCarte, deplacer_carte, generer_cartes, capacite_cartes_tactique, \
-    config_button, CarteTactique, CarteClan, chemin
+from ShottenTotten.Jeux.Carte import displayCarte, deplacer_carte, generer_cartes, config_button, CarteTactique, CarteClan, chemin, jouer_carte_troupes_elites
 from ShottenTotten.Jeux.Joueur import load_and_scale_image
-
+from ShottenTotten.Jeux.Popup import Popup
 
 current_dir, base_dir, carte_clan_path, carte_tactique_path, back_card_path = chemin()
 
@@ -273,7 +272,8 @@ class Plateau:
                 borne_liste = None
                 passer = False
                 carte_rect_list = []
-
+                carte_selectionnee = [None]
+                capacite = None
 
 
                 while borne_index is None:
@@ -291,7 +291,7 @@ class Plateau:
                                     for borne_key, borne_rect in buttons_plateau.items():
                                         if borne_rect.collidepoint(event.pos):
                                             numero_borne = int(borne_key.replace("borne", ""))
-                                            if isinstance(self.joueurs[joueur].main[carte_index], CarteClan) or self.joueurs[joueur].main[carte_index].capacite != "Modes de combat" or (self.joueurs[joueur].main[carte_index].capacite == "Modes de combat"  and not self.bornes[numero_borne].borne):
+                                            if isinstance(carte_selectionnee[0], CarteClan) or capacite != "Modes de combat" or (capacite == "Modes de combat"  and not self.bornes[numero_borne].borne):
                                                 if joueur == 0:
                                                     if len(self.bornes[numero_borne].joueur1_cartes) < combat_de_boue and self.bornes[
                                                         numero_borne].controle_par is None:
@@ -311,29 +311,34 @@ class Plateau:
                                         pygame.display.update(carte_rect)
                                         carte_index = carte_key
                                         carte_contour = carte_rect
-                capacite = None
-                if borne_index is not None:
-                    if isinstance(self.joueurs[joueur].main[carte_index], CarteTactique):
-                        carte, capacite, nom_carte_tactique, nbr_carte = capacite_cartes_tactique(self.joueurs[joueur].main[carte_index], self.joueurs[joueur], screen_plateau, screen_width, screen_height)
-                        if nbr_carte:
-                            combat_de_boue = nbr_carte
-                        if capacite == "Troupes d'élites":
-                            self.joueurs[joueur].main[carte_index] = carte
-                            self.displayPlateau(mode, nbr_manche, True, image_borne)
-                            config_button(screen_plateau, (169, 169, 169), button_passer["passer"], "Passer")
-                            config_button(screen_plateau, (169, 169, 169), button_revendiquer["revendiquer"],"Revendiquer")
-                            displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
-                            for i in range(1, 10):
-                                for carte in self.bornes[i].joueur1_cartes:
-                                    deplacer_carte(screen_plateau, 0, carte, i, self.bornes[i].joueur1_cartes)
-                                for carte in self.bornes[i].joueur2_cartes:
-                                    deplacer_carte(screen_plateau, 1, carte, i, self.bornes[i].joueur2_cartes)
-                        elif capacite == "Modes de combat":
-                            carte_tactique = os.path.join(carte_tactique_path, f"{self.joueurs[joueur].main[carte_index].nom}.jpg")
-                            image_key = f"borne{borne_index}"
-                            buttons_images[image_key] = load_and_scale_image(carte_tactique,100,50, capacite)
-                            image_borne[image_key] = carte_tactique
+                                        carte_selectionnee[0] = self.joueurs[joueur].main[carte_index]
+                                        if isinstance(carte_selectionnee[0], CarteTactique):
+                                            capacite = carte_selectionnee[0].capacite
 
+                if borne_index is not None:
+                    if isinstance(carte_selectionnee[0], CarteTactique):
+                        if carte_selectionnee[0].capacite == "Troupes d'élites":
+                            carte_selectionnee[0] = jouer_carte_troupes_elites(carte_selectionnee[0], screen_plateau, screen_width, screen_height)
+                        elif carte_selectionnee[0].capacite == "Modes de combat":
+                            nom_carte_tactique = carte_selectionnee[0].nom
+                            if nom_carte_tactique == "Combat de Boue":
+                                combat_de_boue = 4
+                            carte_tactique = os.path.join(carte_tactique_path, f"{carte_selectionnee[0].nom}.jpg")
+                            image_key = f"borne{borne_index}"
+                            buttons_images[image_key] = load_and_scale_image(carte_tactique,100,50, carte_selectionnee[0].capacite)
+                            image_borne[image_key] = carte_tactique
+                        elif carte_selectionnee[0].capacite == "Ruses":
+                            self.jouer_carte_ruse(carte_selectionnee[0], joueur, screen_plateau, screen_width, screen_height)
+
+                    self.displayPlateau(mode, nbr_manche, True, image_borne)
+                    config_button(screen_plateau, (169, 169, 169), button_passer["passer"], "Passer")
+                    config_button(screen_plateau, (169, 169, 169), button_revendiquer["revendiquer"], "Revendiquer")
+                    displayCarte(screen_plateau, joueur, self.joueurs[joueur].main)
+                    for i in range(1, 10):
+                        for carte in self.bornes[i].joueur1_cartes:
+                            deplacer_carte(screen_plateau, 0, carte, i, self.bornes[i].joueur1_cartes)
+                        for carte in self.bornes[i].joueur2_cartes:
+                            deplacer_carte(screen_plateau, 1, carte, i, self.bornes[i].joueur2_cartes)
                     carte_choisi = self.joueurs[joueur].jouer_carte(self, borne_index, self.joueurs[joueur].main[carte_index], capacite)
 
                     if capacite != "Modes de combat":
@@ -380,9 +385,11 @@ class Plateau:
                                     if not running:
                                         passer = True
                                         break
-                afficher_pioche(50, screen_plateau, self.pioche_clan, "clan")
+                afficher_pioche(60, screen_plateau, self.pioche_clan, "clan")
                 if mode != "classic":
-                    afficher_pioche(200, screen_plateau, self.pioche_tactique, "tactique")
+                    afficher_pioche(190, screen_plateau, self.pioche_tactique, "tactique")
+                    afficher_pioche(325, screen_plateau, self.defausse, "defausse")
+
             nombre_manche += 1
             self.commencer_nouvelle_manche(mode, nbr_manche)
         self.fin_jeu()
@@ -452,6 +459,123 @@ class Plateau:
             else:
                 break
 
+    def jouer_chasseur_de_tete(self, joueur, screen, screen_width, screen_height, capacite):
+        """Joue la carte Chasseur de Tête."""
+        # Popup pour choisir deux cartes à remettre sous la pioche
+        popup = Popup(screen, screen_width, screen_height, None)
+        choix_pioche_clan, choix_pioche_tactique = popup.show(capacite)
+
+        # Piochez trois cartes
+        cartes_piochees = []
+        while choix_pioche_clan + choix_pioche_tactique > 0:
+            if choix_pioche_clan:
+                cartes_piochees.append(self.pioche_clan.popleft())
+                choix_pioche_clan -= 1
+            if choix_pioche_tactique:
+                cartes_piochees.append(self.pioche_tactique.popleft())
+                choix_pioche_tactique -= 1
+
+        main = cartes_piochees + self.joueurs[joueur].main
+        popup.show(None)
+        cards = displayCarte(screen, 2, main)
+
+        button_valider = {"valider": pygame.Rect(screen_width // 2 - 75, screen_height // 2 + 240, 150, 50)}
+
+        pygame.draw.rect(screen, (205, 200, 145), button_valider["valider"])  # Fond clair
+        pygame.draw.rect(screen, (0, 0, 0), button_valider["valider"], width=2)  # Bordure noire
+        text_surface = pygame.font.Font(None, 36).render("Valider", True, (0, 0, 0))
+        screen.blit(text_surface, text_surface.get_rect(center=button_valider["valider"].center))
+
+        choix_carte = {}
+        carte_index = None
+
+        valider = False
+        while not valider:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    if len(choix_carte) == 2:
+                        if button_valider["valider"].collidepoint(event.pos):
+                            valider = True
+                    for carte_key, carte_rect in cards.items():
+                        if carte_rect.collidepoint(event.pos):
+                            if len(choix_carte) == 2:
+                                choix_carte.pop(0)
+                            if choix_carte[main[carte_index]] is not None:
+                                pygame.draw.rect(screen, (255, 255, 255), choix_carte[main[carte_index]], width=2)
+                                pygame.display.update(choix_carte[main[carte_index]])
+                            pygame.draw.rect(screen, (255, 0, 0), carte_rect, width=2)
+                            pygame.display.update(carte_rect)
+                            carte_index = carte_key
+                            carte_contour = carte_rect
+                            if main[carte_index] not in choix_carte:
+                                choix_carte[main[carte_index]] = carte_contour
+
+        # Remettre les cartes choisies sous la pioche
+        for carte_index, carte_rect in choix_carte:
+            if isinstance(main[carte_index], CarteClan):
+                self.pioche_clan.append(carte_index)
+            else:
+                self.pioche_clan.append(carte_index)
+
+    """def jouer_stratege(self, joueur, screen, screen_width, screen_height):
+        """"Joue la carte Stratège.""""
+        # Choisir une carte à déplacer
+        cartes_joueur = self.bornes[joueur].joueur1_cartes  # Cartes du joueur
+        popup = Popup(screen, screen_width, screen_height, None)
+        carte_a_deplacer = popup.show_single_choice("Choisissez une carte à déplacer.")
+
+        # Choisir une Borne de destination
+        bornes_non_revendiquees = [i for i, borne in self.bornes.items() if borne.controle_par is None]
+        popup = Popup(screen, screen_width, screen_height, None)
+        borne_destination = popup.show_single_choice("Choisissez une Borne de destination.")
+
+        if carte_a_deplacer and borne_destination:
+            # Déplacer la carte vers la Borne choisie
+            self.bornes[borne_destination].joueur1_cartes.append(carte_a_deplacer)
+
+    def jouer_banshee(self, screen, screen_width, screen_height):
+        """"Joue la carte Banshee.""""
+        # Choisissez une carte adverse à défausser
+        cartes_adverses = [carte for borne in self.bornes.values() for carte in borne.joueur2_cartes if borne.controle_par is None]
+        popup = Popup(screen, screen_width, screen_height, None)
+        carte_a_defausser = popup.show_single_choice("Choisissez une carte adverse à défausser.")
+
+        if carte_a_defausser:
+            self.defausse.append(carte_a_defausser)
+
+    def jouer_traitre(self, screen, screen_width, screen_height):
+        """"Joue la carte Traître.""""
+        # Choisissez une carte adverse à déplacer
+        cartes_adverses = [carte for borne in self.bornes.values() for carte in borne.joueur2_cartes if
+                           borne.controle_par is None]
+        popup = Popup(screen, screen_width, screen_height, None)
+        carte_a_deplacer = popup.show_single_choice("Choisissez une carte adverse à déplacer.")
+
+        if carte_a_deplacer:
+            # Déplacez la carte vers une Borne non revendiquée de votre côté
+            bornes_non_revendiquees = [i for i, borne in self.bornes.items() if borne.controle_par is None]
+            popup = Popup(screen, screen_width, screen_height, None)
+            borne_destination = popup.show_single_choice("Choisissez une Borne pour placer la carte.")
+
+            self.bornes[borne_destination].joueur1_cartes.append(carte_a_deplacer)"""
+
+    def jouer_carte_ruse(self, carte, joueur, screen, screen_width, screen_height):
+        """Joue une carte Tactique Ruse et l'ajoute à la défausse."""
+        if carte.nom == "Chasseur de Tête":
+            self.jouer_chasseur_de_tete(screen, joueur, screen_width, screen_height, carte.capacite)
+        """elif carte.nom == "Stratège":
+            self.jouer_stratege(joueur, screen, screen_width, screen_height)
+        elif carte.nom == "Banshee":
+            self.jouer_banshee(screen, screen_width, screen_height)
+        elif carte.nom == "Traître":
+            self.jouer_traitre(screen, screen_width, screen_height)"""
+
+        # Défausse la carte après avoir joué l'effet
+        self.defausse.append(carte)
+
 
 def melanger_pioche(cartes_clans, cartes_tactiques):
     """Mélange les cartes et retourne une pioche."""
@@ -460,18 +584,18 @@ def melanger_pioche(cartes_clans, cartes_tactiques):
     return deque(pioche)
 
 def afficher_pioche(x, screen, pioche, mode):
-    rect_ = pygame.Rect(x, 455, 100, 40)  # Définir les dimensions du rectangle
+    rect_ = pygame.Rect(x - 30, 455, 100, 40)  # Définir les dimensions du rectangle
     pygame.draw.rect(screen, (205, 200, 145), rect_)
 
     smallfont = pygame.font.SysFont('Forte', 35)
     nombre_pioche = smallfont.render(str(len(pioche)), True, (139, 69, 19))
     rect_text = nombre_pioche.get_rect(center=rect_.center)
-    rect_text.x -= rect_.width // 2
+    rect_text.x -= 20
     screen.blit(nombre_pioche, rect_text.topleft)
     nom_pioche = smallfont.render(mode, True, (139, 69, 19))
     rect_text = nom_pioche.get_rect(center=rect_.center)
     rect_text.y -= rect_.height // 2 + 180
-    rect_text.x -= rect_.width // 2
+    rect_text.x -= 20
     screen.blit(nom_pioche, rect_text.topleft)
 
 
