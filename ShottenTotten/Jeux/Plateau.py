@@ -34,26 +34,40 @@ class Plateau:
         self.nbr_joueurs = None
         self.joueur_actuel = None
 
-    def nombre_bornes(self):
-        """Retourne le nombre total de bornes sur le plateau."""
-        return len(self.bornes)
+        # Initialisation de l'agent Q-Learning
+        self.q_agent = QLearningAgent(actions=[], learning_rate=0.1, discount_factor=0.9, exploration_rate=1.0)
 
-    def gagnant_borne(self, numero_borne):
-        """Détermine le gagnant d'une borne spécifique."""
-        borne = self.bornes.get(numero_borne)
-        if not borne:
-            return None  # Aucun gagnant si la borne n'existe pas
-        if borne.controle_par is not None:
-            return 'max' if borne.controle_par == self.joueurs[0] else 'min'
-        return None
+    def to_state_representation(self):
+        """
+        Retourne une représentation de l'état pour Q-Learning.
+        """
+        state_repr = []
+        for borne in self.bornes.values():
+            # Convertir chaque élément de l'état en un tuple immuable
+            state_repr.append((tuple(borne.joueur1_cartes), tuple(borne.joueur2_cartes), borne.controle_par))
+        return tuple(state_repr)
 
-    def bornes_a_gagner(self):
-        """Retourne le nombre de bornes qu'un joueur doit contrôler pour gagner la partie."""
-        return (len(self.bornes) // 2) + 1  # Majorité des bornes
+    def calculate_reward(self, state, joueur):
+        """
+        Calcule une récompense pour le joueur en fonction de l'état.
+        """
+        reward = 0
+        for borne in self.bornes.values():
+            if borne.controle_par == self.joueurs[joueur]:
+                reward += 10  # Récompense pour contrôler une borne
+            elif borne.controle_par == self.joueurs[1 - joueur]:
+                reward -= 10  # Pénalité si l'adversaire contrôle la borne
+        return reward
 
     def joueur_courant(self):
         """ Retourne le joueur qui doit jouer actuellement."""
         return self.joueur_actuel
+
+
+    def nombre_bornes(self):
+        """Retourne le nombre total de bornes sur le plateau."""
+        return len(self.bornes)
+
 
     def main_joueur(self, joueur):
         """ Retourne la main du joueur spécifié."""
@@ -80,14 +94,6 @@ class Plateau:
 
         return True
 
-    def jouer_c (self, carte, borne, joueur):
-        if isinstance(carte, CarteTactique):
-            capacite = carte.capacite
-        else:
-            capacite = None
-
-        return self.joueurs[joueur].jouer_carte(self, borne, carte, capacite)
-
     def appliquer_action_jeu(self, action, joueur):
         """
         Applique une action effectuée par un joueur IA.
@@ -99,37 +105,6 @@ class Plateau:
         else:
             raise ValueError(f"La carte {carte.force}-{carte.couleur} n'est pas dans la main du joueur.")
 
-    def clone(self):
-        """
-        Crée une copie complète de l'état actuel du plateau.
-        """
-        nouveau_plateau = Plateau(nombre_bornes=len(self.bornes))
-        nouveau_plateau.bornes = {
-            k: Borne() for k, v in self.bornes.items()
-        }
-        for numero_borne, borne in self.bornes.items():
-            nouveau_plateau.bornes[numero_borne].joueur1_cartes = borne.joueur1_cartes[:]
-            nouveau_plateau.bornes[numero_borne].joueur2_cartes = borne.joueur2_cartes[:]
-            nouveau_plateau.bornes[numero_borne].controle_par = borne.controle_par
-
-        nouveau_plateau.defausse = self.defausse[:]
-        nouveau_plateau.pioche_clan = deque(self.pioche_clan)
-        nouveau_plateau.pioche_tactique = deque(self.pioche_tactique)
-        nouveau_plateau.nbr_cartes = self.nbr_cartes
-        nouveau_plateau.joueurs = [joueur.clone() for joueur in self.joueurs]
-        nouveau_plateau.nbr_joueurs = self.nbr_joueurs
-        nouveau_plateau.joueur_actuel = self.joueur_actuel
-        return nouveau_plateau
-
-    def score_combinaison(self, joueur, borne):
-        """
-        Évalue la force de la combinaison de cartes d'un joueur sur une borne.
-        """
-        cartes = self.bornes[borne+1].joueur1_cartes if joueur == "max" else self.bornes[borne+1].joueur2_cartes
-        if len(cartes) < 3:
-            return sum(carte.force for carte in cartes)  # Somme brute si pas de combinaison complète
-        # Ajoutez des règles pour évaluer les combinaisons (suite, couleur, etc.)
-        return 0  # Placeholder, remplacez par vos règles
 
     def ajouter_carte(self, numero_borne, joueur_index, carte, capacite):
         """Ajoute une carte à une borne pour un joueur."""
@@ -342,28 +317,44 @@ class Plateau:
                     print("main IA")
                     for carte in self.joueurs[joueur].main:
                         print(carte.force, carte.couleur)
-                    action, _ = alpha_beta_pruning(
-                        state=self,
-                        depth=3,  # Profondeur d'exploration de l'IA
-                        alpha=float('-inf'),
-                        beta=float('inf'),
-                        maximizing_player=(joueur == 0),
-                        evaluate=evaluate,
-                        generate_actions=generate_actions,
-                        apply_action=apply_action,
-                    )
-                    # Appliquer l'action choisie par l'IA
-                    self.appliquer_action_jeu(action, joueur)
+                    # Générer les actions possibles
+                    self.q_agent.actions = generate_actions(self)
+
+                    if not self.q_agent.actions:
+                        print("Aucune action possible pour l'IA. Passer le tour.")
+                        self.joueur_actuel = 1 - self.joueur_actuel
+                        passer = True
+                        return  # Passer au joueur suivant
+
+                    # L'IA choisit une action
+                    current_state = self.to_state_representation()
+                    action = self.q_agent.choose_action(current_state)
+                    print(f"Action choisie par l'IA : {action}")
+
+                    # Appliquer l'action
+                    self.appliquer_action_jeu(action, self.joueur_actuel)
+
+                    # Mettre à jour la table Q
+                    next_state = self.to_state_representation()
+                    reward = self.calculate_reward(next_state, self.joueur_actuel)
+                    self.q_agent.update_q_value(current_state, action, reward, next_state)
+
+                    # Réduire le taux d'exploration
+                    self.q_agent.decay_exploration_rate()
+
                     car, bor = action
+
                     if joueur == 0:
                         deplacer_carte(screen_plateau, joueur, car, bor, self.bornes[bor].joueur1_cartes)
                     else:
                         deplacer_carte(screen_plateau, joueur, car, bor, self.bornes[bor].joueur2_cartes)
                     self.joueurs[joueur].piocher_ia(self.pioche_clan, self.pioche_tactique, "pioche_clan")
                     pygame.display.update()
+
+                    # Passer au joueur suivant
                     joueur = 1 - joueur
                     self.joueur_actuel = joueur
-                    passer = True  # L'IA termine immédiatement son tour
+                    passer = True
 
                 else:
                     # Gérer les événements Pygame
