@@ -47,7 +47,7 @@ class Plateau:
             state_repr.append((tuple(borne.joueur1_cartes), tuple(borne.joueur2_cartes), borne.controle_par))
         return tuple(state_repr)
 
-    def calculate_reward(self, state, joueur):
+    def calculate_reward(self, joueur):
         """
         Calcule une récompense pour le joueur en fonction de l'état.
         """
@@ -323,8 +323,6 @@ class Plateau:
                     if not self.q_agent.actions:
                         print("Aucune action possible pour l'IA. Passer le tour.")
                         self.joueur_actuel = 1 - self.joueur_actuel
-                        passer = True
-                        return  # Passer au joueur suivant
 
                     # L'IA choisit une action
                     current_state = self.to_state_representation()
@@ -336,7 +334,7 @@ class Plateau:
 
                     # Mettre à jour la table Q
                     next_state = self.to_state_representation()
-                    reward = self.calculate_reward(next_state, self.joueur_actuel)
+                    reward = self.calculate_reward(self.joueur_actuel)
                     self.q_agent.update_q_value(current_state, action, reward, next_state)
 
                     # Réduire le taux d'exploration
