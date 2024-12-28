@@ -64,6 +64,11 @@ class Joueur:
         desactiver_indication_fleche(screen)
         pygame.display.update()
 
+    def piocher_ia (self, pioche_clan, pioche_tactique, pioche):
+        if pioche == "pioche_clan" and len(pioche_clan) > 0:
+            self.main.append(pioche_clan.popleft())
+        elif pioche == "pioche_tactique" and len(pioche_tactique) > 0:
+            self.main.append(pioche_tactique.popleft())
 
 def afficher_indication_pioche(screen):
     current_dir = os.path.dirname(__file__)

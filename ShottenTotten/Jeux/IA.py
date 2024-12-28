@@ -4,13 +4,14 @@ import numpy as np
 # --- Alpha-Bêta Pruning ---
 def alpha_beta_pruning(state, depth, alpha, beta, maximizing_player, evaluate, generate_actions, apply_action):
     if depth == 0 or is_terminal_state(state):
-        return None, evaluate(state)
+        return None, evaluate(state)  # Pas d'action, retourne le score de l'état
+
+    best_action = None
 
     if maximizing_player:
         max_eval = float('-inf')
-        best_action = None
         for action in generate_actions(state):
-            new_state = apply_action(state, action)  # Utiliser une copie de l'état
+            new_state = apply_action(state, action)
             _, eval_score = alpha_beta_pruning(new_state, depth - 1, alpha, beta, False, evaluate, generate_actions, apply_action)
             if eval_score > max_eval:
                 max_eval = eval_score
@@ -21,9 +22,8 @@ def alpha_beta_pruning(state, depth, alpha, beta, maximizing_player, evaluate, g
         return best_action, max_eval
     else:
         min_eval = float('inf')
-        best_action = None
         for action in generate_actions(state):
-            new_state = apply_action(state, action)  # Utiliser une copie de l'état
+            new_state = apply_action(state, action)
             _, eval_score = alpha_beta_pruning(new_state, depth - 1, alpha, beta, True, evaluate, generate_actions, apply_action)
             if eval_score < min_eval:
                 min_eval = eval_score
