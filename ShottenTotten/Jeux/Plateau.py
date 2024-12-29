@@ -225,11 +225,11 @@ class Plateau:
             main_joueur1 = self.evaluer_mains(0, numero_borne, nom_carte_tactique)
             main_joueur2 = self.evaluer_mains(1, numero_borne, nom_carte_tactique)
             if main_joueur1 > main_joueur2:
-                self.gagnant_revendiquer(numero_borne, joueur)
+                self.gagnant_revendiquer(numero_borne, self.joueurs[0])
                 pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
                 pygame.display.update(borne_rect)
             elif main_joueur2 > main_joueur1:
-                self.gagnant_revendiquer(numero_borne, joueur)
+                self.gagnant_revendiquer(numero_borne, self.joueurs[1])
                 pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
                 pygame.display.update(borne_rect)
             else:
@@ -240,11 +240,11 @@ class Plateau:
                 for carte in self.bornes[numero_borne].joueur2_cartes:
                     somme_joueur2 += carte.force
                 if somme_joueur1 > somme_joueur2:
-                    self.gagnant_revendiquer(numero_borne, joueur)
+                    self.gagnant_revendiquer(numero_borne, self.joueurs[0])
                     pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
                     pygame.display.update(borne_rect)
                 elif somme_joueur2 > somme_joueur1:
-                    self.gagnant_revendiquer(numero_borne, joueur)
+                    self.gagnant_revendiquer(numero_borne, self.joueurs[1])
                     pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
                     pygame.display.update(borne_rect)
                 else:
