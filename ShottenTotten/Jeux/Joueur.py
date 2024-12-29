@@ -14,11 +14,22 @@ class Joueur:
         self.score = 0
         self.borne_controlee = 0
 
+    def clone(self):
+        """
+        Crée une copie complète de l'état actuel du joueur.
+        """
+        nouveau_joueur = Joueur(self.nom, self.id)
+        nouveau_joueur.main = self.main[:]  # Copie indépendante des cartes
+        nouveau_joueur.borne_controlee = self.borne_controlee
+        nouveau_joueur.score = self.score
+        return nouveau_joueur
+
     def jouer_carte(self, plateau, numero_borne, carte, capacite):
         """Méthode pour jouer une carte."""
-        plateau.ajouter_carte(numero_borne, self.id, carte, capacite)
-        self.main.remove(carte)
-        return carte
+        if carte in self.main:
+            plateau.ajouter_carte(numero_borne, self.id, carte, capacite)
+            self.main.remove(carte)
+            return carte
 
     def distribuer(self, pioche):
         """Méthode pour piocher une carte."""
@@ -53,6 +64,11 @@ class Joueur:
         desactiver_indication_fleche(screen)
         pygame.display.update()
 
+    def piocher_ia (self, pioche_clan, pioche_tactique, pioche):
+        if pioche == "pioche_clan" and len(pioche_clan) > 0:
+            self.main.append(pioche_clan.popleft())
+        elif pioche == "pioche_tactique" and len(pioche_tactique) > 0:
+            self.main.append(pioche_tactique.popleft())
 
 def afficher_indication_pioche(screen):
     current_dir = os.path.dirname(__file__)
