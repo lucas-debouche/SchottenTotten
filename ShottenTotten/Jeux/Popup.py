@@ -6,7 +6,6 @@ class Popup:
         self.screen = screen
         self.screen_width = screen_width
         self.screen_height = screen_height
-        self.selected = []
 
         # Centre la popup
         self.popup_x = self.screen_width // 2
@@ -50,8 +49,8 @@ class Popup:
         self.pioche_tactique = {"tactique": pygame.Rect(self.screen_width // 2 + 40, self.screen_height // 2 - 200, 150, 50)}
 
     def show(self, capacite):
-        valider = False
-        while not valider:
+        running = False
+        while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -60,7 +59,7 @@ class Popup:
                     # Vérifie si le bouton "Valider" est cliqué
                     if capacite == "Troupes d'élites":
                         if self.button_valider["valider"].collidepoint(event.pos) and self.choix_couleur and self.choix_force:
-                            valider = True
+                            running = False
                             # Gestion des menus déroulants
                         elif self.menu1_rect["couleur"].collidepoint(event.pos):
                             self.menu1_open = not self.menu1_open
@@ -79,7 +78,7 @@ class Popup:
                     elif capacite == "Ruses":
                         if self.choix_pioche_clan + self.choix_pioche_tactique == 3:
                             if self.button_valider["valider"].collidepoint(event.pos):
-                                valider = True
+                                running = False
                         else:
                             if self.pioche_clan["clan"].collidepoint(event.pos):
                                 self.choix_pioche_clan += 1
