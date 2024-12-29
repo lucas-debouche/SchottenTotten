@@ -48,7 +48,7 @@ class Popup:
         self.pioche_clan = {"clan": pygame.Rect(self.screen_width // 2 - 190, self.screen_height // 2 - 200, 150, 50)}
         self.pioche_tactique = {"tactique": pygame.Rect(self.screen_width // 2 + 40, self.screen_height // 2 - 200, 150, 50)}
 
-    def show(self, capacite):
+    def show(self, capacite, pioche_clan, pioche_tactique):
         running = True
         self.screen.fill((165, 140, 100))  # Efface l'écran principal
         while running:
@@ -84,10 +84,12 @@ class Popup:
                             if self.button_valider["valider"].collidepoint(event.pos):
                                 running = False
                         else:
-                            if self.pioche_clan["clan"].collidepoint(event.pos):
+                            if self.pioche_clan["clan"].collidepoint(event.pos) and len(pioche_clan) - self.choix_pioche_clan > 0:
                                 self.choix_pioche_clan += 1
-                            elif self.pioche_tactique["tactique"].collidepoint(event.pos):
+                                self.screen.fill((165, 140, 100))
+                            if self.pioche_tactique["tactique"].collidepoint(event.pos) and len(pioche_tactique) - self.choix_pioche_tactique > 0:
                                 self.choix_pioche_tactique += 1
+                                self.screen.fill((165, 140, 100))
 
             if capacite:
                 # Dessin du bouton Valider
@@ -116,21 +118,34 @@ class Popup:
                     menuX_open(self.options2_rects, self.screen, self.force)
 
             elif capacite == "Ruses":
-                pygame.draw.rect(self.screen, (205, 200, 145), self.pioche_clan["clan"])
+                if len(pioche_clan) - self.choix_pioche_clan > 0:
+                    pygame.draw.rect(self.screen, (205, 200, 145), self.pioche_clan["clan"])
+                else:
+                    pygame.draw.rect(self.screen, (120, 120, 120), self.pioche_clan["clan"])
                 pygame.draw.rect(self.screen, (0, 0, 0), self.pioche_clan["clan"], width=2)
                 clan_text = pygame.font.Font(None, 36).render("Clan", True, (0, 0, 0))
                 self.screen.blit(clan_text, clan_text.get_rect(center=self.pioche_clan["clan"].center))
 
-                pygame.draw.rect(self.screen, (205, 200, 145), self.pioche_tactique["tactique"])
+                if len(pioche_tactique) - self.choix_pioche_tactique > 0:
+                    pygame.draw.rect(self.screen, (205, 200, 145), self.pioche_tactique["tactique"])
+                else:
+                    pygame.draw.rect(self.screen, (120, 120, 120), self.pioche_tactique["tactique"])
                 pygame.draw.rect(self.screen, (0, 0, 0), self.pioche_tactique["tactique"], width=2)
                 tactique_text = pygame.font.Font(None, 36).render("Tactique", True, (0, 0, 0))
                 self.screen.blit(tactique_text, tactique_text.get_rect(center=self.pioche_tactique["tactique"].center))
+
+                # Affichage des compteurs de clics sous les boutons
+                clan_count_text = pygame.font.Font(None, 36).render(f"Clics: {self.choix_pioche_clan}", True, (0, 0, 0))
+                self.screen.blit(clan_count_text, (self.pioche_clan["clan"].x + 30, self.pioche_clan["clan"].y + 60))
+
+                tactique_count_text = pygame.font.Font(None, 36).render(f"Clics: {self.choix_pioche_tactique}", True,(0, 0, 0))
+                self.screen.blit(tactique_count_text,(self.pioche_tactique["tactique"].x + 30, self.pioche_tactique["tactique"].y + 60))
 
             pygame.display.flip()
 
         if self.choix_couleur and self.choix_force:
             return self.choix_couleur, self.choix_force
-        elif self.choix_pioche_clan and self.choix_pioche_tactique:
+        elif self.choix_pioche_clan + self.choix_pioche_tactique == 3:
             return self.choix_pioche_clan, self.choix_pioche_tactique
 
 

@@ -46,14 +46,14 @@ def generer_cartes():
     return cartes_clans, cartes_tactiques
 
 
-def displayCarte(fenetre, joueur, main):
+def displayCarte(fenetre, joueur, main, ruses):
     # Création rectangle affichage carte joueur 1 et joueur 2
-    if joueur == 2:
-        x_conteneur = 100
-    else:
+    if joueur == 0:
         x_conteneur = 450
-    y1_conteneur = 0
-    y2_conteneur = 600
+    elif joueur == 1:
+        x_conteneur = 450
+    else:
+        x_conteneur = 300
 
     current_dir, base_dir, carte_clan_path, carte_tactique_path, back_card_path = chemin()
 
@@ -69,24 +69,21 @@ def displayCarte(fenetre, joueur, main):
         5: x_conteneur + 405,
         6: x_conteneur + 500,
         7: x_conteneur + 595,
-        8: x_conteneur + 680,
-        9: x_conteneur + 775,
-        10: x_conteneur + 870,
+        8: x_conteneur + 690,
+        9: x_conteneur + 785,
+        10: x_conteneur + 880,
     }
 
     positions_joueurs = {
-        1: y1_conteneur + 10,
-        0: y2_conteneur + 10,
-        2: y2_conteneur,
+        1: 10,
+        0: 610,
+        2: 450,
     }
 
     buttons = {}
     for i in range(len(main)):
         x_carte = positions_cartes[i + 1]
         y_joueur = positions_joueurs[joueur]
-
-        adversaire = 1 if joueur == 0 else 0
-        y_adversaire = positions_joueurs[adversaire]
 
         if isinstance(main[i], CarteClan):
             carte = os.path.join(carte_clan_path, f"{main[i].couleur}-{main[i].force}.jpg")
@@ -104,13 +101,18 @@ def displayCarte(fenetre, joueur, main):
             print(f"Erreur lors du chargement de l'image : {carte}\n{e}")
             continue
 
-        back_card_img = pygame.image.load(back_card_path)
-        back_card_img = pygame.transform.scale(back_card_img, (largeur_carte, hauteur_carte))
-        back_card = pygame.Rect(x_carte, y_adversaire, largeur_carte, hauteur_carte)
+        if not ruses:
+            adversaire = 1 if joueur == 0 else 0
+            y_adversaire = positions_joueurs[adversaire]
+            back_card_img = pygame.image.load(back_card_path)
+            back_card_img = pygame.transform.scale(back_card_img, (largeur_carte, hauteur_carte))
+            back_card = pygame.Rect(x_carte, y_adversaire, largeur_carte, hauteur_carte)
+            fenetre.blit(back_card_img, (back_card.x, back_card.y))
+
         carte_button_img = pygame.transform.scale(carte_button_img, (largeur_carte, hauteur_carte))
         carte_button = pygame.Rect(x_carte, y_joueur, largeur_carte, hauteur_carte)
         fenetre.blit(carte_button_img, (carte_button.x, carte_button.y))
-        fenetre.blit(back_card_img, (back_card.x, back_card.y))
+
 
         buttons[i] = carte_button
     return buttons
@@ -172,22 +174,22 @@ def deplacer_carte(fenetre, joueur, carte, borne_index, borne_joueur_cartes):
     # Dessiner la carte à la nouvelle position
     fenetre.blit(carte_img, (x,y))
 
-def capacite_elite(screen, screen_width, screen_height, troupe):
+def capacite_elite(screen, screen_width, screen_height, troupe, pioche_clan, pioche_tactique):
     popup = Popup(screen, screen_width, screen_height, troupe)
-    choix_couleur, choix_force = popup.show("Troupes d'élites")
+    choix_couleur, choix_force = popup.show("Troupes d'élites", pioche_clan, pioche_tactique)
     return choix_couleur, choix_force
 
-def jouer_carte_troupes_elites(carte, screen, screen_width, screen_height):
+def jouer_carte_troupes_elites(carte, screen, screen_width, screen_height, pioche_clan, pioche_tactique):
     if carte.nom == "Joker1" or carte.nom == "Joker2" :
-        choix_couleur, choix_force = capacite_elite(screen, screen_width, screen_height, "joker")
+        choix_couleur, choix_force = capacite_elite(screen, screen_width, screen_height, "joker", pioche_clan, pioche_tactique)
         choix_couleur = trad_couleur(choix_couleur)
         return CarteClan(choix_couleur, choix_force)
     elif carte.nom == "Espion":
-        choix_couleur, choix_force = capacite_elite(screen, screen_width, screen_height, "espion")
+        choix_couleur, choix_force = capacite_elite(screen, screen_width, screen_height, "espion", pioche_clan, pioche_tactique)
         choix_couleur = trad_couleur(choix_couleur)
         return CarteClan(choix_couleur, choix_force)
     elif carte.nom == "Porte-Bouclier":
-        choix_couleur, choix_force = capacite_elite(screen, screen_width, screen_height, "porte-bouclier")
+        choix_couleur, choix_force = capacite_elite(screen, screen_width, screen_height, "porte-bouclier", pioche_clan, pioche_tactique)
         choix_couleur = trad_couleur(choix_couleur)
         return CarteClan(choix_couleur, choix_force)
 

@@ -28,7 +28,8 @@ class Joueur:
         """Méthode pour jouer une carte."""
         if carte in self.main:
             plateau.ajouter_carte(numero_borne, self.id, carte, capacite)
-            self.main.remove(carte)
+            if capacite != "Ruses" and capacite != "Modes de Combat":
+                self.main.remove(carte)
             return carte
 
     def distribuer(self, pioche):
