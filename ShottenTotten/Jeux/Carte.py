@@ -115,7 +115,7 @@ def displayCarte(fenetre, joueur, main):
         buttons[i] = carte_button
     return buttons
 
-def deplacer_carte(fenetre, joueur, carte, borne_index, borne):
+def deplacer_carte(fenetre, joueur, carte, borne_index, borne_joueur_cartes):
     """Déplace une carte à une position donnée."""
     positions_cartes = {
         1: 417.5,
@@ -128,14 +128,16 @@ def deplacer_carte(fenetre, joueur, carte, borne_index, borne):
         8: 1187.5,
         9: 1297.5,
     }
-    nb_carte_borne = 0
-    for bornes in borne:
-        if carte != bornes:
-            nb_carte_borne += 1
+    i = 0
+    numero_carte = 0
+    for numero_carte_borne in borne_joueur_cartes:
+        if carte == numero_carte_borne:
+            numero_carte = i
+        i += 1
 
     positions_joueurs = {
-        1: 210 - (nb_carte_borne * 30),
-        0: 410 + (nb_carte_borne * 30)
+        1: 210 - (numero_carte * 30),
+        0: 410 + (numero_carte * 30)
     }
 
     x = positions_cartes[borne_index]

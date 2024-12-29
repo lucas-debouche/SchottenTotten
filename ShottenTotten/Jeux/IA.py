@@ -85,4 +85,3 @@ def generate_actions(state):
             actions.append(("REVENDIQUER", borne))  # Action de type ("REVENDIQUER", Borne)
 
     return actions
-
