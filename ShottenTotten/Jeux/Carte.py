@@ -173,7 +173,6 @@ def deplacer_carte(fenetre, joueur, carte, borne_index, borne):
 def capacite_elite(screen, screen_width, screen_height, troupe):
     popup = Popup(screen, screen_width, screen_height, troupe)
     choix_couleur, choix_force = popup.show("Troupes d'élites")
-    print(choix_couleur, choix_force)
     return choix_couleur, choix_force
 
 def jouer_carte_troupes_elites(carte, screen, screen_width, screen_height):
