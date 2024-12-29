@@ -216,7 +216,7 @@ class Menu :
                         #Sélection joueur contre ia
                         plateau.nbr_joueurs = 1
                     elif buttons["iavsia"].collidepoint(event.pos):
-                        #Sélection joueur contre ia
+                        #Sélection ia contre ia
                         plateau.nbr_joueurs = 0
                     if buttons["manche1"].collidepoint(event.pos):
                         #Sélection 1 manche
