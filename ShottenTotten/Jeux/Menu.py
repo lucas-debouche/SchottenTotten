@@ -87,8 +87,8 @@ def displayNom(mode, nbr_manche):
         input_nom(screen_nom, input_color1, input_rect1, textfont, nom_joueur1)
 
         if nbr_joueur == 0:
-            plateau.joueurs.append(Joueur(0, f"IA{1}"))
-            plateau.joueurs.append(Joueur(1, f"IA{2}"))
+            plateau.joueurs.append(Joueur(0, "IA"))
+            plateau.joueurs.append(Joueur(1, "IA"))
             plateau.commencer_nouvelle_manche(mode, nbr_manche)
         elif nbr_joueur == 1:
             nom_joueur2 = "IA"
