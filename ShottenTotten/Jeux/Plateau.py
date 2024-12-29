@@ -1,4 +1,3 @@
-import random
 from collections import deque
 
 import pygame
@@ -100,7 +99,7 @@ class Plateau:
         """
         carte, borne = action
         if carte in self.joueurs[joueur].main:
-            self.ajouter_carte(borne, joueur, carte, None)
+            self.ajouter_carte(borne, joueur, carte, "")
             self.joueurs[joueur].main.remove(carte)
         else:
             raise ValueError(f"La carte {carte.force}-{carte.couleur} n'est pas dans la main du joueur.")
@@ -297,7 +296,6 @@ class Plateau:
 
     def tour_de_jeu(self, screen_plateau, buttons_images, buttons_plateau, mode, nbr_manche, screen_width, screen_height):
         """Gère le déroulement d'une manche de jeu."""
-
         button_revendiquer = {"revendiquer": pygame.Rect(1250, 600, 200, 50)}
         button_passer = {"passer": pygame.Rect(1250, 660, 200, 50)}
 
@@ -436,6 +434,7 @@ class Plateau:
                         if isinstance(carte_selectionnee[0], CarteTactique):
                             if carte_selectionnee[0].capacite == "Troupes d'élites":
                                 carte_selectionnee[0] = jouer_carte_troupes_elites(carte_selectionnee[0], screen_plateau, screen_width, screen_height)
+                                self.joueurs[joueur].main[carte_index] = carte_selectionnee[0]
                             elif carte_selectionnee[0].capacite == "Modes de combat":
                                 nom_carte_tactique = carte_selectionnee[0].nom
                                 if nom_carte_tactique == "Combat de Boue":

@@ -49,7 +49,8 @@ class Popup:
         self.pioche_tactique = {"tactique": pygame.Rect(self.screen_width // 2 + 40, self.screen_height // 2 - 200, 150, 50)}
 
     def show(self, capacite):
-        running = False
+        running = True
+        self.screen.fill((165, 140, 100))  # Efface l'écran principal
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -58,23 +59,26 @@ class Popup:
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     # Vérifie si le bouton "Valider" est cliqué
                     if capacite == "Troupes d'élites":
-                        if self.button_valider["valider"].collidepoint(event.pos) and self.choix_couleur and self.choix_force:
+                        if self.button_valider["valider"].collidepoint(
+                                event.pos) and self.choix_couleur and self.choix_force:
                             running = False
-                            # Gestion des menus déroulants
                         elif self.menu1_rect["couleur"].collidepoint(event.pos):
                             self.menu1_open = not self.menu1_open
                         elif self.menu1_open:
                             for i, rect in self.options1_rects.items():
                                 if rect.collidepoint(event.pos):
                                     self.choix_couleur = self.couleurs[i]
-                                    self.menu1_open = False
+                                    self.menu1_open = False  # Fermer le menu des couleurs
+                                    self.screen.fill((165, 140, 100))
                         elif self.menu2_rect["force"].collidepoint(event.pos):
                             self.menu2_open = not self.menu2_open
                         elif self.menu2_open:
                             for i, rect in self.options2_rects.items():
                                 if rect.collidepoint(event.pos):
                                     self.choix_force = self.force[i]
-                                    self.menu2_open = False
+                                    self.menu2_open = False  # Fermer le menu de force
+                                    self.screen.fill((165, 140, 100))
+
                     elif capacite == "Ruses":
                         if self.choix_pioche_clan + self.choix_pioche_tactique == 3:
                             if self.button_valider["valider"].collidepoint(event.pos):
@@ -84,29 +88,26 @@ class Popup:
                                 self.choix_pioche_clan += 1
                             elif self.pioche_tactique["tactique"].collidepoint(event.pos):
                                 self.choix_pioche_tactique += 1
-            # Affichage
-            self.screen.fill((165, 140, 100))  # Efface l'écran principal
-            pygame.display.flip()
 
             if capacite:
-                # Bouton Valider
-                pygame.draw.rect(self.screen, (205, 200, 145), self.button_valider["valider"])  # Fond clair
-                pygame.draw.rect(self.screen, (0, 0, 0), self.button_valider["valider"], width=2)  # Bordure noire
+                # Dessin du bouton Valider
+                pygame.draw.rect(self.screen, (205, 200, 145), self.button_valider["valider"])
+                pygame.draw.rect(self.screen, (0, 0, 0), self.button_valider["valider"], width=2)
                 text_surface = pygame.font.Font(None, 36).render("Valider", True, (0, 0, 0))
                 self.screen.blit(text_surface, text_surface.get_rect(center=self.button_valider["valider"].center))
 
             if capacite == "Troupes d'élites":
                 # Affiche les menus
-                pygame.draw.rect(self.screen, (205, 200, 145), self.menu1_rect["couleur"])  # Fond clair
-                pygame.draw.rect(self.screen, (0, 0, 0), self.menu1_rect["couleur"], width=2)  # Bordure noire
-                menu1_text = pygame.font.Font(None, 36).render(str(self.choix_couleur) if self.choix_couleur else "Couleur",
-                                                               True, (0, 0, 0))
+                pygame.draw.rect(self.screen, (205, 200, 145), self.menu1_rect["couleur"])
+                pygame.draw.rect(self.screen, (0, 0, 0), self.menu1_rect["couleur"], width=2)
+                menu1_text = pygame.font.Font(None, 36).render(
+                    str(self.choix_couleur) if self.choix_couleur else "Couleur", True, (0, 0, 0))
                 self.screen.blit(menu1_text, menu1_text.get_rect(center=self.menu1_rect["couleur"].center))
 
-                pygame.draw.rect(self.screen, (205, 200, 145), self.menu2_rect["force"])  # Fond clair
-                pygame.draw.rect(self.screen, (0, 0, 0), self.menu2_rect["force"], width=2)  # Bordure noire
-                menu2_text = pygame.font.Font(None, 36).render(str(self.choix_force) if self.choix_force else "Force", True,
-                                                               (0, 0, 0))
+                pygame.draw.rect(self.screen, (205, 200, 145), self.menu2_rect["force"])
+                pygame.draw.rect(self.screen, (0, 0, 0), self.menu2_rect["force"], width=2)
+                menu2_text = pygame.font.Font(None, 36).render(str(self.choix_force) if self.choix_force else "Force",
+                                                               True, (0, 0, 0))
                 self.screen.blit(menu2_text, menu2_text.get_rect(center=self.menu2_rect["force"].center))
 
                 if self.menu1_open:
@@ -114,19 +115,23 @@ class Popup:
                 if self.menu2_open:
                     menuX_open(self.options2_rects, self.screen, self.force)
 
-                return self.choix_couleur, self.choix_force
             elif capacite == "Ruses":
-                pygame.draw.rect(self.screen, (205, 200, 145), self.pioche_clan["clan"])  # Fond clair
-                pygame.draw.rect(self.screen, (0, 0, 0), self.pioche_clan["clan"], width=2)  # Bordure noire
+                pygame.draw.rect(self.screen, (205, 200, 145), self.pioche_clan["clan"])
+                pygame.draw.rect(self.screen, (0, 0, 0), self.pioche_clan["clan"], width=2)
                 clan_text = pygame.font.Font(None, 36).render("Clan", True, (0, 0, 0))
                 self.screen.blit(clan_text, clan_text.get_rect(center=self.pioche_clan["clan"].center))
 
-                pygame.draw.rect(self.screen, (205, 200, 145), self.pioche_tactique["tactique"])  # Fond clair
-                pygame.draw.rect(self.screen, (0, 0, 0), self.pioche_tactique["tactique"], width=2)  # Bordure noire
+                pygame.draw.rect(self.screen, (205, 200, 145), self.pioche_tactique["tactique"])
+                pygame.draw.rect(self.screen, (0, 0, 0), self.pioche_tactique["tactique"], width=2)
                 tactique_text = pygame.font.Font(None, 36).render("Tactique", True, (0, 0, 0))
                 self.screen.blit(tactique_text, tactique_text.get_rect(center=self.pioche_tactique["tactique"].center))
 
-                return self.choix_pioche_clan, self.choix_pioche_tactique
+            pygame.display.flip()
+
+        if self.choix_couleur and self.choix_force:
+            return self.choix_couleur, self.choix_force
+        elif self.choix_pioche_clan and self.choix_pioche_tactique:
+            return self.choix_pioche_clan, self.choix_pioche_tactique
 
 
 def menuX_open(options_rects, screen, options):
