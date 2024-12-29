@@ -66,11 +66,23 @@ class QLearningAgent:
         self.exploration_rate = max(self.exploration_rate, 0.01)  # Évite que epsilon devienne trop faible
 
 def generate_actions(state):
+    """
+    Génère toutes les actions possibles pour le joueur actuel.
+    Inclut la possibilité de revendiquer une borne si les conditions sont remplies.
+    """
     joueur = state.joueur_courant()
     actions = []
+
+    # Actions pour jouer une carte
     for carte in state.main_joueur(joueur):
         for borne in range(1, state.nombre_bornes() + 1):
             if state.peut_jouer_carte(borne, joueur):
-                actions.append((carte, borne))
-    print(f"Actions générées pour le joueur {joueur}: {actions}")
+                actions.append((carte, borne))  # Action de type (Carte, Borne)
+
+    # Actions pour revendiquer une borne
+    for borne in range(1, state.nombre_bornes() + 1):
+        if state.peut_revendiquer_borne(borne, joueur, None, 3):
+            actions.append(("REVENDIQUER", borne))  # Action de type ("REVENDIQUER", Borne)
+
     return actions
+

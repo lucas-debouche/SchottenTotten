@@ -1,14 +1,15 @@
 import random
+import time
 from collections import deque
 
 import pygame
 import sys
 import os
-
 from ShottenTotten.Jeux.Carte import displayCarte, deplacer_carte, generer_cartes, config_button, CarteTactique, CarteClan, chemin, jouer_carte_troupes_elites
 from ShottenTotten.Jeux.Joueur import load_and_scale_image
 from ShottenTotten.Jeux.Popup import Popup
 from ShottenTotten.Jeux.IA import *
+
 
 current_dir, base_dir, carte_clan_path, carte_tactique_path, back_card_path = chemin()
 
@@ -58,6 +59,37 @@ class Plateau:
             elif borne.controle_par == self.joueurs[1 - joueur]:
                 reward -= 10  # Pénalité si l'adversaire contrôle la borne
         return reward
+
+    def peut_revendiquer_borne(self, borne, j, nom_carte_tactique, combat_de_boue):
+        """
+        Vérifie si un joueur peut revendiquer une borne.
+        """
+        joueur = self.joueurs[j]
+        joueur_adverse = self.joueurs[1 - j]
+
+        if len(self.bornes[borne].joueur1_cartes) == combat_de_boue and len(self.bornes[borne].joueur1_cartes) == combat_de_boue:
+            if self.bornes[borne].controle_par is None:
+                main_joueur = self.evaluer_mains(joueur, borne, nom_carte_tactique)
+                main_joueur_adverse = self.evaluer_mains(joueur_adverse, borne, nom_carte_tactique)
+                if main_joueur > main_joueur_adverse:
+                    return True
+                elif main_joueur_adverse > main_joueur:
+                    return False
+                else:
+                    somme_joueur = 0
+                    somme_joueur_adverse = 0
+                    for carte in self.bornes[borne].joueur1_cartes:
+                        somme_joueur += carte.force
+                    for carte in self.bornes[borne].joueur2_cartes:
+                        somme_joueur_adverse += carte.force
+                    if somme_joueur > somme_joueur_adverse:
+                        return True
+                    elif somme_joueur_adverse > somme_joueur:
+                        return False
+            else:
+                return False
+        else :
+            return False
 
     def joueur_courant(self):
         """ Retourne le joueur qui doit jouer actuellement."""
@@ -227,12 +259,12 @@ class Plateau:
             main_joueur2 = self.evaluer_mains(1, numero_borne, nom_carte_tactique)
             if main_joueur1 > main_joueur2:
                 self.gagnant_revendiquer(numero_borne, joueur)
-                pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
-                pygame.display.update(borne_rect)
+                #pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
+                #pygame.display.update(borne_rect)
             elif main_joueur2 > main_joueur1:
                 self.gagnant_revendiquer(numero_borne, joueur)
-                pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
-                pygame.display.update(borne_rect)
+                #pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
+                #pygame.display.update(borne_rect)
             else:
                 somme_joueur1 = 0
                 somme_joueur2 = 0
@@ -242,20 +274,20 @@ class Plateau:
                     somme_joueur2 += carte.force
                 if somme_joueur1 > somme_joueur2:
                     self.gagnant_revendiquer(numero_borne, joueur)
-                    pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
-                    pygame.display.update(borne_rect)
+                    #pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
+                    #pygame.display.update(borne_rect)
                 elif somme_joueur2 > somme_joueur1:
                     self.gagnant_revendiquer(numero_borne, joueur)
-                    pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
-                    pygame.display.update(borne_rect)
+                    #pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
+                    #pygame.display.update(borne_rect)
                 else:
                     self.gagnant_revendiquer(numero_borne, joueur)
-                    if joueur == 0:
-                        pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
-                        pygame.display.update(borne_rect)
-                    else:
-                        pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
-                        pygame.display.update(borne_rect)
+                    #if joueur == 0:
+                        #pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
+                        #pygame.display.update(borne_rect)
+                    #else:
+                        #pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
+                        #pygame.display.update(borne_rect)
 
 
     def evaluer_mains(self, joueur, numero_borne, nom_carte_tactique):
@@ -284,12 +316,14 @@ class Plateau:
                 return 3
 
             # Vérifier Suite (trois valeurs successives de couleurs quelconques)
-            if forces == list(range(forces[0], forces[0] + 3)):
-                return 2
+
 
             # Vérifier Somme (trois cartes quelconques)
             if len(combinaison) == 3:
-                return 1
+                if forces == list(range(forces[0], forces[0] + 3)):
+                    return 2
+                else :
+                    return 1
 
             return 0
         elif nom_carte_tactique == "Colin-Maillard":
@@ -314,6 +348,7 @@ class Plateau:
                 revendicable = self.verif_borne_revendicable(combat_de_boue)
 
                 if self.joueurs[joueur].nom == "IA":
+                    time.sleep(1)
                     print("main IA")
                     for carte in self.joueurs[joueur].main:
                         print(carte.force, carte.couleur)
@@ -322,19 +357,41 @@ class Plateau:
 
                     if not self.q_agent.actions:
                         print("Aucune action possible pour l'IA. Passer le tour.")
-                        self.joueur_actuel = 1 - self.joueur_actuel
 
                     # L'IA choisit une action
                     current_state = self.to_state_representation()
                     action = self.q_agent.choose_action(current_state)
                     print(f"Action choisie par l'IA : {action}")
 
-                    # Appliquer l'action
-                    self.appliquer_action_jeu(action, self.joueur_actuel)
+                    if isinstance(action[0], CarteClan):
+                        carte, borne = action
+                        print(f"L'IA joue la carte {carte.force}-{carte.couleur} sur la borne {borne}")
+                        self.ajouter_carte(borne, self.joueur_actuel, carte, None)
+                        self.joueurs[self.joueur_actuel].main.remove(carte)
+                        if isinstance(carte, CarteTactique) and carte.capacite == "Modes de combat":
+                            nom_carte_tactique = carte[0].nom
 
-                    # Mettre à jour la table Q
+                        # Vérifiez les revendications possibles après avoir joué
+                    revendications = [
+                        ("REVENDIQUER", borne)
+                        for borne in range(1, self.nombre_bornes() + 1)
+                        if self.peut_revendiquer_borne(borne, self.joueur_actuel, nom_carte_tactique, combat_de_boue)
+                    ]
+
+                    for revendication in revendications:
+                        _, borne = revendication
+                        print(f"L'IA revendique la borne {borne}")
+                        for borne_key, borne_rect in self.bornes.items():
+                            borne_key = str(borne_key)
+                            numero_borne = int(borne_key.replace("borne", ""))
+                            if numero_borne == borne:
+                                self.revendiquer_borne(borne, self.joueur_actuel, screen_plateau, borne_rect, nom_carte_tactique)
+
+                    # Calculer la récompense
                     next_state = self.to_state_representation()
                     reward = self.calculate_reward(self.joueur_actuel)
+
+                    # Mettre à jour la table Q
                     self.q_agent.update_q_value(current_state, action, reward, next_state)
 
                     # Réduire le taux d'exploration
@@ -349,10 +406,14 @@ class Plateau:
                     self.joueurs[joueur].piocher_ia(self.pioche_clan, self.pioche_tactique, "pioche_clan")
                     pygame.display.update()
 
-                    # Passer au joueur suivant
-                    joueur = 1 - joueur
-                    self.joueur_actuel = joueur
-                    passer = True
+                    if not self.verifier_fin_manche():
+                        nombre_manche += 1
+                        self.commencer_nouvelle_manche(mode, nbr_manche)
+                    else:
+                        # Passer au joueur suivant
+                        joueur = 1 - joueur
+                        self.joueur_actuel = joueur
+                        passer = True
 
                 else:
                     # Gérer les événements Pygame
