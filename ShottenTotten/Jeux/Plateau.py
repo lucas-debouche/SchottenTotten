@@ -713,8 +713,8 @@ class Plateau:
 
         return main
 
-    """def jouer_stratege(self, joueur, screen, screen_width, screen_height):
-        """"Joue la carte Stratège.""""
+    def jouer_stratege(self, joueur, screen, screen_width, screen_height):
+        """Joue la carte Stratège."""
         # Choisir une carte à déplacer
         cartes_joueur = self.bornes[joueur].joueur1_cartes  # Cartes du joueur
         popup = Popup(screen, screen_width, screen_height, None)
@@ -729,7 +729,7 @@ class Plateau:
             # Déplacer la carte vers la Borne choisie
             self.bornes[borne_destination].joueur1_cartes.append(carte_a_deplacer)
 
-    def jouer_banshee(self, screen, screen_width, screen_height):
+    """def jouer_banshee(self, screen, screen_width, screen_height):
         """"Joue la carte Banshee.""""
         # Choisissez une carte adverse à défausser
         cartes_adverses = [carte for borne in self.bornes.values() for carte in borne.joueur2_cartes if borne.controle_par is None]
@@ -759,9 +759,9 @@ class Plateau:
         """Joue une carte Tactique Ruse et l'ajoute à la défausse."""
         if carte.nom == "Chasseur de Tête":
             self.joueurs[joueur].main = self.jouer_chasseur_de_tete(joueur, screen, screen_width, screen_height, carte.capacite, self.pioche_clan, self.pioche_tactique)
-        """elif carte.nom == "Stratège":
+        elif carte.nom == "Stratège":
             self.jouer_stratege(joueur, screen, screen_width, screen_height)
-        elif carte.nom == "Banshee":
+        """elif carte.nom == "Banshee":
             self.jouer_banshee(screen, screen_width, screen_height)
         elif carte.nom == "Traître":
             self.jouer_traitre(screen, screen_width, screen_height)"""
