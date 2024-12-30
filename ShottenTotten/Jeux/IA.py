@@ -1,4 +1,5 @@
 import random
+from ShottenTotten.Jeux.Carte import CarteClan
 
 # --- Q-Learning ---
 class QLearningAgent:
@@ -20,22 +21,41 @@ class QLearningAgent:
 
     def choose_action(self, state):
         """
-        Choisit une action en fonction de la politique epsilon-greedy.
-        :param state: Représentation de l'état actuel.
+        Choisit une action en utilisant epsilon-greedy pour équilibrer exploration et exploitation.
+        :param state: Instance de Plateau.
         :return: Action choisie.
         """
-        if not self.actions:  # Vérifiez si la liste des actions est vide
-            raise ValueError("Aucune action valide disponible pour cet état.")
+        if not self.actions:
+            print("Aucune action valide disponible pour cet état.")
+            return None  # Retourner None si aucune action n'est disponible
 
+        # Exploration : choisir une action aléatoire avec probabilité epsilon
         if random.uniform(0, 1) < self.exploration_rate:
-            # Exploration : choisir une action aléatoire
             return random.choice(self.actions)
-        else:
-            # Exploitation : choisir l'action avec la plus grande valeur Q
-            q_values = [self.q_table.get((tuple(state), tuple(action)), 0) for action in self.actions]
-            max_q = max(q_values)
-            max_actions = [action for action, q in zip(self.actions, q_values) if q == max_q]
-            return random.choice(max_actions)  # En cas d'égalité, choisir une action aléatoire parmi les meilleures
+
+        # Exploitation : évaluer les actions
+        score = 0
+        best_action = None
+        best_score = float('-inf')
+
+        for action in self.actions:
+            # Si c'est une action de revendication
+            if isinstance(action[0], str) and action[0] == "REVENDIQUER":
+                borne = action[1]
+                if state.peut_revendiquer_borne(borne, state.joueur_courant()):
+                    score = 15  # Récompense élevée pour revendiquer une borne
+                else:
+                    score = -5  # Pénalité pour tentative inutile
+
+            elif isinstance(action[0], CarteClan):
+                carte, borne = action
+                score = state.evaluer_action_globale(carte, borne, state.joueur_courant())
+            if score > best_score:
+                best_score = score
+                best_action = action
+
+        # Si aucune action optimale n'a été trouvée (par exemple, si scores égaux), choisir au hasard
+        return best_action if best_action else random.choice(self.actions)
 
     def update_q_value(self, state, action, reward, next_state):
         """
@@ -45,8 +65,8 @@ class QLearningAgent:
         :param reward: Récompense reçue.
         :param next_state: État suivant (doit être un tuple).
         """
-        state = tuple(state)  # Assurez-vous que l'état est un tuple
-        action = tuple(action)  # Assurez-vous que l'action est un tuple
+        state = state.to_state_representation()
+        next_state = next_state.to_state_representation()
 
         old_q_value = self.q_table.get((state, action), 0)
         next_q_values = [self.q_table.get((next_state, next_action), 0) for next_action in self.actions]
@@ -67,7 +87,7 @@ class QLearningAgent:
 def generate_actions(state):
     """
     Génère toutes les actions possibles pour le joueur actuel.
-    Inclut la possibilité de revendiquer une borne si les conditions sont remplies.
+    Prend en compte la stratégie des revendications.
     """
     joueur = state.joueur_courant()
     actions = []
@@ -76,11 +96,14 @@ def generate_actions(state):
     for carte in state.main_joueur(joueur):
         for borne in range(1, state.nombre_bornes() + 1):
             if state.peut_jouer_carte(borne, joueur):
-                actions.append((carte, borne))  # Action de type (Carte, Borne)
+                actions.append((carte, borne))  # Action pour jouer une carte
 
     # Actions pour revendiquer une borne
     for borne in range(1, state.nombre_bornes() + 1):
-        if state.peut_revendiquer_borne(borne, joueur, None, 3):
-            actions.append(("REVENDIQUER", borne))  # Action de type ("REVENDIQUER", Borne)
+        if state.peut_revendiquer_borne(borne, joueur):
+            actions.append(("REVENDIQUER", borne))
+
+    # Prioriser les revendications de bornes critiques
+    actions.sort(key=lambda action: state.evaluer_etat_global(joueur) if action[0] == "REVENDIQUER" else 0, reverse=True)
 
     return actions
