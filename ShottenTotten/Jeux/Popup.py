@@ -59,10 +59,7 @@ class Popup:
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     # Vérifie si le bouton "Valider" est cliqué
                     if capacite == "Troupes d'élites":
-                        if self.button_valider["valider"].collidepoint(
-                                event.pos) and self.choix_couleur and self.choix_force:
-                            running = False
-                        elif self.menu1_rect["couleur"].collidepoint(event.pos):
+                        if self.menu1_rect["couleur"].collidepoint(event.pos):
                             self.menu1_open = not self.menu1_open
                         elif self.menu1_open:
                             for i, rect in self.options1_rects.items():
@@ -78,6 +75,9 @@ class Popup:
                                     self.choix_force = self.force[i]
                                     self.menu2_open = False  # Fermer le menu de force
                                     self.screen.fill((165, 140, 100))
+                        elif self.button_valider["valider"].collidepoint(
+                                event.pos) and self.choix_couleur and self.choix_force:
+                            running = False
 
                     elif capacite == "Ruses":
                         if self.choix_pioche_clan + self.choix_pioche_tactique == 3:
