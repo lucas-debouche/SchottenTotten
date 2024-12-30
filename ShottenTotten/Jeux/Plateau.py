@@ -5,9 +5,9 @@ import pygame
 import sys
 import os
 
-from ShottenTotten.Jeux.Carte import displayCarte, deplacer_carte, generer_cartes, config_button, CarteTactique, chemin, jouer_carte_troupes_elites
+from ShottenTotten.Jeux.Carte import displayCarte, deplacer_carte, generer_cartes, CarteTactique, chemin, jouer_carte_troupes_elites
 from ShottenTotten.Jeux.Joueur import load_and_scale_image
-from ShottenTotten.Jeux.Popup import Popup
+from ShottenTotten.Jeux.Popup import Popup, config_button
 from ShottenTotten.Jeux.IA import *
 
 current_dir, base_dir, carte_clan_path, carte_tactique_path, back_card_path = chemin()
@@ -835,7 +835,8 @@ class Plateau:
 
         screen.fill((165, 140, 100))
         cards = displayCarte(screen, 2, main, True)
-        button_valider = afficher_valider(screen_width, screen_height, screen)
+        button_valider = {"valider": pygame.Rect(screen_width // 2 - 75, screen_height // 2 + 240, 150, 50)}
+
         config_button(screen, (169, 169, 169), button_valider, "Valider")
 
         pygame.display.flip()
@@ -862,7 +863,7 @@ class Plateau:
                                 pygame.display.update(carte_rect)
                     if len(choix_carte) == 2:
                         config_button(screen, (205, 200, 145), button_valider, "Valider")
-                        if button_valider.collidepoint(event.pos):
+                        if button_valider["valider"].collidepoint(event.pos):
                             valider = True
                     else:
                         config_button(screen, (169, 169, 169), button_valider, "Valider")
@@ -903,7 +904,7 @@ class Plateau:
                 screen.blit(buttons_images[button_key], button_rect.topleft)
                 afficher_pioche(325, screen, self.defausse, "defausse", (165, 140, 100))
 
-        button_valider = afficher_valider(screen_width, screen_height, screen)
+        button_valider = {"valider": pygame.Rect(screen_width // 2 - 75, screen_height // 2 + 240, 150, 50)}
         config_button(screen, (169, 169, 169), button_valider, "Valider")
 
         pygame.display.flip()
@@ -953,7 +954,7 @@ class Plateau:
                                             borne_choisie = numero_borne
                     if carte_choisie is not None and borne_choisie is not None:
                         config_button(screen, (205, 200, 145), button_valider, "Valider")
-                        if button_valider.collidepoint(event.pos):
+                        if button_valider["valider"].collidepoint(event.pos):
                             valider = True
                     else:
                         config_button(screen, (169, 169, 169), button_valider, "Valider")
@@ -1029,16 +1030,6 @@ def afficher_pioche(x, screen, pioche, mode, couleur):
     rect_text.y -= rect_.height // 2 + 180
     rect_text.x -= 20
     screen.blit(nom_pioche, rect_text.topleft)
-
-def afficher_valider(screen_width, screen_height, screen):
-    button_valider = {"valider": pygame.Rect(screen_width // 2 - 75, screen_height // 2 + 240, 150, 50)}
-
-    pygame.draw.rect(screen, (205, 200, 145), button_valider["valider"])  # Fond clair
-    pygame.draw.rect(screen, (0, 0, 0), button_valider["valider"], width=2)  # Bordure noire
-    text_surface = pygame.font.Font(None, 36).render("Valider", True, (0, 0, 0))
-    screen.blit(text_surface, text_surface.get_rect(center=button_valider["valider"].center))
-
-    return button_valider["valider"]
 
 
 

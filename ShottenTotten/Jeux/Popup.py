@@ -44,7 +44,7 @@ class Popup:
         self.choix_pioche_clan = 0
         self.choix_pioche_tactique = 0
 
-        self.button_valider = {"valider": pygame.Rect(self.popup_x - 75, self.popup_y + 240, 150, 50)}
+        self.button_valider = {"valider": pygame.Rect(screen_width // 2 - 75, screen_height // 2 + 240, 150, 50)}
         self.pioche_clan = {"clan": pygame.Rect(self.screen_width // 2 - 190, self.screen_height // 2 - 200, 150, 50)}
         self.pioche_tactique = {"tactique": pygame.Rect(self.screen_width // 2 + 40, self.screen_height // 2 - 200, 150, 50)}
 
@@ -93,10 +93,7 @@ class Popup:
 
             if capacite:
                 # Dessin du bouton Valider
-                pygame.draw.rect(self.screen, (205, 200, 145), self.button_valider["valider"])
-                pygame.draw.rect(self.screen, (0, 0, 0), self.button_valider["valider"], width=2)
-                text_surface = pygame.font.Font(None, 36).render("Valider", True, (0, 0, 0))
-                self.screen.blit(text_surface, text_surface.get_rect(center=self.button_valider["valider"].center))
+                config_button(self.screen, (169, 169, 169), self.button_valider["valider"], "Valider")
 
             if capacite == "Troupes d'élites":
                 # Affiche les menus
@@ -155,3 +152,13 @@ def menuX_open(options_rects, screen, options):
         pygame.draw.rect(screen, (0, 0, 0), rect, width=2)  # Bordure noire
         text_surface = pygame.font.Font(None, 36).render(options[i], True, (0, 0, 0))
         screen.blit(text_surface, text_surface.get_rect(center=rect.center))
+
+
+def config_button(screen_plateau, button_color, button, text):
+    smallfont = pygame.font.SysFont('Forte', 35)
+    pygame.draw.rect(screen_plateau, button_color, button, border_radius=10)
+    pygame.draw.rect(screen_plateau, (139, 69, 19), button, width=2, border_radius=10)
+    text_jouer = smallfont.render(text, True, (139, 69, 19))
+    text_rect_jouer = text_jouer.get_rect(center=button.center)
+    screen_plateau.blit(text_jouer, text_rect_jouer)
+    pygame.display.update(button)

@@ -194,15 +194,6 @@ def jouer_carte_troupes_elites(carte, screen, screen_width, screen_height, pioch
         choix_couleur = trad_couleur(choix_couleur)
         return CarteClan(choix_couleur, choix_force)
 
-def config_button(screen_plateau, button_color, button, text):
-    smallfont = pygame.font.SysFont('Forte', 35)
-    pygame.draw.rect(screen_plateau, button_color, button, border_radius=10)
-    pygame.draw.rect(screen_plateau, (139, 69, 19), button, width=2, border_radius=10)
-    text_jouer = smallfont.render(text, True, (139, 69, 19))
-    text_rect_jouer = text_jouer.get_rect(center=button.center)
-    screen_plateau.blit(text_jouer, text_rect_jouer)
-    pygame.display.update(button)
-
 def trad_couleur(couleur):
     if couleur == "Rouge":
         return "red"
