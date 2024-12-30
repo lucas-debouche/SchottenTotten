@@ -690,7 +690,7 @@ class Plateau:
                                 deplacer_carte(screen_plateau, 0, carte, i, self.bornes[i].joueur1_cartes)
                             for carte in self.bornes[i].joueur2_cartes:
                                 deplacer_carte(screen_plateau, 1, carte, i, self.bornes[i].joueur2_cartes)
-                        carte_choisi = self.joueurs[joueur].jouer_carte(self, borne_index, self.joueurs[joueur].main[carte_index], capacite)
+                        carte_choisi = self.joueurs[joueur].jouer_carte(self, borne_index, carte_selectionnee[0], capacite)
 
                         if capacite != "Modes de combat" and capacite != "Ruses":
                             if joueur == 0:
@@ -867,15 +867,16 @@ class Plateau:
                     else:
                         config_button(screen, (169, 169, 169), button_valider, "Valider")
 
+        carte = []
         # Remettre les cartes choisies sous la pioche
         for carte_index in choix_carte:
-            carte = main[carte_index - 1]
+            carte.append(main[carte_index])
             if isinstance(carte, CarteClan):
                 pioche_clan.append(carte)
             elif isinstance(carte, CarteTactique):
                 pioche_tactique.append(carte)
-            main.remove(carte)
-
+        for i in carte:
+            main.remove(i)
         return main
 
     def jouer_stratege_banshee(self, joueur, screen, screen_width, screen_height, buttons_plateau, buttons_images, nom):
