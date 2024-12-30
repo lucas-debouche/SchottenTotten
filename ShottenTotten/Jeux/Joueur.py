@@ -3,6 +3,8 @@ import sys
 
 import pygame
 
+from ShottenTotten.Jeux.Carte import CarteTactique
+
 
 class Joueur:
     """Représente un joueur avec un nom, une main et un score."""
@@ -28,7 +30,7 @@ class Joueur:
         """Méthode pour jouer une carte."""
         if carte in self.main:
             plateau.ajouter_carte(numero_borne, self.id, carte, capacite)
-            if capacite != "Ruses" and capacite != "Modes de Combat":
+            if not (isinstance(carte, CarteTactique) and carte.nom == "Chasseur de Tête"):
                 self.main.remove(carte)
             return carte
 
