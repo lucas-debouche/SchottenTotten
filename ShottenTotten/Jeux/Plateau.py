@@ -549,8 +549,7 @@ class Plateau:
 
                     revendicable = self.verif_borne_revendicable()
 
-
-                while not passer:
+                while not passer or (len(self.pioche_clan) > 0 and len(self.pioche_tactique) > 0):
                     config_button(screen_plateau, (205, 200, 145), button_passer["passer"], "Passer")
                     if revendicable:
                         config_button(screen_plateau, (205, 200, 145), button_revendiquer["revendiquer"], "Revendiquer")
