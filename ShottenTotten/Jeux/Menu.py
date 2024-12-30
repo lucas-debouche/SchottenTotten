@@ -1,9 +1,4 @@
-import pygame
-import sys
-import os
-
-from ShottenTotten.Jeux.Joueur import Joueur
-from ShottenTotten.Jeux.Plateau import Plateau
+from ShottenTotten.Jeux.Plateau import *
 
 plateau = Plateau()
 

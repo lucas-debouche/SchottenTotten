@@ -1,13 +1,9 @@
 import time
-from collections import deque
 
-import pygame
-import sys
-import os
 
-from ShottenTotten.Jeux.Carte import displayCarte, deplacer_carte, generer_cartes, CarteTactique, chemin, jouer_carte_troupes_elites
-from ShottenTotten.Jeux.Joueur import load_and_scale_image
-from ShottenTotten.Jeux.Popup import Popup, config_button
+from ShottenTotten.Jeux.Carte import *
+from ShottenTotten.Jeux.Joueur import *
+from ShottenTotten.Jeux.Popup import *
 from ShottenTotten.Jeux.IA import *
 
 current_dir, base_dir, carte_clan_path, carte_tactique_path, back_card_path = chemin()
@@ -837,7 +833,7 @@ class Plateau:
         cards = displayCarte(screen, 2, main, True)
         button_valider = {"valider": pygame.Rect(screen_width // 2 - 75, screen_height // 2 + 240, 150, 50)}
 
-        config_button(screen, (169, 169, 169), button_valider, "Valider")
+        config_button(screen, (169, 169, 169), button_valider["valider"], "Valider")
 
         pygame.display.flip()
 
@@ -862,11 +858,11 @@ class Plateau:
                                 pygame.draw.rect(screen, (255, 255, 255), carte_rect, width=2)  # Contour blanc
                                 pygame.display.update(carte_rect)
                     if len(choix_carte) == 2:
-                        config_button(screen, (205, 200, 145), button_valider, "Valider")
+                        config_button(screen, (205, 200, 145), button_valider["valider"], "Valider")
                         if button_valider["valider"].collidepoint(event.pos):
                             valider = True
                     else:
-                        config_button(screen, (169, 169, 169), button_valider, "Valider")
+                        config_button(screen, (169, 169, 169), button_valider["valider"], "Valider")
 
         carte = []
         # Remettre les cartes choisies sous la pioche
@@ -880,11 +876,11 @@ class Plateau:
             main.remove(i)
         return main
 
-    def jouer_stratege_banshee(self, joueur, screen, screen_width, screen_height, buttons_plateau, buttons_images, nom):
+    def jouer_stratege_banshee_traitre(self, joueur, screen, screen_width, screen_height, buttons_plateau, buttons_images, nom):
         """Joue la carte Stratège."""
         screen.fill((165, 140, 100))
         cards = {}
-        if nom == "Banshee":
+        if nom == "Banshee" or nom == "Traître":
             joueur = 1 - joueur
 
         if joueur == 0:
@@ -905,7 +901,7 @@ class Plateau:
                 afficher_pioche(325, screen, self.defausse, "defausse", (165, 140, 100))
 
         button_valider = {"valider": pygame.Rect(screen_width // 2 - 75, screen_height // 2 + 240, 150, 50)}
-        config_button(screen, (169, 169, 169), button_valider, "Valider")
+        config_button(screen, (169, 169, 169), button_valider["valider"], "Valider")
 
         pygame.display.flip()
 
@@ -938,26 +934,26 @@ class Plateau:
                     if carte_choisie:
                         for borne_key, borne_rect in buttons_plateau.items():
                             if borne_rect.collidepoint(event.pos):
-                                if borne_key == "defausse":
+                                if borne_key == "defausse" and nom != "Traître":
                                     borne_choisie = 0
-                                elif nom == "Stratège":
+                                elif nom != "Banshee":
                                     numero_borne = int(borne_key.replace("borne", ""))
                                     if joueur == 0:
-                                        if len(self.bornes[numero_borne].joueur1_cartes) < self.bornes[
-                                            numero_borne].combat_de_boue and not self.bornes[
-                                            numero_borne].controle_par:
-                                            borne_choisie = numero_borne
-                                    elif joueur == 1:
                                         if len(self.bornes[numero_borne].joueur2_cartes) < self.bornes[
                                             numero_borne].combat_de_boue and not self.bornes[
                                             numero_borne].controle_par:
                                             borne_choisie = numero_borne
+                                    elif joueur == 1:
+                                        if len(self.bornes[numero_borne].joueur1_cartes) < self.bornes[
+                                            numero_borne].combat_de_boue and not self.bornes[
+                                            numero_borne].controle_par:
+                                            borne_choisie = numero_borne
                     if carte_choisie is not None and borne_choisie is not None:
-                        config_button(screen, (205, 200, 145), button_valider, "Valider")
+                        config_button(screen, (205, 200, 145), button_valider["valider"], "Valider")
                         if button_valider["valider"].collidepoint(event.pos):
                             valider = True
                     else:
-                        config_button(screen, (169, 169, 169), button_valider, "Valider")
+                        config_button(screen, (169, 169, 169), button_valider["valider"], "Valider")
 
         # Déplacer la carte vers la Borne choisie
         if nom == "Stratège":
@@ -981,34 +977,25 @@ class Plateau:
                 elif joueur == 1:
                     self.bornes[borne_initiale].joueur2_cartes.remove(carte_choisie)
                 self.defausse.append(carte_choisie)
-
-
-    """def jouer_traitre(self, screen, screen_width, screen_height):
-        """"Joue la carte Traître.""""
-        # Choisissez une carte adverse à déplacer
-        cartes_adverses = [carte for borne in self.bornes.values() for carte in borne.joueur2_cartes if
-                           borne.controle_par is None]
-        popup = Popup(screen, screen_width, screen_height, None)
-        carte_a_deplacer = popup.show_single_choice("Choisissez une carte adverse à déplacer.")
-
-        if carte_a_deplacer:
-            # Déplacez la carte vers une Borne non revendiquée de votre côté
-            bornes_non_revendiquees = [i for i, borne in self.bornes.items() if borne.controle_par is None]
-            popup = Popup(screen, screen_width, screen_height, None)
-            borne_destination = popup.show_single_choice("Choisissez une Borne pour placer la carte.")
-
-            self.bornes[borne_destination].joueur1_cartes.append(carte_a_deplacer)"""
+        elif nom == "Traître":
+            if carte_choisie and borne_choisie and valider:
+                if joueur == 0:
+                    self.bornes[borne_initiale].joueur1_cartes.remove(carte_choisie)
+                    self.bornes[borne_choisie].joueur2_cartes.append(carte_choisie)
+                elif joueur == 1:
+                    self.bornes[borne_initiale].joueur2_cartes.remove(carte_choisie)
+                    self.bornes[borne_choisie].joueur1_cartes.append(carte_choisie)
 
     def jouer_carte_ruse(self, carte, joueur, screen, screen_width, screen_height, buttons_plateau, buttons_image):
         """Joue une carte Tactique Ruse et l'ajoute à la défausse."""
         if carte.nom == "Chasseur de Tête":
             self.joueurs[joueur].main = self.jouer_chasseur_de_tete(joueur, screen, screen_width, screen_height, carte.capacite, self.pioche_clan, self.pioche_tactique)
         elif carte.nom == "Stratège":
-            self.jouer_stratege_banshee(joueur, screen, screen_width, screen_height, buttons_plateau, buttons_image, carte.nom)
+            self.jouer_stratege_banshee_traitre(joueur, screen, screen_width, screen_height, buttons_plateau, buttons_image, carte.nom)
         elif carte.nom == "Banshee":
-            self.jouer_stratege_banshee(joueur, screen, screen_width, screen_height, buttons_plateau, buttons_image, carte.nom)
-        """elif carte.nom == "Traître":
-            self.jouer_traitre(screen, screen_width, screen_height)"""
+            self.jouer_stratege_banshee_traitre(joueur, screen, screen_width, screen_height, buttons_plateau, buttons_image, carte.nom)
+        elif carte.nom == "Traître":
+            self.jouer_stratege_banshee_traitre(joueur, screen, screen_width, screen_height, buttons_plateau, buttons_image, carte.nom)
 
 def melanger_pioche(cartes_clans, cartes_tactiques):
     """Mélange les cartes et retourne une pioche."""

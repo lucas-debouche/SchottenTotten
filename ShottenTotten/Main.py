@@ -1,4 +1,4 @@
-from Jeux.Menu import Menu
+from Jeux.Menu import *
 
 def main():
     # Initialisation du jeu

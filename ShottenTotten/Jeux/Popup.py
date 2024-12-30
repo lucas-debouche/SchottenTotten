@@ -93,8 +93,13 @@ class Popup:
 
             if capacite:
                 # Dessin du bouton Valider
-                config_button(self.screen, (169, 169, 169), self.button_valider["valider"], "Valider")
-
+                smallfont = pygame.font.SysFont('Forte', 35)
+                pygame.draw.rect(self.screen, (169, 169, 169), self.button_valider["valider"], border_radius=10)
+                pygame.draw.rect(self.screen, (139, 69, 19), self.button_valider["valider"], width=2, border_radius=10)
+                text_jouer = smallfont.render("Valider", True, (139, 69, 19))
+                text_rect_jouer = text_jouer.get_rect(center=self.button_valider["valider"].center)
+                self.screen.blit(text_jouer, text_rect_jouer)
+                pygame.display.update(self.button_valider["valider"])
             if capacite == "Troupes d'élites":
                 # Affiche les menus
                 pygame.draw.rect(self.screen, (205, 200, 145), self.menu1_rect["couleur"])
@@ -152,13 +157,3 @@ def menuX_open(options_rects, screen, options):
         pygame.draw.rect(screen, (0, 0, 0), rect, width=2)  # Bordure noire
         text_surface = pygame.font.Font(None, 36).render(options[i], True, (0, 0, 0))
         screen.blit(text_surface, text_surface.get_rect(center=rect.center))
-
-
-def config_button(screen_plateau, button_color, button, text):
-    smallfont = pygame.font.SysFont('Forte', 35)
-    pygame.draw.rect(screen_plateau, button_color, button, border_radius=10)
-    pygame.draw.rect(screen_plateau, (139, 69, 19), button, width=2, border_radius=10)
-    text_jouer = smallfont.render(text, True, (139, 69, 19))
-    text_rect_jouer = text_jouer.get_rect(center=button.center)
-    screen_plateau.blit(text_jouer, text_rect_jouer)
-    pygame.display.update(button)

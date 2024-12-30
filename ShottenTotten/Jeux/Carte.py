@@ -1,9 +1,8 @@
 from collections import deque
 
-import pygame
 import os
 
-from ShottenTotten.Jeux.Popup import Popup
+from ShottenTotten.Jeux.Popup import *
 
 # Configurations globales pour les cartes
 Couleurs = {1: "blue", 2: "green", 3: "yellow", 4: "orange", 5: "red", 6: "purple"}
@@ -216,3 +215,12 @@ def chemin():
     carte_tactique_path = os.path.join(base_dir, "Ressources", "Cartes_Tactiques")
     back_card_path = os.path.join(base_dir, "Ressources", "Back_Card.jpg")
     return current_dir, base_dir, carte_clan_path, carte_tactique_path, back_card_path
+
+def config_button(screen_plateau, button_color, button, text):
+    smallfont = pygame.font.SysFont('Forte', 35)
+    pygame.draw.rect(screen_plateau, button_color, button, border_radius=10)
+    pygame.draw.rect(screen_plateau, (139, 69, 19), button, width=2, border_radius=10)
+    text_jouer = smallfont.render(text, True, (139, 69, 19))
+    text_rect_jouer = text_jouer.get_rect(center=button.center)
+    screen_plateau.blit(text_jouer, text_rect_jouer)
+    pygame.display.update(button)
