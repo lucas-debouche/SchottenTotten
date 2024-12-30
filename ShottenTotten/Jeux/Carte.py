@@ -173,6 +173,7 @@ def deplacer_carte(fenetre, joueur, carte, borne_index, borne_joueur_cartes):
 
     # Dessiner la carte à la nouvelle position
     fenetre.blit(carte_img, (x,y))
+    return pygame.Rect(x, y, largeur_carte, hauteur_carte)
 
 def capacite_elite(screen, screen_width, screen_height, troupe, pioche_clan, pioche_tactique):
     popup = Popup(screen, screen_width, screen_height, troupe)

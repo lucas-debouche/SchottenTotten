@@ -513,8 +513,9 @@ class Plateau:
                                 buttons_images[image_key] = load_and_scale_image(carte_tactique,100,50, carte_selectionnee[0].capacite)
                                 image_borne[image_key] = carte_tactique
                             elif carte_selectionnee[0].capacite == "Ruses":
-                                self.joueurs[joueur].main.remove(carte_selectionnee[0])
-                                self.jouer_carte_ruse(carte_selectionnee[0], joueur, screen_plateau, screen_width, screen_height)
+                                if carte_selectionnee[0].nom == "Chasseur de Tête":
+                                    self.joueurs[joueur].main.remove(carte_selectionnee[0])
+                                self.jouer_carte_ruse(carte_selectionnee[0], joueur, screen_plateau, screen_width, screen_height, buttons_plateau, buttons_images)
 
                         self.displayPlateau(mode, nbr_manche, True, image_borne)
                         config_button(screen_plateau, (169, 169, 169), button_passer["passer"], "Passer")
@@ -549,7 +550,7 @@ class Plateau:
 
                     revendicable = self.verif_borne_revendicable()
 
-                while not passer or (len(self.pioche_clan) > 0 and len(self.pioche_tactique) > 0):
+                while not passer:
                     config_button(screen_plateau, (205, 200, 145), button_passer["passer"], "Passer")
                     if revendicable:
                         config_button(screen_plateau, (205, 200, 145), button_revendiquer["revendiquer"], "Revendiquer")
@@ -712,21 +713,86 @@ class Plateau:
 
         return main
 
-    def jouer_stratege(self, joueur, screen, screen_width, screen_height):
+    def jouer_stratege(self, joueur, screen, screen_width, screen_height, buttons_plateau, buttons_images):
         """Joue la carte Stratège."""
+        screen.fill((165, 140, 100))
+        cards = {}
+        if joueur == 0:
+            for i in range(1, 10):
+                for carte in self.bornes[i].joueur1_cartes:
+                    cards[i] = carte, deplacer_carte(screen, joueur, carte, i, self.bornes[i].joueur1_cartes)
+        elif joueur == 1:
+            for i in range(1, 10):
+                for carte in self.bornes[i].joueur2_cartes:
+                    cards[i] = carte, deplacer_carte(screen, joueur, carte, i, self.bornes[i].joueur2_cartes)
+
+        for button_key, button_rect in buttons_plateau.items():
+            if button_key.startswith("borne") or button_key == "defausse":
+                    screen.blit(buttons_images[button_key], button_rect.topleft)
+
+        button_valider = {"valider": pygame.Rect(screen_width // 2 - 75, screen_height // 2 + 240, 150, 50)}
+
+        pygame.draw.rect(screen, (205, 200, 145), button_valider["valider"])  # Fond clair
+        pygame.draw.rect(screen, (0, 0, 0), button_valider["valider"], width=2)  # Bordure noire
+        text_surface = pygame.font.Font(None, 36).render("Valider", True, (0, 0, 0))
+        screen.blit(text_surface, text_surface.get_rect(center=button_valider["valider"].center))
+
+        pygame.display.flip()
+
+        carte_choisie = None
+        borne_initiale = None
+        borne_choisie = None
+
+        valider = False
         # Choisir une carte à déplacer
-        cartes_joueur = self.bornes[joueur].joueur1_cartes  # Cartes du joueur
-        popup = Popup(screen, screen_width, screen_height, None)
-        carte_a_deplacer = popup.show_single_choice("Choisissez une carte à déplacer.")
+        while not valider:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    if carte_choisie and borne_choisie:
+                        if button_valider["valider"].collidepoint(event.pos):
+                            valider = True
+                    if carte_choisie:
+                        for borne_key, borne_rect in buttons_plateau.items():
+                            if borne_rect.collidepoint(event.pos):
+                                if borne_key == "defausse":
+                                    borne_choisie = 0
+                                else:
+                                    numero_borne = int(borne_key.replace("borne", ""))
+                                    if joueur == 0:
+                                        if len(self.bornes[numero_borne].joueur1_cartes) < self.bornes[
+                                            numero_borne].combat_de_boue and not self.bornes[
+                                            numero_borne].controle_par:
+                                            borne_choisie = numero_borne
+                                    elif joueur == 1:
+                                        if len(self.bornes[numero_borne].joueur2_cartes) < self.bornes[
+                                            numero_borne].combat_de_boue and not self.bornes[
+                                            numero_borne].controle_par:
+                                            borne_choisie = numero_borne
+                    for borne_index in cards.keys():
+                        for carte_clan, carte_rect in cards.values():
+                            if carte_rect.collidepoint(event.pos):
+                                if carte_clan != carte_choisie:
+                                    carte_choisie = carte_clan
+                                    borne_initiale = borne_index
+                                    pygame.draw.rect(screen, (255, 0, 0), carte_rect, width=2)  # Contour rouge
+                                    pygame.display.update(carte_rect)
+                                else:
+                                    carte_choisie = None
+                                    borne_initiale = None
+                                    pygame.draw.rect(screen, (255, 255, 255), carte_rect, width=2)  # Contour blanc
+                                    pygame.display.update(carte_rect)
 
-        # Choisir une Borne de destination
-        bornes_non_revendiquees = [i for i, borne in self.bornes.items() if borne.controle_par is None]
-        popup = Popup(screen, screen_width, screen_height, None)
-        borne_destination = popup.show_single_choice("Choisissez une Borne de destination.")
-
-        if carte_a_deplacer and borne_destination:
-            # Déplacer la carte vers la Borne choisie
-            self.bornes[borne_destination].joueur1_cartes.append(carte_a_deplacer)
+        # Déplacer la carte vers la Borne choisie
+        if carte_choisie and borne_choisie and valider:
+            if joueur == 0:
+                self.bornes[borne_initiale].joueur1_cartes.remove(carte_choisie)
+                self.bornes[borne_choisie].joueur1_cartes.append(carte_choisie)
+            if joueur == 1:
+                self.bornes[borne_initiale].joueur2_cartes.remove(carte_choisie)
+                self.bornes[borne_choisie].joueur2_cartes.append(carte_choisie)
 
     """def jouer_banshee(self, screen, screen_width, screen_height):
         """"Joue la carte Banshee.""""
@@ -754,12 +820,12 @@ class Plateau:
 
             self.bornes[borne_destination].joueur1_cartes.append(carte_a_deplacer)"""
 
-    def jouer_carte_ruse(self, carte, joueur, screen, screen_width, screen_height):
+    def jouer_carte_ruse(self, carte, joueur, screen, screen_width, screen_height, buttons_plateau, buttons_images):
         """Joue une carte Tactique Ruse et l'ajoute à la défausse."""
         if carte.nom == "Chasseur de Tête":
             self.joueurs[joueur].main = self.jouer_chasseur_de_tete(joueur, screen, screen_width, screen_height, carte.capacite, self.pioche_clan, self.pioche_tactique)
         elif carte.nom == "Stratège":
-            self.jouer_stratege(joueur, screen, screen_width, screen_height)
+            self.jouer_stratege(joueur, screen, screen_width, screen_height, buttons_plateau, buttons_images)
         """elif carte.nom == "Banshee":
             self.jouer_banshee(screen, screen_width, screen_height)
         elif carte.nom == "Traître":
