@@ -1,109 +1,168 @@
 import random
-from ShottenTotten.Jeux.Carte import CarteClan
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from collections import deque
+import numpy as np
 
-# --- Q-Learning ---
-class QLearningAgent:
-    def __init__(self, actions, learning_rate=0.1, discount_factor=0.9, exploration_rate=1.0, exploration_decay=0.99):
+# --- Réseau de neurones pour approximer Q(s, a) ---
+class QNetwork(nn.Module):
+    def __init__(self, input_size, action_size):
+        super(QNetwork, self).__init__()
+        self.fc1 = nn.Linear(input_size, 128)
+        self.fc2 = nn.Linear(128, 128)
+        self.fc3 = nn.Linear(128, action_size)
+
+    def forward(self, x):
+        x = torch.relu(self.fc1(x))
+        x = torch.relu(self.fc2(x))
+        return self.fc3(x)
+
+class NeuralQLearningAgent:
+    def __init__(self, input_size, action_size, learning_rate=0.001, discount_factor=0.9, exploration_rate=1.0, exploration_decay=0.99, memory_size = 10000, batch_size = 64):
         """
-        Initialise un agent Q-Learning.
-        :param actions: Liste des actions possibles.
-        :param learning_rate: Taux d'apprentissage (alpha).
+        Initialise un agent Q-Learning basé sur un réseau neuronal.
+        :param input_size: Taille de l'état (entrée du réseau).
+        :param action_size: Nombre d'actions possibles (sortie du réseau).
+        :param learning_rate: Taux d'apprentissage.
         :param discount_factor: Facteur de réduction (gamma).
         :param exploration_rate: Taux d'exploration initial (epsilon).
         :param exploration_decay: Décroissance du taux d'exploration.
         """
-        self.q_table = {}  # Table Q sous forme de dictionnaire : {(état, action): valeur Q}
-        self.actions = actions  # Liste des actions possibles
-        self.learning_rate = learning_rate
+        self.input_size = input_size
+        self.action_size = action_size
         self.discount_factor = discount_factor
         self.exploration_rate = exploration_rate
         self.exploration_decay = exploration_decay
+        self.batch_size = batch_size
 
-    def choose_action(self, state):
-        """
-        Choisit une action en utilisant epsilon-greedy pour équilibrer exploration et exploitation.
-        :param state: Instance de Plateau.
-        :return: Action choisie.
-        """
-        if not self.actions:
-            print("Aucune action valide disponible pour cet état.")
-            return None  # Retourner None si aucune action n'est disponible
+        # Initialisation du réseau et de l'optimiseur
+        self.q_network = QNetwork(input_size, action_size)
+        self.optimizer = optim.Adam(self.q_network.parameters(), lr=learning_rate)
+        self.criterion = nn.MSELoss()
 
-        # Exploration : choisir une action aléatoire avec probabilité epsilon
+        # Mémoire de rejouabilité
+        self.memory = deque(maxlen=memory_size)
+
+        # Statistiques
+        self.total_rewards = []
+
+    def choose_action(self, state, possible_actions):
+        """
+        Choisit une action en utilisant epsilon-greedy.
+        :param state: État actuel (représentation vectorielle).
+        :param possible_actions: Liste des actions possibles pour l'état.
+        :return: Action choisie (index).
+        """
         if random.uniform(0, 1) < self.exploration_rate:
-            return random.choice(self.actions)
+            return random.choice(possible_actions)
 
-        # Exploitation : évaluer les actions
-        score = 0
-        best_action = None
-        best_score = float('-inf')
+        # Convertir l'état en tenseur
+        state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+        with torch.no_grad():
+            q_values = self.q_network(state_tensor)
 
-        for action in self.actions:
-            # Si c'est une action de revendication
-            if isinstance(action[0], str) and action[0] == "REVENDIQUER":
-                borne = action[1]
-                if state.peut_revendiquer_borne(borne, state.joueur_courant()):
-                    score = 15  # Récompense élevée pour revendiquer une borne
-                else:
-                    score = -5  # Pénalité pour tentative inutile
-
-            elif isinstance(action[0], CarteClan):
-                carte, borne = action
-                score = state.evaluer_action_globale(carte, borne, state.joueur_courant())
-            if score > best_score:
-                best_score = score
-                best_action = action
-
-        # Si aucune action optimale n'a été trouvée (par exemple, si scores égaux), choisir au hasard
-        return best_action if best_action else random.choice(self.actions)
-
-    def update_q_value(self, state, action, reward, next_state):
-        """
-        Met à jour la valeur Q pour un état-action donné.
-        :param state: État actuel (doit être un tuple).
-        :param action: Action choisie (doit être un tuple).
-        :param reward: Récompense reçue.
-        :param next_state: État suivant (doit être un tuple).
-        """
-        state = state.to_state_representation()
-        next_state = next_state.to_state_representation()
-
-        old_q_value = self.q_table.get((state, action), 0)
-        next_q_values = [self.q_table.get((next_state, next_action), 0) for next_action in self.actions]
-        max_next_q = max(next_q_values) if next_q_values else 0
-
-        # Calcul de la nouvelle valeur Q
-        new_q_value = (1 - self.learning_rate) * old_q_value + self.learning_rate * (
-                    reward + self.discount_factor * max_next_q)
-        self.q_table[(state, action)] = new_q_value
+        # Filtrer les actions possibles
+        q_values_filtered = [q_values[0, action].item() for action in possible_actions]
+        return possible_actions[q_values_filtered.index(max(q_values_filtered))]
 
     def decay_exploration_rate(self):
         """
-        Diminue le taux d'exploration (epsilon) pour favoriser l'exploitation à long terme.
+        Réduit le taux d'exploration pour privilégier l'exploitation.
         """
         self.exploration_rate *= self.exploration_decay
-        self.exploration_rate = max(self.exploration_rate, 0.01)  # Évite que epsilon devienne trop faible
+        self.exploration_rate = max(self.exploration_rate, 0.01)
 
-def generate_actions(state):
+    def store_experience(self, state, action, reward, next_state, possible_next_actions, done):
+        """
+        Stocke une expérience dans la mémoire de rejouabilité.
+        """
+        self.memory.append((state, action, reward, next_state, possible_next_actions, done))
+
+    def replay(self):
+        """
+        Réalise un apprentissage par lot en utilisant des expériences de la mémoire.
+        """
+        if len(self.memory) < self.batch_size:
+            return
+
+        batch = random.sample(self.memory, self.batch_size)
+        states, actions, rewards, next_states, possible_next_actions, dones = zip(*batch)
+
+        states_tensor = torch.tensor(np.array(states), dtype=torch.float32)
+        actions_tensor = torch.tensor(actions, dtype=torch.int64).unsqueeze(1)
+        rewards_tensor = torch.tensor(rewards, dtype=torch.float32).unsqueeze(1)
+        next_states_tensor = torch.tensor(np.array(next_states), dtype=torch.float32)
+        dones_tensor = torch.tensor(dones, dtype=torch.float32).unsqueeze(1)
+
+        # Calcul des cibles Q
+        q_values = self.q_network(states_tensor).gather(1, actions_tensor)
+        next_q_values = self.q_network(next_states_tensor)
+
+        max_next_q_values = torch.tensor([
+            max(next_q_values[i, possible_actions].tolist()) if len(possible_actions) > 0 else 0
+            for i, possible_actions in enumerate(possible_next_actions)
+        ], dtype=torch.float32).unsqueeze(1)
+
+        targets = rewards_tensor + (1 - dones_tensor) * self.discount_factor * max_next_q_values
+
+        # Mise à jour du réseau neuronal
+        loss = self.criterion(q_values, targets)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+    def log_performance(self, reward):
+        """
+        Enregistre la récompense obtenue à la fin d'une partie pour analyse.
+        """
+        self.total_rewards.append(reward)
+
+    def train_on_experience(self, state, action, reward, next_state, possible_next_actions, done):
+        """
+        Entraîne directement sur une expérience donnée.
+        """
+        # Ajout de l'expérience à la mémoire
+        self.store_experience(state, action, reward, next_state, possible_next_actions, done)
+
+        # Mise à jour immédiate du réseau neuronal
+        state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+        next_state_tensor = torch.tensor(next_state, dtype=torch.float32).unsqueeze(0)
+        action_tensor = torch.tensor([action], dtype=torch.int64)
+
+        # Prédiction de Q(s, a)
+        q_values = self.q_network(state_tensor)
+        q_value = q_values[0, action_tensor]
+
+        # Calcul de la cible pour Q(s, a)
+        with torch.no_grad():
+            next_q_values = self.q_network(next_state_tensor)
+            max_next_q = max(
+                [next_q_values[0, a].item() for a in possible_next_actions]) if possible_next_actions else 0
+            target = reward + self.discount_factor * max_next_q
+
+        # Calcul de la perte et rétropropagation
+        loss = self.criterion(q_value, torch.tensor([target], dtype=torch.float32))
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        # Entraînement par lot si nécessaire
+        self.replay()
+
+# Exemple d'intégration dans le jeu
+def convert_plateau_to_vector(state):
     """
-    Génère toutes les actions possibles pour le joueur actuel.
-    Prend en compte la stratégie des revendications.
+    Convertit l'état du plateau en vecteur pour l'entrée du réseau.
+    :param state: Instance de Plateau.
+    :return: Liste ou vecteur représentant l'état.
     """
-    joueur = state.joueur_courant()
-    actions = []
-
-    # Actions pour jouer une carte
-    for carte in state.main_joueur(joueur):
-        for borne in range(1, state.nombre_bornes() + 1):
-            if state.peut_jouer_carte(borne, joueur):
-                actions.append((carte, borne))  # Action pour jouer une carte
-
-    # Actions pour revendiquer une borne
-    for borne in range(1, state.nombre_bornes() + 1):
-        if state.peut_revendiquer_borne(borne, joueur):
-            actions.append(("REVENDIQUER", borne))
-
-    # Prioriser les revendications de bornes critiques
-    actions.sort(key=lambda action: state.evaluer_etat_global(joueur) if action[0] == "REVENDIQUER" else 0, reverse=True)
-
-    return actions
+    vector = []
+    for borne in state.bornes.values():
+        vector.extend([
+            len(borne.joueur1_cartes),  # Nombre de cartes joueur 1
+            len(borne.joueur2_cartes),  # Nombre de cartes joueur 2
+            1 if borne.controle_par == 0 else 0,
+            1 if borne.controle_par == 1 else 0
+        ])
+    return vector

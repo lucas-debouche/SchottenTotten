@@ -32,7 +32,7 @@ class Plateau:
         self.joueur_actuel = None
 
         # Initialisation de l'agent Q-Learning
-        self.q_agent = QLearningAgent(actions=[], learning_rate=0.1, discount_factor=0.9, exploration_rate=1.0)
+        self.neural_agent = None
 
     def to_state_representation(self):
         """
@@ -43,6 +43,26 @@ class Plateau:
             # Convertir chaque élément de l'état en un tuple immuable
             state_repr.append((tuple(borne.joueur1_cartes), tuple(borne.joueur2_cartes), borne.controle_par))
         return tuple(state_repr)
+
+    def generate_actions(self):
+        """
+        Génère toutes les actions possibles pour le joueur actuel.
+        """
+        joueur = self.joueur_courant()
+        actions = []
+
+        # Actions pour jouer une carte
+        for carte in self.main_joueur(joueur) or []:
+            for borne in range(1, self.nombre_bornes() + 1):
+                if self.peut_jouer_carte(borne, joueur):
+                    actions.append((carte, borne))
+
+        # Actions pour revendiquer une borne
+        for borne in range(1, self.nombre_bornes() + 1):
+            if self.peut_revendiquer_borne(borne, joueur):
+                actions.append(("REVENDIQUER", borne))
+
+        return actions
 
     def evaluer_action(self, carte, numero_borne, joueur):
         """
@@ -239,6 +259,7 @@ class Plateau:
             return self.joueurs[joueur].main
         elif joueur in self.joueurs:
             return joueur.main
+        return []
 
     def peut_jouer_carte(self, borne, joueur):
         """ Vérifie si un joueur peut jouer une carte sur une borne spécifique."""
@@ -489,6 +510,19 @@ class Plateau:
             image_borne = {}
             nom_carte_tactique = None
             passer = False
+
+            if self.neural_agent is None:
+                self.neural_agent = NeuralQLearningAgent(
+                    input_size=len(self.bornes) * 4,  # Chaque borne a 4 caractéristiques
+                    action_size=len(self.generate_actions()),  # Actions possibles
+                    learning_rate=0.001,
+                    discount_factor=0.9,
+                    exploration_rate=1.0,
+                    exploration_decay=0.99,
+                    memory_size = 10000,
+                    batch_size = 64
+                )
+            total_reward = 0
             while running:
                 revendicable = self.verif_borne_revendicable()
 
@@ -500,29 +534,33 @@ class Plateau:
 
                     time.sleep(0.5)
                     reward = 0
-                    # Générer les actions possibles
-                    self.q_agent.actions = generate_actions(self)
-                    print(f"Actions disponibles : {self.q_agent.actions}")  # Affiche les actions générées
+                    # Conversion de l'état actuel en vecteur
+                    current_state_vector = convert_plateau_to_vector(self)
 
-                    # L'IA choisit une action
-                    current_state = self
-                    action = self.q_agent.choose_action(self)
-                    print(f"Action choisie par l'IA : {action}")
-                    if action is None:
-                        print("Aucune action possible pour l'IA. Passer le tour.")
-                        self.joueur_actuel = 1 - self.joueur_actuel
-                        return
+                    # Génération des actions possibles
+                    possible_actions = self.generate_actions()
+                    self.neural_agent.action_size = len(possible_actions)
 
-                    if isinstance(action[0], CarteClan):
-                        carte, borne = action
+                    # Choix de l'action par l'agent
+                    action = self.neural_agent.choose_action(current_state_vector, list(range(len(possible_actions))))
+                    chosen_action = possible_actions[action]
+
+                    if isinstance(chosen_action[0], CarteClan):
+                        carte, borne = chosen_action
                         print(f"L'IA joue la carte {carte.force}-{carte.couleur} sur la borne {borne}")
                         reward = self.calculate_reward(self.joueur_actuel, carte, borne)
                         self.ajouter_carte(borne, self.joueur_actuel, carte, "")
                         self.joueurs[self.joueur_actuel].main.remove(carte)
-                        if isinstance(carte, CarteTactique) and carte.capacite == "Modes de combat":
-                            nom_carte_tactique = carte.nom
 
-                        # Vérifiez les revendications possibles après avoir joué
+                    elif chosen_action[0] == "REVENDIQUER":
+                        _, borne = chosen_action
+                        print(f"L'IA revendique la borne {borne}")
+                        reward = self.calculate_reward(self.joueur_actuel, numero_borne=borne, revendication=True)
+                        for i in range(1, 10):
+                            if i == borne :
+                                borne_rect = pygame.Rect(410 + (i - 1) * 110, 350, 100, 50)
+                                self.revendiquer_borne(borne, self.joueur_actuel, screen_plateau, borne_rect, None)
+                    # Ajoutez une vérification explicite des revendications restantes
                     revendications = [
                         ("REVENDIQUER", borne)
                         for borne in range(1, self.nombre_bornes() + 1)
@@ -531,23 +569,28 @@ class Plateau:
 
                     for revendication in revendications:
                         _, borne = revendication
-                        print(f"L'IA revendique la borne {borne}")
-                        for i in range(1, 10):
-                            if i == borne :
-                                borne_rect = pygame.Rect(410 + (i - 1) * 110, 350, 100, 50)
-                                reward = self.calculate_reward(self.joueur_actuel, numero_borne=borne, revendication=True, nom_carte_tactique=nom_carte_tactique)
-                                self.revendiquer_borne(borne, self.joueur_actuel, screen_plateau, borne_rect, nom_carte_tactique)
+                        print(f"L'IA revendique une borne manquée : {borne}")
+                        reward = self.calculate_reward(self.joueur_actuel, numero_borne=borne, revendication=True)
+                        borne_rect = pygame.Rect(410 + (borne - 1) * 110, 350, 100, 50)
+                        self.revendiquer_borne(borne, self.joueur_actuel, screen_plateau, borne_rect, None)
 
-                    # Calculer la récompense
 
-                    # Mettre à jour la table Q
-                    next_state = self
-                    self.q_agent.update_q_value(self, action, reward, next_state)
+                    # Nouvel état après l'action
+                    next_state_vector = convert_plateau_to_vector(self)
+                    possible_next_actions = self.generate_actions()
 
-                    # Réduire le taux d'exploration
-                    self.q_agent.decay_exploration_rate()
+                    done = not self.verifier_fin_manche()
+                    # Mise à jour du réseau neuronal
+                    self.neural_agent.train_on_experience(
+                        current_state_vector, action, reward, next_state_vector,
+                        list(range(len(possible_next_actions))), done
+                    )
 
-                    car, bor = action
+                    total_reward += reward
+                    # Décroissance du taux d'exploration
+                    self.neural_agent.decay_exploration_rate()
+
+                    car, bor = chosen_action
 
                     if joueur == 0:
                         deplacer_carte(screen_plateau, joueur, car, bor, self.bornes[bor].joueur1_cartes)
@@ -559,8 +602,8 @@ class Plateau:
                     if not self.verifier_fin_manche():
                         nombre_manche += 1
                         self.commencer_nouvelle_manche(mode, nbr_manche)
+                        self.neural_agent.log_performance(total_reward)
                     else:
-                        # Passer au joueur suivant
                         joueur = 1 - joueur
                         self.joueur_actuel = joueur
                         passer = True

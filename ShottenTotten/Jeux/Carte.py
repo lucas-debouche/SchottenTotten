@@ -156,7 +156,11 @@ def deplacer_carte(fenetre, joueur, carte, borne_index, borne_joueur_cartes):
     if isinstance(carte, CarteClan):
         carte_image_path = os.path.join(carte_clan_path, f"{carte.couleur}-{carte.force}.jpg")
     else:
-        carte_image_path = os.path.join(carte_tactique_path, f"{carte.nom}.jpg")
+        if isinstance(carte, str):
+            print(f"Erreur: 'carte' est une chaîne de caractères: {carte}")
+        else:
+            carte_image_path = os.path.join(carte_tactique_path, f"{carte.nom}.jpg")
+
 
     # Vérification et chargement de l'image
     if not os.path.exists(carte_image_path):
