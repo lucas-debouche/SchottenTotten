@@ -672,6 +672,12 @@ class Plateau:
                                 self.jouer_carte_ruse(carte_selectionnee[0], joueur, screen_plateau, screen_width, screen_height)
 
                         self.displayPlateau(mode, nbr_manche, True, image_borne)
+                        for borne_key, borne_rect in buttons_plateau.items():
+                            if self.bornes[borne_key].controle_par == 0:
+                                pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
+                            elif self.bornes[borne_key].controle_par == 1:
+                                pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
+                            pygame.display.update(borne_rect)
                         config_button(screen_plateau, (169, 169, 169), button_passer["passer"], "Passer")
                         config_button(screen_plateau, (169, 169, 169), button_revendiquer["revendiquer"], "Revendiquer")
                         displayCarte(screen_plateau, joueur, self.joueurs[joueur].main, False)
