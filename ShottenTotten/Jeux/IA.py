@@ -170,7 +170,7 @@ def convert_plateau_to_vector(state):
     return vector
 
 
-def entrainement_automatique(plateau, nombre_parties, adversaire=None):
+def entrainement_automatique(plateau, nombre_parties):
     """
     Entraîne l'agent sur un grand nombre de parties.
     :param plateau: Instance de la classe Plateau.
@@ -178,7 +178,7 @@ def entrainement_automatique(plateau, nombre_parties, adversaire=None):
     :param adversaire: Stratégie de l'adversaire (par défaut, adversaire aléatoire).
     """
     performances = []
-    print("done")
+    print("enteeeeeeeeeeeeeeeeeeeeeer")
 
     for partie in range(1, nombre_parties + 1):
         # Initialiser le plateau pour une nouvelle partie
