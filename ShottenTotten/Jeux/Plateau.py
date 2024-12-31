@@ -1,9 +1,6 @@
 import time
 
-
-from ShottenTotten.Jeux.Carte import *
 from ShottenTotten.Jeux.Joueur import *
-from ShottenTotten.Jeux.Popup import *
 from ShottenTotten.Jeux.IA import *
 
 current_dir, base_dir, carte_clan_path, carte_tactique_path, back_card_path = chemin()
