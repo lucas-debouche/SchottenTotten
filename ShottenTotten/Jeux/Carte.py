@@ -153,6 +153,7 @@ def deplacer_carte(fenetre, joueur, carte, borne_index, borne_joueur_cartes):
     carte_clan_path = os.path.join(base_dir, "Ressources", "Cartes_Clan")
     carte_tactique_path = os.path.join(base_dir, "Ressources", "Cartes_Tactiques")
 
+    carte_image_path = None
     if isinstance(carte, CarteClan):
         carte_image_path = os.path.join(carte_clan_path, f"{carte.couleur}-{carte.force}.jpg")
     else:

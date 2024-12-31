@@ -75,9 +75,10 @@ class Popup:
                                     self.choix_force = self.force[i]
                                     self.menu2_open = False  # Fermer le menu de force
                                     self.screen.fill((165, 140, 100))
-                        elif self.button_valider["valider"].collidepoint(
-                                event.pos) and self.choix_couleur and self.choix_force:
-                            running = False
+                        elif self.choix_couleur and self.choix_force:
+                            self.afficher_button_valider((205, 200, 145))
+                            if self.button_valider["valider"].collidepoint(event.pos):
+                                running = False
 
                     elif capacite == "Ruses":
                         if self.choix_pioche_clan + self.choix_pioche_tactique == 3:
@@ -92,14 +93,7 @@ class Popup:
                                 self.screen.fill((165, 140, 100))
 
             if capacite:
-                # Dessin du bouton Valider
-                smallfont = pygame.font.SysFont('Forte', 35)
-                pygame.draw.rect(self.screen, (169, 169, 169), self.button_valider["valider"], border_radius=10)
-                pygame.draw.rect(self.screen, (139, 69, 19), self.button_valider["valider"], width=2, border_radius=10)
-                text_jouer = smallfont.render("Valider", True, (139, 69, 19))
-                text_rect_jouer = text_jouer.get_rect(center=self.button_valider["valider"].center)
-                self.screen.blit(text_jouer, text_rect_jouer)
-                pygame.display.update(self.button_valider["valider"])
+                self.afficher_button_valider((169, 169, 169))
             if capacite == "Troupes d'élites":
                 # Affiche les menus
                 pygame.draw.rect(self.screen, (205, 200, 145), self.menu1_rect["couleur"])
@@ -149,6 +143,15 @@ class Popup:
             return self.choix_couleur, self.choix_force
         elif self.choix_pioche_clan + self.choix_pioche_tactique == 3:
             return self.choix_pioche_clan, self.choix_pioche_tactique
+
+    def afficher_button_valider(self, couleur):
+        smallfont = pygame.font.SysFont('Forte', 35)
+        pygame.draw.rect(self.screen, couleur, self.button_valider["valider"], border_radius=10)
+        pygame.draw.rect(self.screen, (139, 69, 19), self.button_valider["valider"], width=2, border_radius=10)
+        text_jouer = smallfont.render("Valider", True, (139, 69, 19))
+        text_rect_jouer = text_jouer.get_rect(center=self.button_valider["valider"].center)
+        self.screen.blit(text_jouer, text_rect_jouer)
+        pygame.display.update(self.button_valider["valider"])
 
 
 def menuX_open(options_rects, screen, options):

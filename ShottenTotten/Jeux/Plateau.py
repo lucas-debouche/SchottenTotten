@@ -423,11 +423,11 @@ class Plateau:
                     combinaison_adverse = []
 
                     if joueur == 0:
-                        combinaison = sorted(self.bornes[numero_borne].joueur2_cartes, key=lambda x: x.force)
-                        combinaison_adverse = sorted(self.bornes[numero_borne].joueur1_cartes, key=lambda x: x.force)
-                    elif joueur == 1:
                         combinaison = sorted(self.bornes[numero_borne].joueur1_cartes, key=lambda x: x.force)
                         combinaison_adverse = sorted(self.bornes[numero_borne].joueur2_cartes, key=lambda x: x.force)
+                    elif joueur == 1:
+                        combinaison = sorted(self.bornes[numero_borne].joueur2_cartes, key=lambda x: x.force)
+                        combinaison_adverse = sorted(self.bornes[numero_borne].joueur1_cartes, key=lambda x: x.force)
 
                     forces = [carte.force for carte in combinaison]
                     forces_adverse = [carte.force for carte in combinaison_adverse]
@@ -638,6 +638,15 @@ class Plateau:
                     config_button(screen_plateau, (169, 169, 169), button_passer["passer"], "Passer")
 
                     buttons = displayCarte(screen_plateau, joueur, self.joueurs[joueur].main, False)
+                    for borne_key, borne_rect in buttons_plateau.items():
+                        if borne_key != "pioche_clan" and borne_key != "pioche_tactique" and borne_key != "defausse":
+                            numero_borne = int(borne_key.replace("borne", ""))
+                            if self.bornes[numero_borne].controle_par == 0:
+                                pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
+                                pygame.display.update(borne_rect)
+                            elif self.bornes[numero_borne].controle_par == 1:
+                                pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
+                                pygame.display.update(borne_rect)
                     pygame.display.flip()
 
                     carte_index = None
@@ -678,7 +687,24 @@ class Plateau:
                                         if isinstance(carte_selectionnee[0], CarteTactique) and carte_selectionnee[0].capacite == "Ruses":
                                             for borne_key, borne_rect in buttons_plateau.items():
                                                 if borne_rect.collidepoint(event.pos) and borne_key == "defausse":
-                                                    borne_index = 0
+                                                    j = None
+                                                    choisir_defausse = False
+                                                    if carte_selectionnee[0].nom == "Banshee" or carte_selectionnee[0].nom == "Traître":
+                                                        j = 1 - joueur
+                                                    elif carte_selectionnee[0].nom == "Stratège":
+                                                        j = joueur
+                                                    if j is not None:
+                                                        for index, borne in self.bornes:
+                                                            if j == 0:
+                                                                if len(borne.joueur1_carte):
+                                                                    choisir_defausse = True
+                                                            if j == 1:
+                                                                if len(borne.joueur2_carte):
+                                                                    choisir_defausse = True
+                                                    else:
+                                                        choisir_defausse = True
+                                                    if choisir_defausse:
+                                                        borne_index = 0
                                         else:
                                             for borne_key, borne_rect in buttons_plateau.items():
                                                 if borne_rect.collidepoint(event.pos) and borne_key.startswith("borne"):
@@ -939,7 +965,7 @@ class Plateau:
                         (carte, deplacer_carte(screen, joueur, carte, i, self.bornes[i].joueur2_cartes)))
 
         for button_key, button_rect in buttons_plateau.items():
-            if button_key.startswith("borne") or button_key == "defausse":
+            if button_key.startswith("borne") or (button_key == "defausse" and nom != "Traître"):
                 screen.blit(buttons_images[button_key], button_rect.topleft)
                 afficher_pioche(325, screen, self.defausse, "defausse", (165, 140, 100))
 
