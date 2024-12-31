@@ -677,7 +677,7 @@ class Plateau:
                                             carte_selectionnee[0] = self.joueurs[joueur].main[carte_index]
                                             if isinstance(carte_selectionnee[0], CarteTactique):
                                                 capacite = carte_selectionnee[0].capacite
-                                    if carte_index :
+                                    if carte_index is not None :
                                         if isinstance(carte_selectionnee[0], CarteTactique) and carte_selectionnee[0].capacite == "Ruses":
                                             for borne_key, borne_rect in buttons_plateau.items():
                                                 if borne_rect.collidepoint(event.pos) and borne_key == "defausse":
@@ -688,12 +688,12 @@ class Plateau:
                                                     elif carte_selectionnee[0].nom == "Stratège":
                                                         j = joueur
                                                     if j is not None:
-                                                        for index, borne in self.bornes:
+                                                        for index, borne in self.bornes.items():
                                                             if j == 0:
-                                                                if len(borne.joueur1_carte):
+                                                                if len(borne.joueur1_cartes):
                                                                     choisir_defausse = True
                                                             if j == 1:
-                                                                if len(borne.joueur2_carte):
+                                                                if len(borne.joueur2_cartes):
                                                                     choisir_defausse = True
                                                     else:
                                                         choisir_defausse = True
