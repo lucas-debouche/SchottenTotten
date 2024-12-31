@@ -27,6 +27,7 @@ class Plateau:
         self.joueurs = []
         self.nbr_joueurs = None
         self.joueur_actuel = None
+        self.nbr_manches = None
 
         # Initialisation de l'agent Q-Learning
         self.neural_agent = None
@@ -403,8 +404,6 @@ class Plateau:
             if self.bornes[numero_borne].controle_par is None:
                 main_joueur = self.evaluer_mains(joueur, numero_borne, nom_carte_tactique)
                 main_joueur_adverse = self.evaluer_mains(joueur_adverse, numero_borne, nom_carte_tactique)
-                print(main_joueur)
-                print(main_joueur_adverse)
                 if main_joueur > main_joueur_adverse:
                     self.gagnant_revendiquer(numero_borne, joueur)
                     if joueur == 0:
@@ -499,8 +498,10 @@ class Plateau:
         button_revendiquer = {"revendiquer": pygame.Rect(1250, 600, 200, 50)}
         button_passer = {"passer": pygame.Rect(1250, 660, 200, 50)}
 
+        if nbr_manche:
+            self.nbr_manches = nbr_manche
         nombre_manche = 0
-        while nombre_manche != nbr_manche:
+        while nombre_manche < self.nbr_manches:
             running = True
             joueur = 0
             self.joueur_actuel = joueur
@@ -529,7 +530,7 @@ class Plateau:
                             pygame.quit()
                             sys.exit()
 
-                    time.sleep(0.5)
+                    #time.sleep(0.5)
                     reward = 0
                     # Conversion de l'état actuel en vecteur
                     current_state_vector = convert_plateau_to_vector(self)
@@ -544,14 +545,12 @@ class Plateau:
 
                     if isinstance(chosen_action[0], CarteClan):
                         carte, borne = chosen_action
-                        print(f"L'IA joue la carte {carte.force}-{carte.couleur} sur la borne {borne}")
                         reward = self.calculate_reward(self.joueur_actuel, carte, borne)
                         self.ajouter_carte(borne, self.joueur_actuel, carte, "")
                         self.joueurs[self.joueur_actuel].main.remove(carte)
 
                     elif chosen_action[0] == "REVENDIQUER":
                         _, borne = chosen_action
-                        print(f"L'IA revendique la borne {borne}")
                         reward = self.calculate_reward(self.joueur_actuel, numero_borne=borne, revendication=True)
                         for i in range(1, 10):
                             if i == borne :
@@ -566,7 +565,6 @@ class Plateau:
 
                     for revendication in revendications:
                         _, borne = revendication
-                        print(f"L'IA revendique une borne manquée : {borne}")
                         reward = self.calculate_reward(self.joueur_actuel, numero_borne=borne, revendication=True)
                         borne_rect = pygame.Rect(410 + (borne - 1) * 110, 350, 100, 50)
                         self.revendiquer_borne(borne, self.joueur_actuel, screen_plateau, borne_rect, None)
@@ -597,9 +595,8 @@ class Plateau:
                     pygame.display.update()
 
                     if not self.verifier_fin_manche():
-                        nombre_manche += 1
-                        self.commencer_nouvelle_manche(mode, nbr_manche)
                         self.neural_agent.log_performance(total_reward)
+                        running = False
                     else:
                         joueur = 1 - joueur
                         self.joueur_actuel = joueur
@@ -801,7 +798,7 @@ class Plateau:
                 self.afficher_pioches(screen_plateau, (205, 200, 145), mode)
 
             nombre_manche += 1
-            self.commencer_nouvelle_manche(mode, nbr_manche)
+            self.commencer_nouvelle_manche(mode, None)
         self.fin_jeu()
 
     def afficher_pioches(self, screen_plateau, couleur, mode):
@@ -872,7 +869,7 @@ class Plateau:
                     pygame.quit()
                     sys.exit()  # Arrêt du programme
 
-            if not game_running:
+            if not game_running and nbr_manche:
                 self.tour_de_jeu(screen_plateau, buttons_images, buttons, mode, nbr_manche, window_width, window_height)
             else:
                 break
