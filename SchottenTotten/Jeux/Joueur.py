@@ -3,7 +3,7 @@ import sys
 
 import pygame
 
-from ShottenTotten.Jeux.Carte import CarteTactique
+from SchottenTotten.Jeux.Carte import CarteTactique
 
 
 class Joueur:

@@ -1,4 +1,4 @@
-from ShottenTotten.Jeux.Plateau import *
+from SchottenTotten.Jeux.Plateau import *
 
 plateau = Plateau()
 

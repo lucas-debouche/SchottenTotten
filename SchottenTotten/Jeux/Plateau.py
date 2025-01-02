@@ -1,7 +1,5 @@
-import time
-
-from ShottenTotten.Jeux.Joueur import *
-from ShottenTotten.Jeux.IA import *
+from SchottenTotten.Jeux.Joueur import *
+from SchottenTotten.Jeux.IA import *
 
 current_dir, base_dir, carte_clan_path, carte_tactique_path, back_card_path = chemin()
 
@@ -580,6 +578,7 @@ class Plateau:
                         current_state_vector, action, reward, next_state_vector,
                         list(range(len(possible_next_actions))), done
                     )
+
 
                     total_reward += reward
                     # Décroissance du taux d'exploration

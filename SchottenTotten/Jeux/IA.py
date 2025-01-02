@@ -1,11 +1,17 @@
+import json
 import random
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from collections import deque
 import numpy as np
-from ShottenTotten.Jeux.Carte import *
+from SchottenTotten.Jeux.Carte import *
 
+# Définir le chemin du dossier
+SAVE_DIR = 'C:/Users/client/cours/ia41/SchottenTotten/SchottenTotten'  # Nom du dossier où tout sera sauvegardé
+
+# Créer le dossier s'il n'existe pas
+if not os.path.exists(SAVE_DIR):
+    os.makedirs(SAVE_DIR)
 
 # --- Réseau de neurones pour approximer Q(s, a) ---
 class QNetwork(nn.Module):
@@ -44,10 +50,14 @@ class NeuralQLearningAgent:
         self.criterion = nn.MSELoss()
 
         # Mémoire de rejouabilité
-        self.memory = deque(maxlen=memory_size)
+        self.memory = deque(load_experiences_from_file(), maxlen=10000)
 
         # Statistiques
         self.total_rewards = []
+
+        self.action_counter = 0
+
+        load_model_weights(self.q_network)
 
     def choose_action(self, state, possible_actions):
         """
@@ -119,6 +129,8 @@ class NeuralQLearningAgent:
         Enregistre la récompense obtenue à la fin d'une partie pour analyse.
         """
         self.total_rewards.append(reward)
+        save_model_weights(self.q_network)
+
 
     def train_on_experience(self, state, action, reward, next_state, possible_next_actions, done):
         """
@@ -126,6 +138,7 @@ class NeuralQLearningAgent:
         """
         # Ajout de l'expérience à la mémoire
         self.store_experience(state, action, reward, next_state, possible_next_actions, done)
+        save_experiences_to_file(self.memory)
 
         # Mise à jour immédiate du réseau neuronal
         state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
@@ -150,7 +163,9 @@ class NeuralQLearningAgent:
         self.optimizer.step()
 
         # Entraînement par lot si nécessaire
-        self.replay()
+        self.action_counter += 1
+        if self.action_counter % 10 == 0:  # Exécuter `replay` toutes les 10 actions
+            self.replay()
 
 # Exemple d'intégration dans le jeu
 def convert_plateau_to_vector(state):
@@ -168,3 +183,53 @@ def convert_plateau_to_vector(state):
             1 if borne.controle_par == 1 else 0
         ])
     return vector
+
+def save_experiences_to_file(memory, filename='experiences.json'):
+    filepath = os.path.join(SAVE_DIR, filename)  # Chemin complet
+    experiences = [
+        {
+            'state': state,
+            'action': action,
+            'reward': reward,
+            'next_state': next_state,
+            'possible_next_action': possible_next_action,
+            'done': done
+        }
+        for state, action, reward, next_state, possible_next_action, done in memory
+    ]
+    with open(filepath, 'w') as file:
+        json.dump(experiences, file)  # Sauvegarder dans le fichier JSON
+
+
+def load_experiences_from_file(filename='experiences.json'):
+    filepath = os.path.join(SAVE_DIR, filename)  # Chemin complet
+    try:
+        with open(filepath, 'r') as file:
+            experiences = json.load(file)
+        return [
+            (
+                experience['state'],
+                experience['action'],
+                experience['reward'],
+                experience['next_state'],
+                experience['possible_next_action'],
+                experience['done']
+            )
+            for experience in experiences
+        ]
+    except FileNotFoundError:
+        return []  # Si le fichier n'existe pas, retourner une liste vide
+
+
+def save_model_weights(model, filename='q_network_weights.pth'):
+    filepath = os.path.join(SAVE_DIR, filename)  # Chemin complet
+    torch.save(model.state_dict(), filepath)
+
+
+def load_model_weights(model, filename='q_network_weights.pth'):
+    filepath = os.path.join(SAVE_DIR, filename)  # Chemin complet
+    try:
+        model.load_state_dict(torch.load(filepath))
+    except FileNotFoundError:
+        print("Pas de fichier de poids trouvé. Réinitialisation du modèle.")
+

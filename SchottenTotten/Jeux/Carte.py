@@ -2,7 +2,7 @@ from collections import deque
 
 import os
 
-from ShottenTotten.Jeux.Popup import *
+from SchottenTotten.Jeux.Popup import *
 
 # Configurations globales pour les cartes
 Couleurs = {1: "blue", 2: "green", 3: "yellow", 4: "orange", 5: "red", 6: "purple"}
