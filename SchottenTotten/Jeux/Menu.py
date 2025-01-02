@@ -98,6 +98,7 @@ class Menu :
     def __init__(self):
         self.mode = False
         self.nbr_manche = None
+        self.entrainement = False
 
     def displayAccueil(self):
         """Fonction qui affiche l'accueil de bienvenue"""
@@ -165,9 +166,10 @@ class Menu :
                    "jvsj": pygame.Rect(200, 350, button_width, button_height),
                    "jvsia":  pygame.Rect(500, 350, button_width, button_height),
                    "iavsia": pygame.Rect(800, 350, button_width, button_height),
-                   "manche1": pygame.Rect(200, 550, button_width, button_height),
-                   "manche3": pygame.Rect(500, 550, button_width, button_height),
-                   "manche5": pygame.Rect(800, 550, button_width, button_height),
+                   "manche1": pygame.Rect(100, 550, button_width, button_height),
+                   "manche3": pygame.Rect(400, 550, button_width, button_height),
+                   "manche5": pygame.Rect(700, 550, button_width, button_height),
+                   "entrainement": pygame.Rect(1000, 550, button_width, button_height),
                    "jouer": pygame.Rect(1050, 650, button_width, button_height),
                }
 
@@ -216,12 +218,17 @@ class Menu :
                     if buttons["manche1"].collidepoint(event.pos):
                         #Sélection 1 manche
                         self.nbr_manche = 1
+                        self.entrainement = False
                     elif buttons["manche3"].collidepoint(event.pos):
                         #Sélection 3 manches
                         self.nbr_manche = 3
+                        self.entrainement = False
                     elif buttons["manche5"].collidepoint(event.pos):
                         #Sélection 5 manches
                         self.nbr_manche = 5
+                        self.entrainement = False
+                    elif buttons["entrainement"].collidepoint(event.pos):
+                        self.nbr_manche = self.displayEntrainement()
                     if buttons["jouer"].collidepoint(event.pos) and self.mode != False and plateau.nbr_joueurs is not None and self.nbr_manche:
                         #retourne les valeurs Mode, Joueurs, Manches pour initialiser le jeu
                         displayNom(self.mode, self.nbr_manche)
@@ -310,10 +317,25 @@ class Menu :
             text_rect_manche5 = text_manche5.get_rect(center=buttons["manche5"].center)
             screen_menu.blit(text_manche5, text_rect_manche5)
 
+            shadow_rect = buttons["entrainement"].move(4, 4)  # Décalage pour l'ombre
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche and self.entrainement else (160, 82, 45), shadow_rect,
+                             border_radius=10)
+
+            pygame.draw.rect(screen_menu, (205, 200, 145), buttons["entrainement"], border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche and self.entrainement else (139, 69, 19), buttons["entrainement"],
+                             width=2, border_radius=10)
+            text_entrainement = smallfont.render("Entrainement", True, (139, 69, 19))
+            text_rect_entrainement = text_entrainement.get_rect(center=buttons["entrainement"].center)
+            screen_menu.blit(text_entrainement, text_rect_entrainement)
+
             button_play(buttons["jouer"], screen_menu, smallfont)
 
             pygame.display.flip()
 
+    def displayEntrainement(self):
+        self.entrainement = True
+        nbr_manche = 0
+        return nbr_manche
 
 def button_play(button, screen, smallfont):
     shadow_rect = button.move(4, 4)  # Décalage pour l'ombre
