@@ -2,15 +2,13 @@ from SchottenTotten.Jeux.Plateau import *
 
 plateau = Plateau()
 
-
-def displayNom(mode, nbr_manche):
+def displayNom(mode, nbr_manche, entrainement):
     """Fonction qui permet d'ajouter des noms de joueur"""
     nbr_joueur = plateau.nbr_joueurs
     pygame.display.set_caption("Schotten Totten : Nom")
     screen_nom = pygame.display.set_mode((1000, 400))
 
     # Création des boutons
-    smallfont = pygame.font.SysFont('Forte', 35)
     textfont = pygame.font.SysFont('Congenial Black', 35)
     text_joueur1 = smallfont.render("Joueur 1 :", True, (139, 69, 19))
     text_joueur2 = smallfont.render("Joueur 2 : ", True, (139, 69, 19))
@@ -62,7 +60,7 @@ def displayNom(mode, nbr_manche):
                     if nom_joueur1 != "" and nom_joueur2 != "":
                         plateau.joueurs.append(Joueur(0, nom_joueur1))
                         plateau.joueurs.append(Joueur(1, nom_joueur2))
-                        plateau.commencer_nouvelle_manche(mode, nbr_manche)
+                        plateau.commencer_nouvelle_manche(mode, nbr_manche, entrainement)
 
             elif event.type == pygame.KEYDOWN and active1:
                 if event.key == pygame.K_BACKSPACE:
@@ -76,15 +74,15 @@ def displayNom(mode, nbr_manche):
                     nom_joueur2 += event.unicode  # Ajouter le caractère saisi
 
         # Dessiner les boutons
+        if nbr_joueur != 0:
+            config_button(screen_nom, (205, 200, 145), smallfont, buttons["jouer"], "Jouer")
 
-        button_play(buttons["jouer"], screen_nom, smallfont)
-
-        input_nom(screen_nom, input_color1, input_rect1, textfont, nom_joueur1)
+            input_nom(screen_nom, input_color1, input_rect1, textfont, nom_joueur1)
 
         if nbr_joueur == 0:
             plateau.joueurs.append(Joueur(0, "IA"))
             plateau.joueurs.append(Joueur(1, "IA"))
-            plateau.commencer_nouvelle_manche(mode, nbr_manche)
+            plateau.commencer_nouvelle_manche(mode, nbr_manche, entrainement)
         elif nbr_joueur == 1:
             nom_joueur2 = "IA"
         elif nbr_joueur == 2:
@@ -107,13 +105,10 @@ class Menu :
         pygame.display.set_caption("Schotten Totten")
         screen_accueil = pygame.display.set_mode((600,750))
 
-        current_dir = os.path.dirname(__file__)
-        base_dir = os.path.abspath(os.path.join(current_dir, ".."))
         background_path = os.path.join(base_dir, "Ressources", "Accueil.png")
         background = pygame.image.load(background_path)
 
         #Création des boutons
-        smallfont = pygame.font.SysFont('Forte', 35)
         buttons = {"Jouer": pygame.Rect(225, 600, 120, 50)}
 
         menu_running = True
@@ -149,14 +144,11 @@ class Menu :
         pygame.display.set_caption("Schotten Totten : Menu")
         screen_menu = pygame.display.set_mode((window_width, window_height))
 
-        current_dir = os.path.dirname(__file__)
-        base_dir = os.path.abspath(os.path.join(current_dir, ".."))
         background_path = os.path.join(base_dir, "Ressources", "Menu.png")
         background = pygame.image.load(background_path)
         background = pygame.transform.scale(background, (window_width, window_height))
 
         #Création des boutons
-        smallfont = pygame.font.SysFont('Forte', 35)
         button_height = 50
         button_width = 200
 
@@ -228,10 +220,10 @@ class Menu :
                         self.nbr_manche = 5
                         self.entrainement = False
                     elif buttons["entrainement"].collidepoint(event.pos):
-                        self.nbr_manche = self.displayEntrainement()
+                        self.displayEntrainement()
                     if buttons["jouer"].collidepoint(event.pos) and self.mode != False and plateau.nbr_joueurs is not None and self.nbr_manche:
                         #retourne les valeurs Mode, Joueurs, Manches pour initialiser le jeu
-                        displayNom(self.mode, self.nbr_manche)
+                        displayNom(self.mode, self.nbr_manche, self.entrainement)
 
 
 
@@ -291,28 +283,28 @@ class Menu :
             screen_menu.blit(text_iavsia, text_rect_iavsia)
 
             shadow_rect = buttons["manche1"].move(4, 4)  # Décalage pour l'ombre
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 1 else (160, 82, 45), shadow_rect,border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 1 and not self.entrainement else (160, 82, 45), shadow_rect,border_radius=10)
 
             pygame.draw.rect(screen_menu, (205, 200, 145), buttons["manche1"], border_radius=10)
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 1 else (139, 69, 19), buttons["manche1"],width=2, border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 1 and not self.entrainement else (139, 69, 19), buttons["manche1"],width=2, border_radius=10)
             text_manche1 = smallfont.render("1 Manche", True, (139, 69, 19))
             text_rect_manche1 = text_manche1.get_rect(center=buttons["manche1"].center)
             screen_menu.blit(text_manche1, text_rect_manche1)
 
             shadow_rect = buttons["manche3"].move(4, 4)  # Décalage pour l'ombre
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 3 else (160, 82, 45), shadow_rect,border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 3 and not self.entrainement else (160, 82, 45), shadow_rect,border_radius=10)
 
             pygame.draw.rect(screen_menu, (205, 200, 145), buttons["manche3"], border_radius=10)
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 3 else (139, 69, 19), buttons["manche3"],width=2, border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 3 and not self.entrainement else (139, 69, 19), buttons["manche3"],width=2, border_radius=10)
             text_manche3 = smallfont.render("3 Manches", True, (139, 69, 19))
             text_rect_manche3 = text_manche3.get_rect(center=buttons["manche3"].center)
             screen_menu.blit(text_manche3, text_rect_manche3)
 
             shadow_rect = buttons["manche5"].move(4, 4)  # Décalage pour l'ombre
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 5 else (160, 82, 45), shadow_rect,border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 5 and not self.entrainement else (160, 82, 45), shadow_rect,border_radius=10)
 
             pygame.draw.rect(screen_menu, (205, 200, 145), buttons["manche5"], border_radius=10)
-            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 5 else (139, 69, 19), buttons["manche5"],width=2, border_radius=10)
+            pygame.draw.rect(screen_menu, (255, 0, 0) if self.nbr_manche == 5 and not self.entrainement else (139, 69, 19), buttons["manche5"],width=2, border_radius=10)
             text_manche5 = smallfont.render("5 Manches", True, (139, 69, 19))
             text_rect_manche5 = text_manche5.get_rect(center=buttons["manche5"].center)
             screen_menu.blit(text_manche5, text_rect_manche5)
@@ -328,32 +320,75 @@ class Menu :
             text_rect_entrainement = text_entrainement.get_rect(center=buttons["entrainement"].center)
             screen_menu.blit(text_entrainement, text_rect_entrainement)
 
-            button_play(buttons["jouer"], screen_menu, smallfont)
+            config_button(screen_menu, (205, 200, 145), smallfont, buttons["jouer"], "Jouer")
 
             pygame.display.flip()
 
     def displayEntrainement(self):
         self.entrainement = True
-        nbr_manche = 0
-        return nbr_manche
+        pygame.display.set_caption("Schotten Totten : Nombre de manches")
+        screen_nom = pygame.display.set_mode((1000, 400))
 
-def button_play(button, screen, smallfont):
-    shadow_rect = button.move(4, 4)  # Décalage pour l'ombre
-    pygame.draw.rect(screen, (160, 82, 45), shadow_rect, border_radius=10)
+        # Création des boutons
+        textfont = pygame.font.SysFont('Congenial Black', 35)
+        text = smallfont.render("Nombre de manches :", True, (139, 69, 19))
+        buttons = {"valider": pygame.Rect(750, 300, 200, 50)}
 
-    pygame.draw.rect(screen, (205, 200, 145), button, border_radius=10)
-    pygame.draw.rect(screen, (139, 69, 19), button, width=2, border_radius=10)
-    text_jouer = smallfont.render("Jouer", True, (139, 69, 19))
-    text_rect_jouer = text_jouer.get_rect(center=button.center)
-    screen.blit(text_jouer, text_rect_jouer)
+        # Initialisation de la zone de texte
+        input_rect1 = pygame.Rect(400, 100, 300, 50)
+        input_color_active = (255, 255, 255)  # Couleur de fond active
+        input_color_inactive = (200, 200, 200)  # Couleur de fond inactif
+        input_color1 = input_color_inactive
+        active1 = False  # Indique si la zone de texte est active
+        nbr_manche = ""  # Contient le texte saisi
 
-def input_nom(screen, input_color, input_rect, textfont, nom_joueur):
-    pygame.draw.rect(screen, input_color, input_rect, border_radius=10)
-    pygame.draw.rect(screen, (139, 69, 19), input_rect, 2, border_radius=10)  # Bordure
+        menu_running = True
+
+        while menu_running:
+            screen_nom.fill((205, 200, 145))  # Fond de la fenêtre
+            screen_nom.blit(text, (100, 100))
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    menu_running = False
+                    pygame.quit()
+                    sys.exit()  # Arrêt du programme
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    if input_rect1.collidepoint(event.pos):
+                        active1 = True
+                        input_color1 = input_color_active
+                    else:
+                        active1 = False
+                        input_color1 = input_color_inactive
+
+                    if buttons["valider"].collidepoint(event.pos):
+                        if len(nbr_manche) != 0:
+                            self.nbr_manche = int(nbr_manche)
+                            self.displayMenu()
+
+                elif event.type == pygame.KEYDOWN and active1:
+                    if event.key == pygame.K_BACKSPACE:
+                        nbr_manche = nbr_manche[:-1]  # Supprimer le dernier caractère
+                    elif event.unicode.isdigit():
+                        if len(nbr_manche) == 0 and event.unicode == "0":
+                            pass  # Ignorer le "0" initial
+                        elif len(nbr_manche) < 3:  # Limiter à 5 caractères
+                            nbr_manche += event.unicode
+
+            # Dessiner les boutons
+            config_button(screen_nom, (205, 200, 145), smallfont, buttons["valider"], "Valider")
+
+            input_nom(screen_nom, input_color1, input_rect1, textfont, nbr_manche)
+
+            pygame.display.flip()
+
+
+def input_nom(screen_, input_color, input_rect, textfont, input_text):
+    pygame.draw.rect(screen_, input_color, input_rect, border_radius=10)
+    pygame.draw.rect(screen_, (139, 69, 19), input_rect, 2, border_radius=10)  # Bordure
 
     # Afficher le texte saisi
-    text_surface = textfont.render(nom_joueur, True, (0, 0, 0))
-    screen.blit(text_surface, (input_rect.x + 10, input_rect.y + 10))
+    text_surface = textfont.render(input_text, True, (0, 0, 0))
+    screen_.blit(text_surface, (input_rect.x + 10, input_rect.y + 10))
 
     # Empêcher le texte de dépasser la largeur de la zone de texte
     input_rect.w = max(300, text_surface.get_width() + 20)

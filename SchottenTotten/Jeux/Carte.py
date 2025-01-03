@@ -20,6 +20,13 @@ class CarteClan:
         self.couleur = couleur
         self.force = force
 
+    def to_dict(self):
+        """Convertit l'objet en un dictionnaire JSON-compatible."""
+        return {
+            "force": self.force,
+            "couleur": self.couleur
+        }
+
 class CarteTactique:
     """Représente une carte tactique avec une capacité et un nom."""
 
@@ -221,11 +228,13 @@ def chemin():
     back_card_path = os.path.join(base_dir, "Ressources", "Back_Card.jpg")
     return current_dir, base_dir, carte_clan_path, carte_tactique_path, back_card_path
 
-def config_button(screen_plateau, button_color, button, text):
-    smallfont = pygame.font.SysFont('Forte', 35)
+def config_button(screen_plateau, button_color, smallfont, button, text):
+    shadow_rect = button.move(4, 4)  # Décalage pour l'ombre
+    pygame.draw.rect(screen_plateau, (160, 82, 45), shadow_rect, border_radius=10)
+
     pygame.draw.rect(screen_plateau, button_color, button, border_radius=10)
     pygame.draw.rect(screen_plateau, (139, 69, 19), button, width=2, border_radius=10)
-    text_jouer = smallfont.render(text, True, (139, 69, 19))
-    text_rect_jouer = text_jouer.get_rect(center=button.center)
-    screen_plateau.blit(text_jouer, text_rect_jouer)
+    text_ = smallfont.render(text, True, (139, 69, 19))
+    text_rect = text_.get_rect(center=button.center)
+    screen_plateau.blit(text_, text_rect)
     pygame.display.update(button)

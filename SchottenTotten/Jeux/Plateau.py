@@ -1,7 +1,12 @@
+import threading
+import time
+
 from SchottenTotten.Jeux.Joueur import *
 from SchottenTotten.Jeux.IA import *
 
 current_dir, base_dir, carte_clan_path, carte_tactique_path, back_card_path = chemin()
+pygame.init()
+smallfont = pygame.font.SysFont('Forte', 35)
 
 class Borne:
     """Représente une borne sur le plateau avec des cartes et un contrôle."""
@@ -148,17 +153,15 @@ class Plateau:
 
         return score
 
-    def calculate_reward(self, joueur, carte=None, numero_borne=None, revendication=False, nom_carte_tactique=None):
+    def calculate_reward(self, joueur, carte=None, numero_borne=None, revendication=False):
         """
         Calcule la récompense pour une action spécifique (jouer une carte ou revendiquer une borne).
-        :param nom_carte_tactique:
         :param joueur: Le joueur qui effectue l'action.
         :param carte: La carte jouée (None si c'est une revendication).
         :param numero_borne: La borne ciblée.
         :param revendication: Indique si l'action est une revendication.
         :return: Récompense numérique.
         """
-        reward = 0
 
         # Si l'action est une revendication
         reward = 0
@@ -298,22 +301,9 @@ class Plateau:
         random.shuffle(self.pioche_clan)
         random.shuffle(self.pioche_tactique)
 
-    def commencer_nouvelle_manche(self, mode, nbr_manche):
-
-        for joueur in self.joueurs:
-            joueur.main = []
-            joueur.borne_controlee = 0
-        for borne in self.bornes:
-            self.bornes[borne].controle_par = None
-            self.bornes[borne].joueur1_cartes = []
-            self.bornes[borne].joueur2_cartes = []
-        self.pioche_clan.clear()
-        self.pioche_tactique.clear()
-
-
-        self.initialiser_cartes(mode)
-        self.distribuer_cartes()
-        self.displayPlateau(mode, nbr_manche, False, {})
+    def commencer_nouvelle_manche(self, mode, nbr_manche, entrainement):
+        self.reset_plateau(mode)
+        self.displayPlateau(mode, nbr_manche, False, {}, entrainement)
 
     def distribuer_cartes(self):
         """Distribue les cartes aux joueurs au début de la partie."""
@@ -404,15 +394,16 @@ class Plateau:
                 main_joueur_adverse = self.evaluer_mains(joueur_adverse, numero_borne, nom_carte_tactique)
                 if main_joueur > main_joueur_adverse:
                     self.gagnant_revendiquer(numero_borne, joueur)
-                    if joueur == 0:
-                        pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
-                        pygame.display.update(borne_rect)
-                    elif joueur == 1:
-                        pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
-                        pygame.display.update(borne_rect)
+                    if borne_rect:
+                        if joueur == 0:
+                            pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
+                            pygame.display.update(borne_rect)
+                        elif joueur == 1:
+                            pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
+                            pygame.display.update(borne_rect)
 
                 #gerer les égalités en prenant en compte la force des cartes
-                elif main_joueur > 1 and main_joueur_adverse > 1 and main_joueur_adverse == main_joueur :
+                elif 1 < main_joueur == main_joueur_adverse and main_joueur_adverse > 1:
                     combinaison = []
                     combinaison_adverse = []
 
@@ -428,12 +419,13 @@ class Plateau:
 
                     if forces[0] > forces_adverse[0]:
                         self.gagnant_revendiquer(numero_borne, joueur)
-                        if joueur == 0:
-                            pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
-                            pygame.display.update(borne_rect)
-                        elif joueur == 1:
-                            pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
-                            pygame.display.update(borne_rect)
+                        if borne_rect:
+                            if joueur == 0:
+                                pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
+                                pygame.display.update(borne_rect)
+                            elif joueur == 1:
+                                pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
+                                pygame.display.update(borne_rect)
                 else:
                     somme_joueur = 0
                     somme_joueur_adverse = 0
@@ -444,12 +436,13 @@ class Plateau:
 
                     if somme_joueur > somme_joueur_adverse:
                         self.gagnant_revendiquer(numero_borne, joueur)
-                        if joueur == 0:
-                            pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
-                            pygame.display.update(borne_rect)
-                        elif joueur == 1:
-                            pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
-                            pygame.display.update(borne_rect)
+                        if borne_rect:
+                            if joueur == 0:
+                                pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
+                                pygame.display.update(borne_rect)
+                            elif joueur == 1:
+                                pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
+                                pygame.display.update(borne_rect)
 
 
     def evaluer_mains(self, joueur, numero_borne, nom_carte_tactique = None):
@@ -490,7 +483,7 @@ class Plateau:
         elif nom_carte_tactique == "Colin-Maillard":
             return 0
 
-    def tour_de_jeu(self, screen_plateau, buttons_images, buttons_plateau, mode, nbr_manche, screen_width, screen_height):
+    def tour_de_jeu(self, screen_plateau, buttons_images, buttons_plateau, mode, nbr_manche, screen_width, screen_height, entrainement):
         """Gère le déroulement d'une manche de jeu."""
 
         button_revendiquer = {"revendiquer": pygame.Rect(1250, 600, 200, 50)}
@@ -515,20 +508,17 @@ class Plateau:
                     discount_factor=0.9,
                     exploration_rate=1.0,
                     exploration_decay=0.99,
-                    memory_size = 10000,
                     batch_size = 64
                 )
             total_reward = 0
             while running:
                 revendicable = self.verif_borne_revendicable()
-
                 if self.joueurs[joueur].nom == "IA":
                     for event in pygame.event.get():
                         if event.type == pygame.QUIT:
                             pygame.quit()
                             sys.exit()
-
-                    #time.sleep(0.5)
+                    time.sleep(0.5)
                     reward = 0
                     # Conversion de l'état actuel en vecteur
                     current_state_vector = convert_plateau_to_vector(self)
@@ -585,7 +575,6 @@ class Plateau:
                     self.neural_agent.decay_exploration_rate()
 
                     car, bor = chosen_action
-
                     if joueur == 0:
                         deplacer_carte(screen_plateau, joueur, car, bor, self.bornes[bor].joueur1_cartes)
                     else:
@@ -627,8 +616,8 @@ class Plateau:
                     else:
                         button_color = (169, 169, 169)  # Grise si non activable
 
-                    config_button(screen_plateau, button_color, button_revendiquer["revendiquer"], "Revendiquer")
-                    config_button(screen_plateau, (169, 169, 169), button_passer["passer"], "Passer")
+                    config_button(screen_plateau, button_color, smallfont, button_revendiquer["revendiquer"], "Revendiquer")
+                    config_button(screen_plateau, (169, 169, 169), smallfont, button_passer["passer"], "Passer")
 
                     buttons = displayCarte(screen_plateau, joueur, self.joueurs[joueur].main, False)
                     for borne_key, borne_rect in buttons_plateau.items():
@@ -665,7 +654,7 @@ class Plateau:
                                     for carte_key, carte_rect in buttons.items():
                                         carte_rect_list.append(carte_rect)
                                         if carte_rect.collidepoint(event.pos):
-                                            config_button(screen_plateau, (169, 169, 169), button_revendiquer["revendiquer"], "Revendiquer")
+                                            config_button(screen_plateau, (169, 169, 169), smallfont, button_revendiquer["revendiquer"], "Revendiquer")
                                             if carte_contour is not None:
                                                 pygame.draw.rect(screen_plateau, (255, 255, 255), carte_contour, width=2)
                                                 pygame.display.update(carte_contour)
@@ -730,7 +719,7 @@ class Plateau:
                                     self.joueurs[joueur].main.remove(carte_selectionnee[0])
                                 self.jouer_carte_ruse(carte_selectionnee[0], joueur, screen_plateau, screen_width, screen_height, buttons_plateau, buttons_images)
 
-                        self.displayPlateau(mode, nbr_manche, True, image_borne)
+                        self.displayPlateau(mode, nbr_manche, True, image_borne, False)
                         for borne_key, borne_rect in buttons_plateau.items():
                             if borne_key != "pioche_clan" and borne_key != "pioche_tactique" and borne_key != "defausse":
                                 numero_borne = int(borne_key.replace("borne", ""))
@@ -740,8 +729,8 @@ class Plateau:
                                 elif self.bornes[numero_borne].controle_par == 1:
                                     pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
                                     pygame.display.update(borne_rect)
-                        config_button(screen_plateau, (169, 169, 169), button_passer["passer"], "Passer")
-                        config_button(screen_plateau, (169, 169, 169), button_revendiquer["revendiquer"], "Revendiquer")
+                        config_button(screen_plateau, (169, 169, 169), smallfont, button_passer["passer"], "Passer")
+                        config_button(screen_plateau, (169, 169, 169), smallfont, button_revendiquer["revendiquer"], "Revendiquer")
                         displayCarte(screen_plateau, joueur, self.joueurs[joueur].main, False)
                         for i in range(1, 10):
                             for carte in self.bornes[i].joueur1_cartes:
@@ -773,11 +762,11 @@ class Plateau:
                     revendicable = self.verif_borne_revendicable()
 
                 while not passer:
-                    config_button(screen_plateau, (205, 200, 145), button_passer["passer"], "Passer")
+                    config_button(screen_plateau, (205, 200, 145), smallfont, button_passer["passer"], "Passer")
                     if revendicable:
-                        config_button(screen_plateau, (205, 200, 145), button_revendiquer["revendiquer"], "Revendiquer")
+                        config_button(screen_plateau, (205, 200, 145), smallfont, button_revendiquer["revendiquer"], "Revendiquer")
                     else:
-                        config_button(screen_plateau, (169, 169, 169), button_revendiquer["revendiquer"], "Revendiquer")
+                        config_button(screen_plateau, (169, 169, 169), smallfont, button_revendiquer["revendiquer"], "Revendiquer")
                     for event in pygame.event.get():
                         if event.type == pygame.QUIT:
                             pygame.quit()
@@ -793,11 +782,10 @@ class Plateau:
                                     if not running:
                                         passer = True
                                         break
-
                 self.afficher_pioches(screen_plateau, (205, 200, 145), mode)
 
             nombre_manche += 1
-            self.commencer_nouvelle_manche(mode, None)
+            self.commencer_nouvelle_manche(mode, None, entrainement)
         self.fin_jeu()
 
     def afficher_pioches(self, screen_plateau, couleur, mode):
@@ -807,7 +795,7 @@ class Plateau:
             afficher_pioche(325, screen_plateau, self.defausse, "defausse", couleur)
 
 
-    def displayPlateau(self, mode, nbr_manche, game_running, image_borne):
+    def displayPlateau(self, mode, nbr_manche, game_running, image_borne, entrainement):
         """Fonction qui affiche le plateau."""
         pygame.init()
 
@@ -816,62 +804,64 @@ class Plateau:
         window_width = 1480
         pygame.display.set_caption("Schotten Totten : Jeux")
         screen_plateau = pygame.display.set_mode((window_width, window_height))
+        if not entrainement:
+            # Récupération des chemins d'images
+            pioche_path = os.path.join(base_dir, "Ressources")
+            borne_path = os.path.join(base_dir, "Ressources", "Bornes")
+            images_paths = {
+                "pioche_clan": os.path.join(pioche_path, "Pioche.png"),
+                "pioche_tactique": os.path.join(pioche_path, "Pioche.png"),
+                **{f"borne{i}": os.path.join(borne_path, f"borne_{i - 1}.jpg") for i in range(1, 10)},
+            }
 
-        # Récupération des chemins d'images
-        pioche_path = os.path.join(base_dir, "Ressources")
-        borne_path = os.path.join(base_dir, "Ressources", "Bornes")
-        images_paths = {
-            "pioche_clan": os.path.join(pioche_path, "Pioche.png"),
-            "pioche_tactique": os.path.join(pioche_path, "Pioche.png"),
-            **{f"borne{i}": os.path.join(borne_path, f"borne_{i - 1}.jpg") for i in range(1, 10)},
-        }
+            # Chargement des images des boutons
+            buttons_images = {}
+            for i in range(1, 10):
+                image_key = f"borne{i}"
+                buttons_images[image_key] = load_and_scale_image(images_paths[image_key],100,50, None)
+            for borne_key, borne_path  in image_borne.items():
+                buttons_images[borne_key] = load_and_scale_image(borne_path,100,50, "Modes de combat")
+            buttons_images["pioche_clan"] = load_and_scale_image(images_paths["pioche_clan"], 85, 150, None)
+            buttons_images["pioche_tactique"] = load_and_scale_image(images_paths["pioche_tactique"], 85, 150, None)
+            buttons_images["defausse"] = load_and_scale_image(os.path.join(base_dir, "Ressources", "Back_Card.jpg"), 85, 150, None)
 
-        # Chargement des images des boutons
-        buttons_images = {}
-        for i in range(1, 10):
-            image_key = f"borne{i}"
-            buttons_images[image_key] = load_and_scale_image(images_paths[image_key],100,50, None)
-        for borne_key, borne_path  in image_borne.items():
-            buttons_images[borne_key] = load_and_scale_image(borne_path,100,50, "Modes de combat")
-        buttons_images["pioche_clan"] = load_and_scale_image(images_paths["pioche_clan"], 85, 150, None)
-        buttons_images["pioche_tactique"] = load_and_scale_image(images_paths["pioche_tactique"], 85, 150, None)
-        buttons_images["defausse"] = load_and_scale_image(os.path.join(base_dir, "Ressources", "Back_Card.jpg"), 85, 150, None)
+            buttons = {
+                "pioche_clan": pygame.Rect(20, 300, 85, 150),
+                "pioche_tactique": pygame.Rect(150, 300, 85, 150),
+                "defausse" : pygame.Rect(280, 300, 85, 150),
+                **{f"borne{i}": pygame.Rect(410 + (i - 1) * 110, 350, 100, 50) for i in range(1, 10)},
+            }
 
-        buttons = {
-            "pioche_clan": pygame.Rect(20, 300, 85, 150),
-            "pioche_tactique": pygame.Rect(150, 300, 85, 150),
-            "defausse" : pygame.Rect(280, 300, 85, 150),
-            **{f"borne{i}": pygame.Rect(410 + (i - 1) * 110, 350, 100, 50) for i in range(1, 10)},
-        }
+            menu_running = True
 
-        menu_running = True
+            while menu_running:
+                # Efface la surface hors écran
+                screen_plateau.fill((205, 200, 145))  # Fond de la surface
 
-        while menu_running:
-            # Efface la surface hors écran
-            screen_plateau.fill((205, 200, 145))  # Fond de la surface
-
-            # Affichage des composants sur la surface hors écran
-            for button_key, button_rect in buttons.items():
-                if button_key == "pioche_tactique" or button_key == "defausse":
-                    if mode != "classic":
+                # Affichage des composants sur la surface hors écran
+                for button_key, button_rect in buttons.items():
+                    if button_key == "pioche_tactique" or button_key == "defausse":
+                        if mode != "classic":
+                            screen_plateau.blit(buttons_images[button_key], button_rect.topleft)
+                    else:
                         screen_plateau.blit(buttons_images[button_key], button_rect.topleft)
+
+                self.afficher_pioches(screen_plateau, (205, 200, 145), mode)
+
+                pygame.display.flip()
+
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        menu_running = False
+                        pygame.quit()
+                        sys.exit()  # Arrêt du programme
+
+                if not game_running and nbr_manche:
+                    self.tour_de_jeu(screen_plateau, buttons_images, buttons, mode, nbr_manche, window_width, window_height, entrainement)
                 else:
-                    screen_plateau.blit(buttons_images[button_key], button_rect.topleft)
-
-            self.afficher_pioches(screen_plateau, (205, 200, 145), mode)
-
-            pygame.display.flip()
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    menu_running = False
-                    pygame.quit()
-                    sys.exit()  # Arrêt du programme
-
-            if not game_running and nbr_manche:
-                self.tour_de_jeu(screen_plateau, buttons_images, buttons, mode, nbr_manche, window_width, window_height)
-            else:
-                break
+                    break
+        else:
+            fenetre_attente(self, nbr_manche, mode)
 
     def jouer_chasseur_de_tete(self, joueur, screen, screen_width, screen_height, capacite, pioche_clan, pioche_tactique):
         """Joue la carte Chasseur de Tête."""
@@ -895,7 +885,7 @@ class Plateau:
         cards = displayCarte(screen, 2, main, True)
         button_valider = {"valider": pygame.Rect(screen_width // 2 - 75, screen_height // 2 + 240, 150, 50)}
 
-        config_button(screen, (169, 169, 169), button_valider["valider"], "Valider")
+        config_button(screen, (169, 169, 169), smallfont, button_valider["valider"], "Valider")
 
         pygame.display.flip()
 
@@ -920,11 +910,11 @@ class Plateau:
                                 pygame.draw.rect(screen, (255, 255, 255), carte_rect, width=2)  # Contour blanc
                                 pygame.display.update(carte_rect)
                     if len(choix_carte) == 2:
-                        config_button(screen, (205, 200, 145), button_valider["valider"], "Valider")
+                        config_button(screen, (205, 200, 145), smallfont, button_valider["valider"], "Valider")
                         if button_valider["valider"].collidepoint(event.pos):
                             valider = True
                     else:
-                        config_button(screen, (169, 169, 169), button_valider["valider"], "Valider")
+                        config_button(screen, (169, 169, 169), smallfont, button_valider["valider"], "Valider")
 
         carte = []
         # Remettre les cartes choisies sous la pioche
@@ -963,7 +953,7 @@ class Plateau:
                 afficher_pioche(325, screen, self.defausse, "defausse", (165, 140, 100))
 
         button_valider = {"valider": pygame.Rect(screen_width // 2 - 75, screen_height // 2 + 240, 150, 50)}
-        config_button(screen, (169, 169, 169), button_valider["valider"], "Valider")
+        config_button(screen, (169, 169, 169), smallfont, button_valider["valider"], "Valider")
 
         pygame.display.flip()
 
@@ -1011,11 +1001,11 @@ class Plateau:
                                             numero_borne].controle_par:
                                             borne_choisie = numero_borne
                     if carte_choisie is not None and borne_choisie is not None:
-                        config_button(screen, (205, 200, 145), button_valider["valider"], "Valider")
+                        config_button(screen, (205, 200, 145), smallfont, button_valider["valider"], "Valider")
                         if button_valider["valider"].collidepoint(event.pos):
                             valider = True
                     else:
-                        config_button(screen, (169, 169, 169), button_valider["valider"], "Valider")
+                        config_button(screen, (169, 169, 169), smallfont, button_valider["valider"], "Valider")
 
         # Déplacer la carte vers la Borne choisie
         if nom == "Stratège":
@@ -1059,6 +1049,112 @@ class Plateau:
         elif carte.nom == "Traître":
             self.jouer_stratege_banshee_traitre(joueur, screen, screen_width, screen_height, buttons_plateau, buttons_image, carte.nom)
 
+    def entrainement_rapide(self, nombre_essais, mode):
+        self.reset_plateau(mode)
+        for i in range(nombre_essais):
+            print(f"Partie {i + 1}/{nombre_essais} en cours...")
+            self.partie_simulee()
+            self.reset_plateau(mode)  # Réinitialiser le plateau pour une nouvelle partie
+
+    def partie_simulee(self):
+        """Jouer une partie rapidement sans affichage."""
+        total_reward = 0
+        self.joueur_actuel = 0
+
+        if self.neural_agent is None:
+            self.neural_agent = NeuralQLearningAgent(
+                input_size=len(self.bornes) * 4,  # Chaque borne a 4 caractéristiques
+                action_size=len(self.generate_actions()),  # Actions possibles
+                learning_rate=0.001,
+                discount_factor=0.9,
+                exploration_rate=1.0,
+                exploration_decay=0.99,
+                batch_size=64
+            )
+        while self.verifier_fin_manche():
+            # IA 1 joue
+            state = convert_plateau_to_vector(self)
+            possible_actions = self.generate_actions()
+            self.neural_agent.action_size = len(possible_actions)
+            action = self.neural_agent.choose_action(state, list(range(len(possible_actions))))
+            action_choisie = possible_actions[action]
+            reward0 = self.effectuer_action(state, action_choisie, action)  # Exécuter l'action choisie par l'IA
+
+            # IA 2 joue (même logique)
+            state = convert_plateau_to_vector(self)
+            possible_actions = self.generate_actions()
+            self.neural_agent.action_size = len(possible_actions)
+            action = self.neural_agent.choose_action(state, list(range(len(possible_actions))))
+            action_choisie = possible_actions[action]
+            reward1 = self.effectuer_action(state, action_choisie, action)
+
+            total_reward = reward0 + reward1
+        self.neural_agent.log_performance(total_reward)
+
+    def reset_plateau(self, mode):
+        for joueur in self.joueurs:
+            joueur.main = []
+            joueur.borne_controlee = 0
+        for borne in self.bornes:
+            self.bornes[borne].controle_par = None
+            self.bornes[borne].joueur1_cartes = []
+            self.bornes[borne].joueur2_cartes = []
+        self.pioche_clan.clear()
+        self.pioche_tactique.clear()
+
+
+        self.initialiser_cartes(mode)
+        self.distribuer_cartes()
+
+    def effectuer_action(self, state, action_choisie, action):
+        reward = 0
+
+        if isinstance(action_choisie[0], CarteClan):
+            objet, borne = action_choisie
+            reward = self.calculate_reward(self.joueur_actuel, objet, borne)
+            self.ajouter_carte(borne, self.joueur_actuel, objet, "")
+            self.joueurs[self.joueur_actuel].main.remove(objet)
+
+        elif action_choisie[0] == "REVENDIQUER":
+            _, borne = action_choisie
+            reward = self.calculate_reward(self.joueur_actuel, numero_borne=borne, revendication=True)
+            for i in range(1, 10):
+                if i == borne:
+                    borne_rect = None
+                    self.revendiquer_borne(borne, self.joueur_actuel, None, borne_rect, None)
+
+        # Ajoutez une vérification explicite des revendications restantes
+        revendications = [
+            ("REVENDIQUER", borne)
+            for borne in range(1, self.nombre_bornes() + 1)
+            if self.peut_revendiquer_borne(borne, self.joueur_actuel)
+        ]
+
+        for revendication in revendications:
+            _, borne = revendication
+            reward = self.calculate_reward(self.joueur_actuel, numero_borne=borne, revendication=True)
+            borne_rect = None
+            self.revendiquer_borne(borne, self.joueur_actuel, None, borne_rect, None)
+
+        # Nouvel état après l'action
+        next_state_vector = convert_plateau_to_vector(self)
+        possible_next_actions = self.generate_actions()
+
+        done = not self.verifier_fin_manche()
+        # Mise à jour du réseau neuronal
+        self.neural_agent.train_on_experience(
+            [carte.to_dict() if isinstance(carte, CarteClan) else carte for carte in state], action, reward, next_state_vector,
+            list(range(len(possible_next_actions))), done
+        )
+
+        # Décroissance du taux d'exploration
+        self.neural_agent.decay_exploration_rate()
+
+        self.joueurs[self.joueur_actuel].piocher_ia(self.pioche_clan, self.pioche_tactique, "pioche_clan")
+
+        self.joueur_actuel = 1 - self.joueur_actuel
+        return reward
+
 def melanger_pioche(cartes_clans, cartes_tactiques):
     """Mélange les cartes et retourne une pioche."""
     pioche = cartes_clans + cartes_tactiques
@@ -1069,7 +1165,6 @@ def afficher_pioche(x, screen, pioche, mode, couleur):
     rect_ = pygame.Rect(x - 30, 455, 100, 40)  # Définir les dimensions du rectangle
     pygame.draw.rect(screen, couleur, rect_)
 
-    smallfont = pygame.font.SysFont('Forte', 35)
     nombre_pioche = smallfont.render(str(len(pioche)), True, (139, 69, 19))
     rect_text = nombre_pioche.get_rect(center=rect_.center)
     rect_text.x -= 20
@@ -1080,6 +1175,54 @@ def afficher_pioche(x, screen, pioche, mode, couleur):
     rect_text.x -= 20
     screen.blit(nom_pioche, rect_text.topleft)
 
+def fenetre_attente(plateau, nbr_manche, mode):
+    """Affiche une fenêtre d'attente pendant l'entraînement."""
+    # Initialiser pygame
+    pygame.init()
+    screen = pygame.display.set_mode((600, 400))
+    pygame.display.set_caption("Entraînement en cours...")
+    font = pygame.font.Font(None, 50)
 
+    # Lancer l'entraînement dans un thread séparé
+    thread_entrainement = threading.Thread(target=plateau.entrainement_rapide, args=(nbr_manche, mode))
+    thread_entrainement.start()
+
+    # Boucle principale de la fenêtre
+    clock = pygame.time.Clock()
+    training_done = False
+    progress = 0
+    while not training_done:
+        # Gérer les événements
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
+
+        # Vérifier si l'entraînement est terminé
+        training_done = not thread_entrainement.is_alive()
+
+        # Calculer la progression
+        progress = min(progress + (1 / nbr_manche), 1.0) if thread_entrainement.is_alive() else 1.0
+
+        # Dessiner la barre de progression
+        pygame.draw.rect(screen, (200, 200, 200), (100, 300, 400, 20))  # Fond de la barre
+        pygame.draw.rect(screen, (0, 200, 0), (100, 300, int(400 * progress), 20))  # Barre de progression
+
+        # Mettre à jour l'affichage
+        screen.fill((255, 255, 255))  # Fond blanc
+        if training_done:
+            text_surface = font.render("Entraînement terminé !", True, (0, 200, 0))
+        else:
+            dots = (pygame.time.get_ticks() // 500) % 4  # Change tous les 500ms
+            text_surface = font.render(f"Entraînement en cours{'.' * dots}", True, (0, 0, 200))
+        screen.blit(text_surface, (100, 150))
+
+        # Rafraîchir l'écran
+        pygame.display.flip()
+        clock.tick(30)  # Limiter à 30 FPS
+
+    # Garder l'écran affiché après la fin de l'entraînement
+    time.sleep(2)
+    pygame.quit()
 
 

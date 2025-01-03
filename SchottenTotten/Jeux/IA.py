@@ -27,7 +27,7 @@ class QNetwork(nn.Module):
         return self.fc3(x)
 
 class NeuralQLearningAgent:
-    def __init__(self, input_size, action_size, learning_rate=0.001, discount_factor=0.9, exploration_rate=1.0, exploration_decay=0.99, memory_size = 10000, batch_size = 64):
+    def __init__(self, input_size, action_size, learning_rate=0.001, discount_factor=0.9, exploration_rate=1.0, exploration_decay=0.99, batch_size = 64):
         """
         Initialise un agent Q-Learning basé sur un réseau neuronal.
         :param input_size: Taille de l'état (entrée du réseau).
@@ -167,6 +167,13 @@ class NeuralQLearningAgent:
         if self.action_counter % 10 == 0:  # Exécuter `replay` toutes les 10 actions
             self.replay()
 
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, CarteClan):
+            return obj.to_dict()  # Utiliser to_dict() pour CarteClan
+        # Ajoute d'autres classes personnalisées ici si nécessaire
+        return super().default(obj)
+
 # Exemple d'intégration dans le jeu
 def convert_plateau_to_vector(state):
     """
@@ -197,8 +204,10 @@ def save_experiences_to_file(memory, filename='experiences.json'):
         }
         for state, action, reward, next_state, possible_next_action, done in memory
     ]
+
     with open(filepath, 'w') as file:
-        json.dump(experiences, file)  # Sauvegarder dans le fichier JSON
+        json.dump(experiences, file, cls=CustomJSONEncoder)  # Utiliser l'encodeur personnalisé
+
 
 
 def load_experiences_from_file(filename='experiences.json'):
@@ -208,10 +217,10 @@ def load_experiences_from_file(filename='experiences.json'):
             experiences = json.load(file)
         return [
             (
-                experience['state'],
+                CarteClan(**experience['state']) if isinstance(experience['state'], dict) and 'force' in experience['state'] else experience['state'],
                 experience['action'],
                 experience['reward'],
-                experience['next_state'],
+                CarteClan(**experience['next_state']) if isinstance(experience['next_state'], dict) and 'force' in experience['next_state'] else experience['next_state'],
                 experience['possible_next_action'],
                 experience['done']
             )
@@ -219,6 +228,7 @@ def load_experiences_from_file(filename='experiences.json'):
         ]
     except FileNotFoundError:
         return []  # Si le fichier n'existe pas, retourner une liste vide
+
 
 
 def save_model_weights(model, filename='q_network_weights.pth'):
