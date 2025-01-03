@@ -83,13 +83,13 @@ class NeuralQLearningAgent:
         Réduit le taux d'exploration pour privilégier l'exploitation.
         """
         self.exploration_rate *= self.exploration_decay
-        self.exploration_rate = max(self.exploration_rate, 0.01)
+        self.exploration_rate = max(self.exploration_rate * 0.995, 0.01)
 
     def store_experience(self, state, action, reward, next_state, possible_next_actions, done):
         """
         Stocke une expérience dans la mémoire de rejouabilité.
         """
-        self.memory.append((state, action, reward, next_state, possible_next_actions, done))
+        self.memory.append((tuple(state), action, reward, tuple(next_state), possible_next_actions, done))
 
     def replay(self):
         """

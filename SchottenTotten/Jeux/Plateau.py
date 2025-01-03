@@ -1,5 +1,6 @@
 import threading
 import time
+from time import sleep
 
 from SchottenTotten.Jeux.Joueur import *
 from SchottenTotten.Jeux.IA import *
@@ -1222,7 +1223,8 @@ def fenetre_attente(plateau, nbr_manche, mode):
         clock.tick(30)  # Limiter à 30 FPS
 
     # Garder l'écran affiché après la fin de l'entraînement
-    time.sleep(2)
+    thread_entrainement.join()
     pygame.quit()
+    sys.exit()
 
 
