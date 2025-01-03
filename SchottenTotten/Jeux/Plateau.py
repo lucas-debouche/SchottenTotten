@@ -1,5 +1,3 @@
-print ("test")
-
 from SchottenTotten.Jeux.Joueur import *
 from SchottenTotten.Jeux.IA import *
 
