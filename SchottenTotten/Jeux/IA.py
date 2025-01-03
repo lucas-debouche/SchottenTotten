@@ -87,13 +87,13 @@ class NeuralQLearningAgent:
         Réduit le taux d'exploration pour privilégier l'exploitation.
         """
         self.exploration_rate *= self.exploration_decay
-        self.exploration_rate = max(self.exploration_rate * 0.995, 0.01)
+        self.exploration_rate = max(self.exploration_rate * 0.99, 0.01)
 
     def store_experience(self, state, action, reward, next_state, possible_next_actions, done):
         """
         Stocke une expérience dans la mémoire de rejouabilité.
         """
-        self.memory.append((tuple(state), action, reward, tuple(next_state), possible_next_actions, done))
+        self.memory.append((state, action, reward, next_state, possible_next_actions, done))
 
     def replay(self):
         """
@@ -195,43 +195,67 @@ def convert_plateau_to_vector(state):
         ])
     return vector
 
-def save_experiences_to_file(memory, filename='experiences.json'):
-    filepath = os.path.join(SAVE_DIR, filename)  # Chemin complet
-    experiences = [
-        {
-            'state': state,
-            'action': action,
-            'reward': reward,
-            'next_state': next_state,
-            'possible_next_action': possible_next_action,
-            'done': done
-        }
-        for state, action, reward, next_state, possible_next_action, done in memory
-    ]
+def save_experiences_to_file(memory, filename='experiences.json', max_per_file=1000):
+    if not isinstance(memory, list):  # Si `memory` n'est pas une liste, le convertir
+        memory = list(memory)
 
-    with open(filepath, 'w') as file:
-        json.dump(experiences, file, cls=CustomJSONEncoder)  # Utiliser l'encodeur personnalisé
+    # Diviser les expériences en groupes de max_per_file
+    for i in range(0, len(memory), max_per_file):
+        chunk = memory[i:i + max_per_file]
+        chunk_filename = f"{os.path.splitext(filename)[0]}_part{i // max_per_file + 1}.json"
+        filepath = os.path.join(SAVE_DIR, chunk_filename)
 
-
-
-def load_experiences_from_file(filename='experiences.json'):
-    filepath = os.path.join(SAVE_DIR, filename)  # Chemin complet
-    try:
-        with open(filepath, 'r') as file:
-            experiences = json.load(file)
-        return [
-            (
-                CarteClan(**experience['state']) if isinstance(experience['state'], dict) and 'force' in experience['state'] else experience['state'],
-                experience['action'],
-                experience['reward'],
-                CarteClan(**experience['next_state']) if isinstance(experience['next_state'], dict) and 'force' in experience['next_state'] else experience['next_state'],
-                experience['possible_next_action'],
-                experience['done']
-            )
-            for experience in experiences
+        # Préparer les données pour le fichier JSON
+        experiences = [
+            {
+                'state': state,
+                'action': action,
+                'reward': reward,
+                'next_state': next_state,
+                'possible_next_action': possible_next_action,
+                'done': done
+            }
+            for state, action, reward, next_state, possible_next_action, done in chunk
         ]
-    except FileNotFoundError:
-        return []  # Si le fichier n'existe pas, retourner une liste vide
+
+        # Sauvegarder les données dans le fichier
+        with open(filepath, 'w') as file:
+            json.dump(experiences, file, cls=CustomJSONEncoder, indent=4)
+
+def load_experiences_from_file(filename_prefix='experiences', directory=SAVE_DIR):
+    """Charge toutes les expériences sauvegardées depuis plusieurs fichiers JSON."""
+    experiences = []
+
+    # Parcourir tous les fichiers correspondant au préfixe dans le répertoire
+    for file in os.listdir(directory):
+        if file.startswith(filename_prefix) and file.endswith('.json'):
+            filepath = os.path.join(directory, file)
+            try:
+                # Charger le contenu JSON du fichier
+                with open(filepath, 'r') as f:
+                    file_experiences = json.load(f)
+
+                # Convertir les expériences en format compatible
+                experiences.extend([
+                    (
+                        CarteClan(**experience['state']) if isinstance(experience['state'], dict) and 'force' in experience['state'] else experience['state'],
+                        experience['action'],
+                        experience['reward'],
+                        CarteClan(**experience['next_state']) if isinstance(experience['next_state'], dict) and 'force' in experience['next_state'] else experience['next_state'],
+                        experience['possible_next_action'],
+                        experience['done']
+                    )
+                    for experience in file_experiences
+                ])
+                print(f"Fichier chargé : {filepath} ({len(file_experiences)} expériences)")
+
+            except json.JSONDecodeError as e:
+                print(f"Erreur de décodage JSON dans le fichier {filepath}: {e}")
+            except FileNotFoundError:
+                print(f"Fichier non trouvé : {filepath}")
+
+    return experiences
+
 
 
 

@@ -1,6 +1,5 @@
 import threading
 import time
-from time import sleep
 
 from SchottenTotten.Jeux.Joueur import *
 from SchottenTotten.Jeux.IA import *
@@ -353,7 +352,7 @@ class Plateau:
                 print(f"{self.joueurs[1].nom} remporte la manche (plus de bornes contrôlées que {self.joueurs[0].nom}).")
                 return False
             else:
-                print(f"{self.joueurs[0]} et {self.joueurs[1]} ne marque pas de point (même nombre de bornes contrôlées).")
+                print(f"{self.joueurs[0].nom} et {self.joueurs[1].nom} ne marque pas de point (même nombre de bornes contrôlées).")
                 return False
         return True
 
@@ -528,7 +527,7 @@ class Plateau:
             total_reward = 0
             while running:
                 revendicable = self.verif_borne_revendicable()
-                if self.joueurs[joueur].nom == "IA":
+                if self.joueurs[joueur].nom.startswith("IA"):
                     for event in pygame.event.get():
                         if event.type == pygame.QUIT:
                             pygame.quit()
@@ -1107,6 +1106,7 @@ class Plateau:
                 batch_size=64
             )
         while self.verifier_fin_manche():
+
             # IA 1 joue
             state = convert_plateau_to_vector(self)
             possible_actions = self.generate_actions()
@@ -1124,6 +1124,7 @@ class Plateau:
             reward1 = self.effectuer_action(state, action_choisie, action)
 
             total_reward = reward0 + reward1
+
         self.neural_agent.log_performance(total_reward)
 
     def reset_plateau(self, mode):
