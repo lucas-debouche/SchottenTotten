@@ -7,7 +7,7 @@ import numpy as np
 from SchottenTotten.Jeux.Carte import *
 
 # Définir le chemin du dossier
-SAVE_DIR = 'C:/Users/client/cours/ia41/SchottenTotten/SchottenTotten'  # Nom du dossier où tout sera sauvegardé
+SAVE_DIR = '../SAVE_DIR'  # Nom du dossier où tout sera sauvegardé
 
 # Créer le dossier s'il n'existe pas
 if not os.path.exists(SAVE_DIR):
