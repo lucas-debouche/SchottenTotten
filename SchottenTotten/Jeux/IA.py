@@ -66,6 +66,10 @@ class NeuralQLearningAgent:
         :param possible_actions: Liste des actions possibles pour l'état.
         :return: Action choisie (index).
         """
+        if any(isinstance(action, CarteTactique) for action in possible_actions):
+            tactical_actions = [action for action in possible_actions if isinstance(action, CarteTactique)]
+            return random.choice(tactical_actions)
+
         if random.uniform(0, 1) < self.exploration_rate:
             return random.choice(possible_actions)
 

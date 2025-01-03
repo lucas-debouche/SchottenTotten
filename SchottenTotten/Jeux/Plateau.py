@@ -55,9 +55,17 @@ class Plateau:
 
         # Actions pour jouer une carte
         for carte in self.main_joueur(joueur) or []:
-            for borne in range(1, self.nombre_bornes() + 1):
-                if self.peut_jouer_carte(borne, joueur):
-                    actions.append((carte, borne))
+            if isinstance(carte, CarteTactique):
+                if carte.capacite == "Ruses":
+                    actions.append((carte, "RUSE"))
+                elif carte.capacite == "Modes de combat":
+                    for borne in range(1, self.nombre_bornes() + 1):
+                        if not self.bornes[borne].borne:
+                            actions.append((carte, borne))
+            else:
+                for borne in range(1, self.nombre_bornes() + 1):
+                    if self.peut_jouer_carte(borne, joueur):
+                        actions.append((carte, borne))
 
         # Actions pour revendiquer une borne
         for borne in range(1, self.nombre_bornes() + 1):
@@ -76,6 +84,12 @@ class Plateau:
         """
         borne = self.bornes[numero_borne]
         cartes = borne.joueur1_cartes + [carte] if joueur == 0 else borne.joueur2_cartes + [carte]
+
+        if isinstance(carte, CarteTactique):
+            if carte.capacite == "Ruses":
+                return 5
+            elif carte.capacite == "Modes de combat":
+                return 3
 
         # Si plus de 3 cartes, ce n'est pas une action valide
         if len(cartes) > 3:
@@ -521,6 +535,12 @@ class Plateau:
                             sys.exit()
                     time.sleep(0.5)
                     reward = 0
+                    print("main IA")
+                    for carte in self.joueurs[joueur].main:
+                        if isinstance(carte, CarteTactique):
+                            print(carte.nom)
+                        else:
+                            print(carte.force, carte.couleur)
                     # Conversion de l'état actuel en vecteur
                     current_state_vector = convert_plateau_to_vector(self)
 
@@ -532,11 +552,22 @@ class Plateau:
                     action = self.neural_agent.choose_action(current_state_vector, list(range(len(possible_actions))))
                     chosen_action = possible_actions[action]
 
-                    if isinstance(chosen_action[0], CarteClan):
+                    # Si l'IA choisit une carte tactique
+                    if isinstance(chosen_action[0], CarteTactique):
+                        carte = chosen_action[0]
+                        self.jouer_carte_tactique_ia(carte, joueur)
+                        self.joueurs[self.joueur_actuel].main.remove(carte)
+
+                    elif isinstance(chosen_action[0], CarteClan):
                         carte, borne = chosen_action
                         reward = self.calculate_reward(self.joueur_actuel, carte, borne)
                         self.ajouter_carte(borne, self.joueur_actuel, carte, "")
                         self.joueurs[self.joueur_actuel].main.remove(carte)
+                        car, bor = chosen_action
+                        if joueur == 0:
+                            deplacer_carte(screen_plateau, joueur, car, bor, self.bornes[bor].joueur1_cartes)
+                        else:
+                            deplacer_carte(screen_plateau, joueur, car, bor, self.bornes[bor].joueur2_cartes)
 
                     elif chosen_action[0] == "REVENDIQUER":
                         _, borne = chosen_action
@@ -570,18 +601,21 @@ class Plateau:
                         list(range(len(possible_next_actions))), done
                     )
 
+                    if mode != "classic":
+                        if len(self.pioche_clan) > 0 and len(self.pioche_tactique) > 0:
+                            self.joueurs[joueur].piocher_ia(self.pioche_clan, self.pioche_tactique, random.choice(["pioche_clan", "pioche_tactique"]))
+                        elif len(self.pioche_clan) == 0 and len(self.pioche_tactique) > 0:
+                            self.joueurs[joueur].piocher_ia(self.pioche_clan, self.pioche_tactique, "pioche_tactique")
+                        elif len(self.pioche_clan) > 0 and len(self.pioche_tactique) == 0:
+                            self.joueurs[joueur].piocher_ia(self.pioche_clan, self.pioche_tactique, "pioche_clan")
+
+                    else:
+                        self.joueurs[joueur].piocher_ia(self.pioche_clan, self.pioche_tactique,"pioche_clan")
+                    pygame.display.update()
 
                     total_reward += reward
                     # Décroissance du taux d'exploration
                     self.neural_agent.decay_exploration_rate()
-
-                    car, bor = chosen_action
-                    if joueur == 0:
-                        deplacer_carte(screen_plateau, joueur, car, bor, self.bornes[bor].joueur1_cartes)
-                    else:
-                        deplacer_carte(screen_plateau, joueur, car, bor, self.bornes[bor].joueur2_cartes)
-                    self.joueurs[joueur].piocher_ia(self.pioche_clan, self.pioche_tactique, "pioche_clan")
-                    pygame.display.update()
 
                     if not self.verifier_fin_manche():
                         self.neural_agent.log_performance(total_reward)
@@ -1156,6 +1190,121 @@ class Plateau:
         self.joueur_actuel = 1 - self.joueur_actuel
         return reward
 
+    def jouer_carte_tactique_ia(self, carte, joueur):
+        """
+        Gère automatiquement le jeu des cartes tactiques par l'IA en respectant les règles spécifiques de chaque carte.
+        :param carte: La carte tactique jouée.
+        :param joueur: L'index du joueur IA.
+        :return: Les paramètres nécessaires pour jouer la carte tactique.
+        """
+        print('enteeeeeeeeeeeeeeeeeeer')
+        if carte.capacite == "Troupes d'élites":
+            # Générer une nouvelle carte à partir des choix optimaux
+            meilleur_score = -float('inf')
+            meilleur_choix = None
+            couleurs = ["Rouge", "Vert", "Jaune", "Violet", "Bleu", "Orange"]
+            forces = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+
+            for couleur in couleurs:
+                for force in forces:
+                    carte_test = CarteClan(couleur=couleur, force=int(force))
+                    score = self.evaluer_action_globale(carte_test, numero_borne=None, joueur=joueur)
+                    if score > meilleur_score:
+                        meilleur_score = score
+                        meilleur_choix = (couleur, force)
+
+            return meilleur_choix
+
+        elif carte.capacite == "Ruses":
+            # Piocher 3 cartes en fonction des probabilités d'amélioration
+            pioche_clan = min(len(self.pioche_clan), 2)
+            pioche_tactique = 3 - pioche_clan
+            return pioche_clan, pioche_tactique
+
+        elif carte.capacite == "Modes de combat":
+            # Appliquer l'effet sur une borne spécifique
+            meilleur_borne = None
+            meilleur_score = -float('inf')
+
+            for numero_borne, borne in self.bornes.items():
+                if not borne.borne:
+                    score = self.evaluer_action_globale(carte, numero_borne, joueur)
+                    if score > meilleur_score:
+                        meilleur_score = score
+                        meilleur_borne = numero_borne
+
+            return meilleur_borne
+
+        elif carte.capacite == "Stratège":
+            # Déplacer une carte d'une borne à une autre pour maximiser le gain
+            meilleur_score = -float('inf')
+            carte_choisie = None
+            borne_initiale = None
+            borne_cible = None
+
+            for numero_borne, borne in self.bornes.items():
+                cartes = borne.joueur1_cartes if joueur == 0 else borne.joueur2_cartes
+                for carte_test in cartes:
+                    for cible, borne_cible_test in self.bornes.items():
+                        if cible != numero_borne and not borne_cible_test.controle_par:
+                            score = self.evaluer_action_globale(carte_test, cible, joueur)
+                            if score > meilleur_score:
+                                meilleur_score = score
+                                carte_choisie = carte_test
+                                borne_initiale = numero_borne
+                                borne_cible = cible
+
+            return carte_choisie, borne_initiale, borne_cible
+
+        elif carte.capacite == "Banshee":
+            # Déplacer une carte de l'adversaire à la défausse
+            meilleur_carte = None
+            meilleur_borne = None
+
+            for numero_borne, borne in self.bornes.items():
+                cartes = borne.joueur2_cartes if joueur == 0 else borne.joueur1_cartes
+                for carte_test in cartes:
+                    score = self.evaluer_action_globale(carte_test, numero_borne, joueur)
+                    if score > 0:  # Toute carte peut être un bon choix pour diminuer l'adversaire
+                        meilleur_carte = carte_test
+                        meilleur_borne = numero_borne
+
+            return meilleur_carte, meilleur_borne, 0  # 0 indique la défausse
+
+        elif carte.capacite == "Traître":
+            # Déplacer une carte de l'adversaire vers une borne non contrôlée
+            meilleur_carte = None
+            borne_initiale = None
+            borne_cible = None
+            meilleur_score = -float('inf')
+
+            for numero_borne, borne in self.bornes.items():
+                cartes = borne.joueur2_cartes if joueur == 0 else borne.joueur1_cartes
+                for carte_test in cartes:
+                    for cible, borne_cible_test in self.bornes.items():
+                        if cible != numero_borne and not borne_cible_test.controle_par:
+                            score = self.evaluer_action_globale(carte_test, cible, joueur)
+                            if score > meilleur_score:
+                                meilleur_score = score
+                                meilleur_carte = carte_test
+                                borne_initiale = numero_borne
+                                borne_cible = cible
+
+            return meilleur_carte, borne_initiale, borne_cible
+
+        elif carte.capacite == "Colin-Maillard":
+            # Ajouter un effet aveugle à une borne (empêche l'évaluation)
+            meilleur_borne = None
+            for numero_borne, borne in self.bornes.items():
+                if not borne.controle_par:
+                    meilleur_borne = numero_borne
+                    break
+
+            return meilleur_borne
+
+        else:
+            raise ValueError(f"Capacité inconnue pour la carte tactique: {carte.capacite}")
+
 def melanger_pioche(cartes_clans, cartes_tactiques):
     """Mélange les cartes et retourne une pioche."""
     pioche = cartes_clans + cartes_tactiques
@@ -1226,5 +1375,3 @@ def fenetre_attente(plateau, nbr_manche, mode):
     thread_entrainement.join()
     pygame.quit()
     sys.exit()
-
-
