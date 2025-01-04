@@ -92,6 +92,7 @@ def displayNom(mode, nbr_manche, entrainement):
 
 
 class Menu :
+    """Représente le menu et les choix de l'utilisateur pour la partie."""
 
     def __init__(self):
         self.mode = False
@@ -325,6 +326,7 @@ class Menu :
             pygame.display.flip()
 
     def displayEntrainement(self):
+        """Affiche la fenêtre pour choisir le nombre d'essais pour l'entrainement"""
         self.entrainement = True
         pygame.display.set_caption("Schotten Totten : Nombre de manches")
         screen_nom = pygame.display.set_mode((1000, 400))
@@ -383,6 +385,7 @@ class Menu :
 
 
 def input_nom(screen_, input_color, input_rect, textfont, input_text):
+    """Affiche le texte"""
     pygame.draw.rect(screen_, input_color, input_rect, border_radius=10)
     pygame.draw.rect(screen_, (139, 69, 19), input_rect, 2, border_radius=10)  # Bordure
 

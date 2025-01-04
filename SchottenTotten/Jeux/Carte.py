@@ -59,6 +59,7 @@ def generer_cartes():
 
 
 def displayCarte(fenetre, joueur, main, ruses):
+    """Affiche les cartes des mains des joueurs"""
     # Création rectangle affichage carte joueur 1 et joueur 2
     if joueur == 0:
         x_conteneur = 450
@@ -193,11 +194,13 @@ def deplacer_carte(fenetre, joueur, carte, borne_index, borne_joueur_cartes):
     return pygame.Rect(x, y, largeur_carte, hauteur_carte)
 
 def capacite_elite(screen, screen_width, screen_height, troupe, pioche_clan, pioche_tactique):
+    """Affiche un popup pour choisir une couleur et une force de troupe d'élite."""
     popup = Popup(screen, screen_width, screen_height, troupe)
     choix_couleur, choix_force = popup.show("Troupes d'élites", pioche_clan, pioche_tactique)
     return choix_couleur, choix_force
 
 def jouer_carte_troupes_elites(carte, screen, screen_width, screen_height, pioche_clan, pioche_tactique):
+    """Joue une carte spécifique parmi les troupes d'élite (Joker1, Joker2, Espion, Porte-Bouclier)."""
     if carte.nom == "Joker1" or carte.nom == "Joker2" :
         choix_couleur, choix_force = capacite_elite(screen, screen_width, screen_height, "joker", pioche_clan, pioche_tactique)
         choix_couleur = trad_couleur(choix_couleur)
@@ -212,6 +215,7 @@ def jouer_carte_troupes_elites(carte, screen, screen_width, screen_height, pioch
         return CarteClan(choix_couleur, choix_force)
 
 def trad_couleur(couleur):
+    """Traduit une couleur en français vers son équivalent en anglais."""
     if couleur == "Rouge":
         return "red"
     elif couleur == "Bleu":
@@ -226,6 +230,7 @@ def trad_couleur(couleur):
         return "orange"
 
 def chemin():
+    """Récupère les chemins des ressources nécessaires pour le jeu."""
     # Récupération chemin images cartes
     current_dir = os.path.dirname(__file__)
     base_dir = os.path.abspath(os.path.join(current_dir, ".."))
@@ -235,6 +240,7 @@ def chemin():
     return current_dir, base_dir, carte_clan_path, carte_tactique_path, back_card_path
 
 def config_button(screen_plateau, button_color, smallfont, button, text):
+    """Configure et affiche un bouton avec des bordures et une ombre."""
     shadow_rect = button.move(4, 4)  # Décalage pour l'ombre
     pygame.draw.rect(screen_plateau, (160, 82, 45), shadow_rect, border_radius=10)
 

@@ -19,13 +19,7 @@ class Borne:
 
 
 def evaluer_mains_supp(joueur, borne, cartes_supp=None):
-    """
-    Évalue la meilleure combinaison possible pour l'ia sur une borne si elle ajoute une carte sur celle-ci.
-    :param joueur: Index du joueur.
-    :param borne: Borne à évaluer.
-    :param cartes_supp: Liste de cartes supplémentaires pour simulation.
-    :return: Score de la meilleure combinaison.
-    """
+    """Évalue la meilleure combinaison possible pour l'ia sur une borne si elle ajoute une carte sur celle-ci."""
     cartes = list(borne.joueur1_cartes if joueur == 0 else borne.joueur2_cartes)
     if cartes_supp:
         cartes.extend(cartes_supp)
@@ -59,10 +53,7 @@ def evaluer_mains_supp(joueur, borne, cartes_supp=None):
 
 
 def evaluer_compatibilite_carte(carte, main):
-    """
-    Évalue la compatibilité d'une carte avec les combinaisons potentielles de la main.
-    Critères : potentiel de création de suites, brelans ou autres combinaisons fortes.
-    """
+    """Évalue la compatibilité d'une carte avec les combinaisons potentielles de la main."""
     forces = [c.force for c in main if isinstance(c, CarteClan) and c != carte]
     couleurs = [c.couleur for c in main if isinstance(c, CarteClan) and c != carte]
 
@@ -84,19 +75,14 @@ def evaluer_compatibilite_carte(carte, main):
 
 
 def simuler_ajout_carte(borne, joueur, valeur, couleur):
-    """
-    Simule l'ajout d'une carte à une borne et retourne le score obtenu.
-    """
+    """Simule l'ajout d'une carte à une borne et retourne le score obtenu."""
     carte_temp = CarteClan(valeur, couleur)
     cartes_temp = borne.joueur1_cartes + [carte_temp] if joueur == 0 else borne.joueur2_cartes + [carte_temp]
     return evaluer_mains_supp(joueur, borne, cartes_supp=cartes_temp)
 
 
 def ia_choisir_cartes_a_remettre(main):
-    """
-    Sélectionne les deux cartes les moins utiles pour l'IA à remettre sous la pioche.
-    Critères : faiblesse de la carte ou incompatibilité avec les stratégies en cours.
-    """
+    """Sélectionne les deux cartes les moins utiles pour l'IA à remettre sous la pioche."""
     cartes_evaluees = []
     for carte in main:
         if isinstance(carte, CarteClan):
@@ -110,9 +96,7 @@ def ia_choisir_cartes_a_remettre(main):
 
 
 def determiner_meilleure_valeur_couleur_porte_bouclier(borne, joueur):
-    """
-    Détermine la meilleure valeur et couleur pour un Porte-Bouclier sur une borne donnée.
-    """
+    """Détermine la meilleure valeur et couleur pour un Porte-Bouclier sur une borne donnée."""
     valeurs = [1, 2, 3]
     couleurs = ["rouge", "vert", "bleu", "jaune", "violet", "orange"]
     meilleure_combinaison = (0, "")
@@ -129,9 +113,7 @@ def determiner_meilleure_valeur_couleur_porte_bouclier(borne, joueur):
 
 
 def determiner_meilleure_valeur_couleur_joker(borne, joueur):
-    """
-    Détermine la meilleure valeur et couleur pour un Joker sur une borne donnée.
-    """
+    """Détermine la meilleure valeur et couleur pour un Joker sur une borne donnée."""
     valeurs = [1, 2, 3, 4, 5, 6, 7, 8, 9]
     couleurs = ["rouge", "vert", "bleu", "jaune", "violet", "orange"]
     meilleure_combinaison = (0, "")
@@ -148,9 +130,7 @@ def determiner_meilleure_valeur_couleur_joker(borne, joueur):
 
 
 def determiner_meilleure_couleur_espion(borne, joueur):
-    """
-    Détermine la meilleure couleur pour un Espion sur une borne donnée.
-    """
+    """Détermine la meilleure couleur pour un Espion sur une borne donnée."""
     couleurs = ["rouge", "vert", "bleu", "jaune", "violet", "orange"]
     meilleur_score = 0
     meilleure_couleur = ""
@@ -182,9 +162,7 @@ class Plateau:
         self.neural_agent = None
 
     def to_state_representation(self):
-        """
-        Retourne une représentation de l'état pour Q-Learning.
-        """
+        """Retourne une représentation de l'état pour Q-Learning."""
         state_repr = []
         for borne in self.bornes.values():
             # Convertir chaque élément de l'état en un tuple immuable
@@ -192,9 +170,7 @@ class Plateau:
         return tuple(state_repr)
 
     def generate_actions(self):
-        """
-        Génère toutes les actions possibles pour le joueur actuel.
-        """
+        """Génère toutes les actions possibles pour le joueur actuel."""
         joueur = self.joueur_courant()
         actions = []
 
@@ -220,13 +196,7 @@ class Plateau:
         return actions
 
     def evaluer_action(self, carte, numero_borne, joueur):
-        """
-        Évalue la qualité d'une action en fonction de son impact sur la formation de combinaisons.
-        :param carte: Carte à jouer.
-        :param numero_borne: Borne cible.
-        :param joueur: Joueur (0 ou 1).
-        :return: Score de l'action.
-        """
+        """Évalue la qualité d'une action en fonction de son impact sur la formation de combinaisons."""
         borne = self.bornes[numero_borne]
         cartes = borne.joueur1_cartes + [carte] if joueur == 0 else borne.joueur2_cartes + [carte]
 
@@ -266,10 +236,7 @@ class Plateau:
         return score
 
     def evaluer_action_globale(self, carte, numero_borne, joueur):
-        """
-        Évalue l'impact global de jouer une carte sur une borne spécifique.
-        Prend en compte l'état des autres bornes et les cartes adverses.
-        """
+        """Évalue l'impact global de jouer une carte sur une borne spécifique."""
         score = self.evaluer_action(carte, numero_borne, joueur)
 
         # Simuler le contrôle de la borne après l'action
@@ -289,11 +256,7 @@ class Plateau:
         return score
 
     def evaluer_etat_global(self, joueur):
-        """
-        Évalue l'état global du plateau pour le joueur.
-        :param joueur: Index du joueur (0 ou 1).
-        :return: Score basé sur la proximité des conditions de victoire.
-        """
+        """Évalue l'état global du plateau pour le joueur."""
         score = 0
         bornes_controlees = [
             numero_borne
@@ -314,14 +277,7 @@ class Plateau:
         return score
 
     def calculate_reward(self, joueur, carte=None, numero_borne=None, revendication=False):
-        """
-        Calcule la récompense pour une action spécifique (jouer une carte ou revendiquer une borne).
-        :param joueur: Le joueur qui effectue l'action.
-        :param carte: La carte jouée (None si c'est une revendication).
-        :param numero_borne: La borne ciblée.
-        :param revendication: Indique si l'action est une revendication.
-        :return: Récompense numérique.
-        """
+        """Calcule la récompense pour une action spécifique (jouer une carte ou revendiquer une borne)."""
 
         # Si l'action est une revendication
         reward = 0
@@ -348,9 +304,7 @@ class Plateau:
         return reward
 
     def peut_revendiquer_borne(self, borne, j, nom_carte_tactique = None):
-        """
-        Vérifie si un joueur peut revendiquer une borne.
-        """
+        """Vérifie si un joueur peut revendiquer une borne."""
         joueur = self.joueurs[j]
         joueur_adverse = self.joueurs[1 - j]
 
@@ -379,11 +333,7 @@ class Plateau:
             return False
 
     def gagnant_borne(self, numero_borne):
-        """
-        Détermine quel joueur contrôle la borne spécifiée.
-        :param numero_borne: Numéro de la borne.
-        :return: 0 si le joueur 1 contrôle la borne, 1 si le joueur 2 la contrôle, None sinon.
-        """
+        """Détermine quel joueur contrôle la borne spécifiée."""
         borne = self.bornes[numero_borne]
         cartes_joueur1 = borne.joueur1_cartes
         cartes_joueur2 = borne.joueur2_cartes
@@ -413,7 +363,7 @@ class Plateau:
 
 
     def main_joueur(self, joueur):
-        """ Retourne la main du joueur spécifié."""
+        """Retourne la main du joueur spécifié."""
         if isinstance(joueur, int):
             return self.joueurs[joueur].main
         elif joueur in self.joueurs:
@@ -421,7 +371,7 @@ class Plateau:
         return []
 
     def peut_jouer_carte(self, borne, joueur):
-        """ Vérifie si un joueur peut jouer une carte sur une borne spécifique."""
+        """Vérifie si un joueur peut jouer une carte sur une borne spécifique."""
         if isinstance(joueur, int):
             joueur = self.joueurs[joueur]
 
@@ -462,6 +412,7 @@ class Plateau:
         random.shuffle(self.pioche_tactique)
 
     def commencer_nouvelle_manche(self, mode, nbr_manche, entrainement):
+        """Commence une nouvelle manche."""
         self.reset_plateau(mode)
         self.displayPlateau(mode, nbr_manche, False, {}, entrainement)
 
@@ -517,6 +468,7 @@ class Plateau:
         sys.exit()
 
     def verif_borne_revendicable(self):
+        """Retourne les bornes revendicables."""
         # Vérification d'activation du bouton Revendiquer
         liste = []
         for bornes in self.bornes.items():
@@ -526,6 +478,7 @@ class Plateau:
         return liste
 
     def choix_revendiquer(self, buttons_plateau, revendicable, joueur, screen_plateau, nom_carte_tactique):
+        """Vérifie si une borne peut être revendiquée"""
         revendiquer = False
         # mettre en "couleur" les bornes revendicables
         while not revendiquer:
@@ -546,6 +499,7 @@ class Plateau:
                 break
 
     def gagnant_revendiquer(self, numero_borne, joueur):
+        """Attribue les points au gagnant d'une revendication"""
         self.bornes[numero_borne].controle_par = joueur
         self.joueurs[joueur].borne_controlee += 1
 
@@ -994,6 +948,7 @@ class Plateau:
         self.fin_jeu()
 
     def afficher_pioches(self, screen_plateau, couleur, mode):
+        """Affiche les différentes pioches"""
         afficher_pioche(60, screen_plateau, self.pioche_clan, "clan", couleur)
         if mode != "classic":
             afficher_pioche(190, screen_plateau, self.pioche_tactique, "tactique", couleur)
@@ -1255,6 +1210,7 @@ class Plateau:
             self.jouer_stratege_banshee_traitre(joueur, screen, screen_width, screen_height, buttons_plateau, buttons_image, carte.nom)
 
     def entrainement_rapide(self, nombre_essais, mode):
+        """Lance un nombre de parties simulées un certain nombre de fois"""
         self.reset_plateau(mode)
         for i in range(nombre_essais):
             print(f"Partie {i + 1}/{nombre_essais} en cours...")
@@ -1300,6 +1256,7 @@ class Plateau:
         self.neural_agent.log_performance(total_reward, "classic")
 
     def reset_plateau(self, mode):
+        """Réinitialise le plateau."""
         for joueur in self.joueurs:
             joueur.main = []
             joueur.borne_controlee = 0
@@ -1315,6 +1272,7 @@ class Plateau:
         self.distribuer_cartes()
 
     def effectuer_action(self, state, action_choisie, action):
+        """Gère le tour de l'ia en entrainement"""
         reward = 0
 
         if isinstance(action_choisie[0], CarteClan):
@@ -1364,13 +1322,7 @@ class Plateau:
         return reward
 
     def jouer_carte_tactique_ia(self, carte, joueur, screen_plateau):
-        """
-        Gère automatiquement le jeu des cartes tactiques par l'IA en respectant les règles spécifiques de chaque carte.
-        :param screen_plateau:
-        :param carte: La carte tactique jouée.
-        :param joueur: L'index du joueur IA.
-        :return: Les paramètres nécessaires pour jouer la carte tactique.
-        """
+        """Gère automatiquement le jeu des cartes tactiques par l'IA en respectant les règles spécifiques de chaque carte."""
         self.joueurs[joueur].main.remove(carte)
         if carte.nom == "Stratège":
             # Déplacer une carte d'une borne à une autre pour maximiser le gain
@@ -1553,10 +1505,7 @@ class Plateau:
             raise ValueError(f"Capacité inconnue pour la carte tactique: {carte.capacite}")
 
     def choisir_borne_pour_combat_de_boue(self, joueur):
-        """
-        Sélectionne la meilleure borne pour jouer 'Combat de Boue'.
-        Critères : borne non revendiquée et contestée, avantageuse pour l'adversaire.
-        """
+        """Sélectionne la meilleure borne pour jouer 'Combat de Boue'."""
         meilleures_bornes = []
         for numero_borne, borne in self.bornes.items():
             if borne.controle_par is None and len(borne.joueur1_cartes) == 2 and len(borne.joueur2_cartes) == 2:
@@ -1573,10 +1522,7 @@ class Plateau:
         return None
 
     def choisir_borne_pour_joker(self, joueur):
-        """
-        Sélectionne la meilleure borne pour jouer 'Joker'.
-        Critères : borne où le Joker peut compléter une combinaison forte.
-        """
+        """Sélectionne la meilleure borne pour jouer 'Joker'."""
         meilleures_bornes = []
         for numero_borne, borne in self.bornes.items():
             if borne.controle_par is None:
@@ -1590,10 +1536,7 @@ class Plateau:
         return None
 
     def choisir_borne_pour_espion(self, joueur):
-        """
-        Sélectionne la meilleure borne pour jouer 'Espion'.
-        Critères : borne où l'Espion maximise la combinaison du joueur.
-        """
+        """Sélectionne la meilleure borne pour jouer 'Espion'."""
         meilleures_bornes = []
         for numero_borne, borne in self.bornes.items():
             if borne.controle_par is None:
@@ -1607,10 +1550,7 @@ class Plateau:
         return None
 
     def choisir_borne_pour_porte_bouclier(self, joueur):
-        """
-        Sélectionne la meilleure borne pour jouer 'Porte-Bouclier'.
-        Critères : borne où le Porte-Bouclier offre le meilleur avantage.
-        """
+        """Sélectionne la meilleure borne pour jouer 'Porte-Bouclier'."""
         meilleures_bornes = []
         for numero_borne, borne in self.bornes.items():
             if borne.controle_par is None:
@@ -1631,6 +1571,7 @@ def melanger_pioche(cartes_clans, cartes_tactiques):
     return deque(pioche)
 
 def afficher_pioche(x, screen, pioche, mode, couleur):
+    """Affiche la pioche en fonction du mode"""
     rect_ = pygame.Rect(x - 30, 455, 100, 40)  # Définir les dimensions du rectangle
     pygame.draw.rect(screen, couleur, rect_)
 

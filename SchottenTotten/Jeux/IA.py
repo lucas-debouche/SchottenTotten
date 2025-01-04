@@ -15,6 +15,7 @@ if not os.path.exists(SAVE_DIR):
 
 # --- Réseau de neurones pour approximer Q(s, a) ---
 class QNetwork(nn.Module):
+    """Réseau de neurones pour approximer la fonction Q(s, a)."""
     def __init__(self, input_size, action_size):
         super(QNetwork, self).__init__()
         self.fc1 = nn.Linear(input_size, 128)
@@ -22,21 +23,14 @@ class QNetwork(nn.Module):
         self.fc3 = nn.Linear(128, action_size)
 
     def forward(self, x):
+        """Passe avant dans le réseau."""
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
         return self.fc3(x)
 
 class NeuralQLearningAgent:
+    """Agent de Q-learning basé sur un réseau neuronal pour approximer Q(s, a)."""
     def __init__(self, input_size, action_size, mode, learning_rate=0.001, discount_factor=0.9, exploration_rate=1.0, exploration_decay=0.99, batch_size = 64):
-        """
-        Initialise un agent Q-Learning basé sur un réseau neuronal.
-        :param input_size: Taille de l'état (entrée du réseau).
-        :param action_size: Nombre d'actions possibles (sortie du réseau).
-        :param learning_rate: Taux d'apprentissage.
-        :param discount_factor: Facteur de réduction (gamma).
-        :param exploration_rate: Taux d'exploration initial (epsilon).
-        :param exploration_decay: Décroissance du taux d'exploration.
-        """
         self.input_size = input_size
         self.action_size = action_size
         self.discount_factor = discount_factor
@@ -60,12 +54,7 @@ class NeuralQLearningAgent:
         load_model_weights(self.q_network, mode)
 
     def choose_action(self, state, possible_actions):
-        """
-        Choisit une action en utilisant epsilon-greedy.
-        :param state: État actuel (représentation vectorielle).
-        :param possible_actions: Liste des actions possibles pour l'état.
-        :return: Action choisie (index).
-        """
+        """Choisit une action en utilisant epsilon-greedy."""
         if any(isinstance(action, CarteTactique) for action in possible_actions):
             tactical_actions = [action for action in possible_actions if isinstance(action, CarteTactique)]
             return random.choice(tactical_actions)
@@ -83,22 +72,16 @@ class NeuralQLearningAgent:
         return possible_actions[q_values_filtered.index(max(q_values_filtered))]
 
     def decay_exploration_rate(self):
-        """
-        Réduit le taux d'exploration pour privilégier l'exploitation.
-        """
+        """Réduit le taux d'exploration pour privilégier l'exploitation."""
         self.exploration_rate *= self.exploration_decay
         self.exploration_rate = max(self.exploration_rate * 0.99, 0.01)
 
     def store_experience(self, state, action, reward, next_state, possible_next_actions, done):
-        """
-        Stocke une expérience dans la mémoire de rejouabilité.
-        """
+        """Stocke une expérience dans la mémoire de rejouabilité."""
         self.memory.append((state, action, reward, next_state, possible_next_actions, done))
 
     def replay(self):
-        """
-        Réalise un apprentissage par lot en utilisant des expériences de la mémoire.
-        """
+        """Réalise un apprentissage par lot en utilisant des expériences de la mémoire."""
         if len(self.memory) < self.batch_size:
             return
 
@@ -129,17 +112,13 @@ class NeuralQLearningAgent:
         self.optimizer.step()
 
     def log_performance(self, reward, mode):
-        """
-        Enregistre la récompense obtenue à la fin d'une partie pour analyse.
-        """
+        """Enregistre la récompense obtenue à la fin d'une partie pour analyse."""
         self.total_rewards.append(reward)
         save_model_weights(self.q_network, mode)
 
 
     def train_on_experience(self, state, action, reward, next_state, possible_next_actions, done, mode):
-        """
-        Entraîne directement sur une expérience donnée.
-        """
+        """Entraîne directement sur une expérience donnée."""
         # Ajout de l'expérience à la mémoire
         self.store_experience(state, action, reward, next_state, possible_next_actions, done)
         save_experiences_to_file(self.memory, mode)
@@ -172,7 +151,9 @@ class NeuralQLearningAgent:
             self.replay()
 
 class CustomJSONEncoder(json.JSONEncoder):
+    """Encodeur JSON personnalisé pour sérialiser des objets spécifiques."""
     def default(self, obj):
+        """Sérialisation des objets spécifiques."""
         if isinstance(obj, CarteClan):
             return obj.to_dict()  # Utiliser to_dict() pour CarteClan
         elif isinstance(obj, CarteTactique):
@@ -182,11 +163,7 @@ class CustomJSONEncoder(json.JSONEncoder):
 
 # Exemple d'intégration dans le jeu
 def convert_plateau_to_vector(state):
-    """
-    Convertit l'état du plateau en vecteur pour l'entrée du réseau.
-    :param state: Instance de Plateau.
-    :return: Liste ou vecteur représentant l'état.
-    """
+    """Convertit l'état du plateau en vecteur pour l'entrée du réseau."""
     vector = []
     for borne in state.bornes.values():
         vector.extend([
@@ -198,6 +175,7 @@ def convert_plateau_to_vector(state):
     return vector
 
 def save_experiences_to_file(memory, mode, max_per_file=1000):
+    """Sauvegarde les expériences dans plusieurs fichiers JSON."""
     if not isinstance(memory, list):  # Si `memory` n'est pas une liste, le convertir
         memory = list(memory)
 
@@ -271,9 +249,8 @@ def load_experiences_from_file(mode, directory=SAVE_DIR):
     return experiences
 
 
-
-
 def save_model_weights(model, mode):
+    """Sauvegarde les poids du modèle dans un fichier."""
     if mode == "classic":
         filename = 'q_network_weights_classic.pth'
     elif mode == "tactic":
@@ -285,6 +262,7 @@ def save_model_weights(model, mode):
 
 
 def load_model_weights(model, mode):
+    """Charge les poids du modèle à partir d'un fichier."""
     if mode == "classic":
         filename = 'q_network_weights_classic.pth'
     elif mode == "tactic":

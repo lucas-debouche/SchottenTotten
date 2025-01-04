@@ -7,7 +7,7 @@ from SchottenTotten.Jeux.Carte import CarteTactique
 
 
 class Joueur:
-    """Représente un joueur avec un nom, une main et un score."""
+    """Représente un joueur avec un nom, une main, un score et le nombre de bornes contrôlées."""
 
     def __init__(self, id_, nom):
         self.id = id_
@@ -17,17 +17,15 @@ class Joueur:
         self.borne_controlee = 0
 
     def clone(self):
-        """
-        Crée une copie complète de l'état actuel du joueur.
-        """
-        nouveau_joueur = Joueur(self.nom, self.id)
+        """Crée une copie complète de l'état actuel du joueur."""
+        nouveau_joueur = Joueur(self.id, self.nom)
         nouveau_joueur.main = self.main[:]  # Copie indépendante des cartes
         nouveau_joueur.borne_controlee = self.borne_controlee
         nouveau_joueur.score = self.score
         return nouveau_joueur
 
     def jouer_carte(self, plateau, numero_borne, carte, capacite):
-        """Méthode pour jouer une carte."""
+        """Permet au joueur de jouer une carte."""
         if carte in self.main:
             plateau.ajouter_carte(numero_borne, self.id, carte, capacite)
             if not (isinstance(carte, CarteTactique) and carte.nom == "Chasseur de Tête"):
@@ -35,15 +33,16 @@ class Joueur:
             return carte
 
     def distribuer(self, pioche):
-        """Méthode pour piocher une carte."""
+        """Permet au joueur de piocher une carte."""
         if pioche:
             self.main.append(pioche.popleft())  # Utilisation optimisée avec deque
 
     def piocher(self, pioche_clan, pioche_tactique, buttons, screen):
+        """Permet au joueur de piocher une carte en fonction des clics souris."""
         piocher = False
 
         while not piocher:
-            # Afficher la flèche uniquement si l'indicateur est True
+            # Afficher l'indication de pioche
             afficher_indication_pioche(screen)
 
             # Rafraîchir l'écran après chaque mise à jour
@@ -67,13 +66,16 @@ class Joueur:
         desactiver_indication_fleche(screen)
         pygame.display.update()
 
-    def piocher_ia (self, pioche_clan, pioche_tactique, pioche):
+    def piocher_ia(self, pioche_clan, pioche_tactique, pioche):
+        """Permet à l'IA de piocher une carte automatiquement."""
         if pioche == "pioche_clan" and len(pioche_clan) > 0:
             self.main.append(pioche_clan.popleft())
         elif pioche == "pioche_tactique" and len(pioche_tactique) > 0:
             self.main.append(pioche_tactique.popleft())
 
+
 def afficher_indication_pioche(screen):
+    """Affiche une flèche d'indication pour le joueur lorsqu'il doit piocher une carte."""
     current_dir = os.path.dirname(__file__)
     base_dir = os.path.abspath(os.path.join(current_dir, ".."))
     image_path = os.path.join(os.path.join(base_dir, "Ressources"), "fleche.png")
@@ -84,6 +86,7 @@ def afficher_indication_pioche(screen):
 
     # Afficher l'image à l'écran
     screen.blit(image_fleche, (fleche_rect.x, fleche_rect.y))
+
 
 def load_and_scale_image(path, width, height, capacite):
     """Charge et redimensionne une image."""
@@ -96,7 +99,9 @@ def load_and_scale_image(path, width, height, capacite):
         print(f"Erreur lors du chargement de l'image: {path}")
         raise e
 
+
 def desactiver_indication_fleche(screen):
+    """Supprime la flèche d'indication en remplissant sa zone avec la couleur de fond."""
     fleche_rect = pygame.Rect(100, 530, 120, 120)  # Rectangle pour position et dimensions.
 
     # Remplir la zone avec la couleur de fond (205, 200, 145)
@@ -104,4 +109,3 @@ def desactiver_indication_fleche(screen):
 
     # Mettre à jour l'affichage pour appliquer les changements
     pygame.display.update()
-
