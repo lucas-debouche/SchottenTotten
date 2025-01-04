@@ -330,6 +330,7 @@ class Plateau:
         for joueur in self.joueurs:
             # Vérifier si un joueur contrôle 5 bornes
             if joueur.borne_controlee == 5:
+                self.joueurs[joueur].score += 1
                 print(f"{joueur.nom} remporte la manche (5 bornes contrôlées).")
                 return False
 
@@ -339,16 +340,19 @@ class Plateau:
                 if borne.controle_par == joueur:
                     consecutives += 1
                     if consecutives == 3:
+                        self.joueurs[joueur].score += 1
                         print(f"{joueur.nom} remporte la manche (3 bornes consécutives).")
                         return False
                 else:
                     consecutives = 0
 
         if len(self.pioche_clan) == 0 and len(self.pioche_tactique) == 0:
-            if self.joueurs[0].borne_controlee < self.joueurs[1].borne_controlee:
+            if self.joueurs[0].borne_controlee > self.joueurs[1].borne_controlee:
+                self.joueurs[0].score += 1
                 print(f"{self.joueurs[0].nom} remporte la manche (plus de bornes contrôlées que {self.joueurs[1].nom}).")
                 return False
-            elif self.joueurs[0].borne_controlee > self.joueurs[1].borne_controlee:
+            elif self.joueurs[0].borne_controlee < self.joueurs[1].borne_controlee:
+                self.joueurs[1].score += 1
                 print(f"{self.joueurs[1].nom} remporte la manche (plus de bornes contrôlées que {self.joueurs[0].nom}).")
                 return False
             else:
@@ -532,8 +536,7 @@ class Plateau:
                         if event.type == pygame.QUIT:
                             pygame.quit()
                             sys.exit()
-                    if mode == 'classic':
-                        time.sleep(0.5)
+                    #time.sleep(0.5)
                     reward = 0
                     # Conversion de l'état actuel en vecteur
                     current_state_vector = convert_plateau_to_vector(self)
@@ -558,16 +561,25 @@ class Plateau:
                             image_key = f"borne{borne_index}"
                             buttons_images[image_key] = load_and_scale_image(carte_tactique, 100, 50, carte.capacite)
                             image_borne[image_key] = carte_tactique
-                            for i in range(1, 10):
-                                if i == borne_index:
-                                    print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-                                    borne_rect = pygame.Rect(410 + (i - 1) * 110, 350, 100, 50)
-                                    pygame.display.update(borne_rect)
-                            pygame.display.flip()
                         else:
                             self.jouer_carte_tactique_ia(carte, joueur, screen_plateau)
 
-                        #self.displayPlateau(mode, nbr_manche, True, image_borne, False)
+                        self.displayPlateau(mode, nbr_manche, True, image_borne, False)
+                        for borne_key, borne_rect in buttons_plateau.items():
+                            if borne_key != "pioche_clan" and borne_key != "pioche_tactique" and borne_key != "defausse":
+                                numero_borne = int(borne_key.replace("borne", ""))
+                                if self.bornes[numero_borne].controle_par == 0:
+                                    pygame.draw.rect(screen_plateau, (255, 0, 0), borne_rect, width=2)
+                                    pygame.display.update(borne_rect)
+                                elif self.bornes[numero_borne].controle_par == 1:
+                                    pygame.draw.rect(screen_plateau, (0, 0, 255), borne_rect, width=2)
+                                    pygame.display.update(borne_rect)
+                        for i in range(1, 10):
+                            for carte in self.bornes[i].joueur1_cartes:
+                                deplacer_carte(screen_plateau, 0, carte, i, self.bornes[i].joueur1_cartes)
+                            for carte in self.bornes[i].joueur2_cartes:
+                                deplacer_carte(screen_plateau, 1, carte, i, self.bornes[i].joueur2_cartes)
+                        pygame.display.update()
 
                     elif isinstance(chosen_action[0], CarteClan):
                         carte, borne = chosen_action
@@ -1211,7 +1223,6 @@ class Plateau:
         :return: Les paramètres nécessaires pour jouer la carte tactique.
         """
         self.joueurs[joueur].main.remove(carte)
-        print("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
         if carte.nom == "Stratège":
             # Déplacer une carte d'une borne à une autre pour maximiser le gain
             meilleur_score = -float('inf')
