@@ -34,6 +34,12 @@ class CarteTactique:
         self.capacite = capacite
         self.nom = nom
 
+    def to_dict(self):
+        """Convertit l'objet en un dictionnaire JSON-compatible."""
+        return {
+            "capacite": self.capacite,
+            "nom": self.nom
+        }
 
 def generer_cartes():
     """Génère toutes les cartes de clans et tactiques."""

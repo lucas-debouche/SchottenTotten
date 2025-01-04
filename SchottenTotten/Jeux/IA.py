@@ -27,7 +27,7 @@ class QNetwork(nn.Module):
         return self.fc3(x)
 
 class NeuralQLearningAgent:
-    def __init__(self, input_size, action_size, learning_rate=0.001, discount_factor=0.9, exploration_rate=1.0, exploration_decay=0.99, batch_size = 64):
+    def __init__(self, input_size, action_size, mode, learning_rate=0.001, discount_factor=0.9, exploration_rate=1.0, exploration_decay=0.99, batch_size = 64):
         """
         Initialise un agent Q-Learning basé sur un réseau neuronal.
         :param input_size: Taille de l'état (entrée du réseau).
@@ -50,14 +50,14 @@ class NeuralQLearningAgent:
         self.criterion = nn.MSELoss()
 
         # Mémoire de rejouabilité
-        self.memory = deque(load_experiences_from_file(), maxlen=10000)
+        self.memory = deque(load_experiences_from_file(mode), maxlen=10000)
 
         # Statistiques
         self.total_rewards = []
 
         self.action_counter = 0
 
-        load_model_weights(self.q_network)
+        load_model_weights(self.q_network, mode)
 
     def choose_action(self, state, possible_actions):
         """
@@ -128,21 +128,21 @@ class NeuralQLearningAgent:
         loss.backward()
         self.optimizer.step()
 
-    def log_performance(self, reward):
+    def log_performance(self, reward, mode):
         """
         Enregistre la récompense obtenue à la fin d'une partie pour analyse.
         """
         self.total_rewards.append(reward)
-        save_model_weights(self.q_network)
+        save_model_weights(self.q_network, mode)
 
 
-    def train_on_experience(self, state, action, reward, next_state, possible_next_actions, done):
+    def train_on_experience(self, state, action, reward, next_state, possible_next_actions, done, mode):
         """
         Entraîne directement sur une expérience donnée.
         """
         # Ajout de l'expérience à la mémoire
         self.store_experience(state, action, reward, next_state, possible_next_actions, done)
-        save_experiences_to_file(self.memory)
+        save_experiences_to_file(self.memory, mode)
 
         # Mise à jour immédiate du réseau neuronal
         state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
@@ -175,6 +175,8 @@ class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, CarteClan):
             return obj.to_dict()  # Utiliser to_dict() pour CarteClan
+        elif isinstance(obj, CarteTactique):
+            return obj.to_dict()
         # Ajoute d'autres classes personnalisées ici si nécessaire
         return super().default(obj)
 
@@ -195,9 +197,16 @@ def convert_plateau_to_vector(state):
         ])
     return vector
 
-def save_experiences_to_file(memory, filename='experiences.json', max_per_file=1000):
+def save_experiences_to_file(memory, mode, max_per_file=1000):
     if not isinstance(memory, list):  # Si `memory` n'est pas une liste, le convertir
         memory = list(memory)
+
+    if mode == "classic":
+        filename = 'experiences_classic.json'
+    elif mode == "tactic":
+        filename = 'experiences_tactic.json'
+    else:
+        filename = 'experiences_expert.json'
 
     # Diviser les expériences en groupes de max_per_file
     for i in range(0, len(memory), max_per_file):
@@ -222,10 +231,15 @@ def save_experiences_to_file(memory, filename='experiences.json', max_per_file=1
         with open(filepath, 'w') as file:
             json.dump(experiences, file, cls=CustomJSONEncoder, indent=4)
 
-def load_experiences_from_file(filename_prefix='experiences', directory=SAVE_DIR):
+def load_experiences_from_file(mode, directory=SAVE_DIR):
     """Charge toutes les expériences sauvegardées depuis plusieurs fichiers JSON."""
     experiences = []
-
+    if mode == "classic":
+        filename_prefix = 'experiences_classic'
+    elif mode == "tactic":
+        filename_prefix = 'experiences_tactic'
+    else:
+        filename_prefix = 'experiences_expert'
     # Parcourir tous les fichiers correspondant au préfixe dans le répertoire
     for file in os.listdir(directory):
         if file.startswith(filename_prefix) and file.endswith('.json'):
@@ -238,7 +252,7 @@ def load_experiences_from_file(filename_prefix='experiences', directory=SAVE_DIR
                 # Convertir les expériences en format compatible
                 experiences.extend([
                     (
-                        CarteClan(**experience['state']) if isinstance(experience['state'], dict) and 'force' in experience['state'] else experience['state'],
+                        CarteClan(**experience['state']) if isinstance(experience['state'], dict) and 'force' in experience['state'] else CarteTactique(**experience['state']) if isinstance(experience['state'], dict) and 'capacite' in experience['state'] else experience['state'],
                         experience['action'],
                         experience['reward'],
                         CarteClan(**experience['next_state']) if isinstance(experience['next_state'], dict) and 'force' in experience['next_state'] else experience['next_state'],
@@ -259,12 +273,24 @@ def load_experiences_from_file(filename_prefix='experiences', directory=SAVE_DIR
 
 
 
-def save_model_weights(model, filename='q_network_weights.pth'):
+def save_model_weights(model, mode):
+    if mode == "classic":
+        filename = 'q_network_weights_classic.pth'
+    elif mode == "tactic":
+        filename = 'q_network_weights_tactic.pth'
+    else:
+        filename = 'q_network_weights_expert.pth'
     filepath = os.path.join(SAVE_DIR, filename)  # Chemin complet
     torch.save(model.state_dict(), filepath)
 
 
-def load_model_weights(model, filename='q_network_weights.pth'):
+def load_model_weights(model, mode):
+    if mode == "classic":
+        filename = 'q_network_weights_classic.pth'
+    elif mode == "tactic":
+        filename = 'q_network_weights_tactic.pth'
+    else:
+        filename = 'q_network_weights_expert.pth'
     filepath = os.path.join(SAVE_DIR, filename)  # Chemin complet
     try:
         model.load_state_dict(torch.load(filepath))

@@ -1,5 +1,4 @@
 import threading
-import time
 
 from SchottenTotten.Jeux.Joueur import *
 from SchottenTotten.Jeux.IA import *
@@ -17,6 +16,153 @@ class Borne:
         self.borne = []
         self.controle_par = None  # Joueur qui contrôle cette borne
         self.combat_de_boue = 3
+
+
+def evaluer_mains_supp(joueur, borne, cartes_supp=None):
+    """
+    Évalue la meilleure combinaison possible pour l'ia sur une borne si elle ajoute une carte sur celle-ci.
+    :param joueur: Index du joueur.
+    :param borne: Borne à évaluer.
+    :param cartes_supp: Liste de cartes supplémentaires pour simulation.
+    :return: Score de la meilleure combinaison.
+    """
+    cartes = list(borne.joueur1_cartes if joueur == 0 else borne.joueur2_cartes)
+    if cartes_supp:
+        cartes.extend(cartes_supp)
+
+    # Trier les cartes par valeur
+    cartes.sort(key=lambda c: c.force)
+
+    # Évaluer les combinaisons possibles
+    forces = [c.force for c in cartes]
+    couleurs = [c.couleur for c in cartes]
+
+    # Vérifier Suite couleur (trois cartes de la même couleur successives)
+    if len(set(couleurs)) == 1 and len(forces) >= 3 and all(
+            forces[i] + 1 == forces[i + 1] for i in range(len(forces) - 1)):
+        return 10
+
+    # Vérifier Brelan (trois cartes de la même valeur)
+    if any(forces.count(f) >= 3 for f in forces):
+        return 8
+
+    # Vérifier Couleur (trois cartes de la même couleur)
+    if len(set(couleurs)) == 1:
+        return 6
+
+    # Vérifier Suite (trois valeurs successives de couleurs quelconques)
+    if len(forces) >= 3 and all(forces[i] + 1 == forces[i + 1] for i in range(len(forces) - 1)):
+        return 4
+
+    # Vérifier Somme (trois cartes quelconques)
+    return sum(forces) if len(forces) <= 3 else sum(sorted(forces, reverse=True)[:3])
+
+
+def evaluer_compatibilite_carte(carte, main):
+    """
+    Évalue la compatibilité d'une carte avec les combinaisons potentielles de la main.
+    Critères : potentiel de création de suites, brelans ou autres combinaisons fortes.
+    """
+    forces = [c.force for c in main if isinstance(c, CarteClan) and c != carte]
+    couleurs = [c.couleur for c in main if isinstance(c, CarteClan) and c != carte]
+
+    score = 0
+
+    # Bonus si la carte peut compléter une suite
+    if carte.force - 1 in forces and carte.force + 1 in forces:
+        score += 5
+
+    # Bonus si la carte peut compléter un brelan
+    if forces.count(carte.force) == 2:
+        score += 4
+
+    # Bonus si la carte peut compléter une couleur
+    if couleurs.count(carte.couleur) >= 2:
+        score += 3
+
+    return score
+
+
+def simuler_ajout_carte(borne, joueur, valeur, couleur):
+    """
+    Simule l'ajout d'une carte à une borne et retourne le score obtenu.
+    """
+    carte_temp = CarteClan(valeur, couleur)
+    cartes_temp = borne.joueur1_cartes + [carte_temp] if joueur == 0 else borne.joueur2_cartes + [carte_temp]
+    return evaluer_mains_supp(joueur, borne, cartes_supp=cartes_temp)
+
+
+def ia_choisir_cartes_a_remettre(main):
+    """
+    Sélectionne les deux cartes les moins utiles pour l'IA à remettre sous la pioche.
+    Critères : faiblesse de la carte ou incompatibilité avec les stratégies en cours.
+    """
+    cartes_evaluees = []
+    for carte in main:
+        if isinstance(carte, CarteClan):
+            compatibilite = evaluer_compatibilite_carte(carte, main)
+            cartes_evaluees.append((carte, compatibilite))
+        else:
+            cartes_evaluees.append((carte, 0))  # Priorité basse pour les cartes tactiques inutiles
+
+    cartes_evaluees.sort(key=lambda x: x[1])
+    return [c[0] for c in cartes_evaluees[:2]]
+
+
+def determiner_meilleure_valeur_couleur_porte_bouclier(borne, joueur):
+    """
+    Détermine la meilleure valeur et couleur pour un Porte-Bouclier sur une borne donnée.
+    """
+    valeurs = [1, 2, 3]
+    couleurs = ["rouge", "vert", "bleu", "jaune", "violet", "orange"]
+    meilleure_combinaison = (0, "")
+    meilleur_score = 0
+
+    for valeur in valeurs:
+        for couleur in couleurs:
+            score = simuler_ajout_carte(borne, joueur, valeur, couleur)
+            if score > meilleur_score:
+                meilleur_score = score
+                meilleure_combinaison = (valeur, couleur)
+
+    return meilleure_combinaison
+
+
+def determiner_meilleure_valeur_couleur_joker(borne, joueur):
+    """
+    Détermine la meilleure valeur et couleur pour un Joker sur une borne donnée.
+    """
+    valeurs = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    couleurs = ["rouge", "vert", "bleu", "jaune", "violet", "orange"]
+    meilleure_combinaison = (0, "")
+    meilleur_score = 0
+
+    for valeur in valeurs:
+        for couleur in couleurs:
+            score = simuler_ajout_carte(borne, joueur, valeur, couleur)
+            if score > meilleur_score:
+                meilleur_score = score
+                meilleure_combinaison = (valeur, couleur)
+
+    return meilleure_combinaison
+
+
+def determiner_meilleure_couleur_espion(borne, joueur):
+    """
+    Détermine la meilleure couleur pour un Espion sur une borne donnée.
+    """
+    couleurs = ["rouge", "vert", "bleu", "jaune", "violet", "orange"]
+    meilleur_score = 0
+    meilleure_couleur = ""
+
+    for couleur in couleurs:
+        score = simuler_ajout_carte(borne, joueur, 7, couleur)
+        if score > meilleur_score:
+            meilleur_score = score
+            meilleure_couleur = couleur
+
+    return meilleure_couleur
+
 
 class Plateau:
     """Représente le plateau de jeu avec ses bornes et sa défausse."""
@@ -522,6 +668,7 @@ class Plateau:
                 self.neural_agent = NeuralQLearningAgent(
                     input_size=len(self.bornes) * 4,  # Chaque borne a 4 caractéristiques
                     action_size=len(self.generate_actions()),  # Actions possibles
+                    mode=mode,
                     learning_rate=0.001,
                     discount_factor=0.9,
                     exploration_rate=1.0,
@@ -621,7 +768,7 @@ class Plateau:
                     # Mise à jour du réseau neuronal
                     self.neural_agent.train_on_experience(
                         current_state_vector, action, reward, next_state_vector,
-                        list(range(len(possible_next_actions))), done
+                        list(range(len(possible_next_actions))), done, mode
                     )
 
                     if mode != "classic":
@@ -641,7 +788,7 @@ class Plateau:
                     self.neural_agent.decay_exploration_rate()
 
                     if not self.verifier_fin_manche():
-                        self.neural_agent.log_performance(total_reward)
+                        self.neural_agent.log_performance(total_reward, mode)
                         running = False
                     else:
                         joueur = 1 - joueur
@@ -1123,6 +1270,7 @@ class Plateau:
             self.neural_agent = NeuralQLearningAgent(
                 input_size=len(self.bornes) * 4,  # Chaque borne a 4 caractéristiques
                 action_size=len(self.generate_actions()),  # Actions possibles
+                mode="classic",
                 learning_rate=0.001,
                 discount_factor=0.9,
                 exploration_rate=1.0,
@@ -1149,7 +1297,7 @@ class Plateau:
 
             total_reward = reward0 + reward1
 
-        self.neural_agent.log_performance(total_reward)
+        self.neural_agent.log_performance(total_reward, "classic")
 
     def reset_plateau(self, mode):
         for joueur in self.joueurs:
@@ -1218,6 +1366,7 @@ class Plateau:
     def jouer_carte_tactique_ia(self, carte, joueur, screen_plateau):
         """
         Gère automatiquement le jeu des cartes tactiques par l'IA en respectant les règles spécifiques de chaque carte.
+        :param screen_plateau:
         :param carte: La carte tactique jouée.
         :param joueur: L'index du joueur IA.
         :return: Les paramètres nécessaires pour jouer la carte tactique.
@@ -1272,7 +1421,7 @@ class Plateau:
                         meilleur_borne = numero_borne
 
             # Appliquer l'effet
-            print(f"IA joue 'Banshee' enleve la carte: {meilleur_carte} de la borne: {meilleur_borne}.")
+            print(f"IA joue 'Banshee' enlève la carte: {meilleur_carte} de la borne: {meilleur_borne}.")
             if meilleur_carte and meilleur_borne:
                 if joueur == 0:
                     self.bornes[meilleur_borne].joueur2_cartes.remove(meilleur_carte)
@@ -1350,7 +1499,7 @@ class Plateau:
             self.joueurs[joueur].main.extend(cartes_piochees)
 
             # Choisir deux cartes à remettre sous la pioche
-            cartes_a_remettre = self.ia_choisir_cartes_a_remettre(self.joueurs[joueur].main)
+            cartes_a_remettre = ia_choisir_cartes_a_remettre(self.joueurs[joueur].main)
             for carte_a_remettre in cartes_a_remettre:
                 self.joueurs[joueur].main.remove(carte_a_remettre)
                 if isinstance(carte_a_remettre, CarteClan):
@@ -1362,43 +1511,43 @@ class Plateau:
 
         elif carte.nom == "Joker":
             # Permet de jouer un Joker en choisissant la meilleure couleur et valeur
-            borne_cible = self.choisir_borne_pour_joker(joueur)
+            borne_index, borne_cible = self.choisir_borne_pour_joker(joueur)
             if borne_cible:
-                valeur, couleur = self.determiner_meilleure_valeur_couleur_joker(borne_cible, joueur)
+                valeur, couleur = determiner_meilleure_valeur_couleur_joker(borne_cible, joueur)
                 carte_choisis = CarteClan(couleur, valeur)
                 borne_cible.joueur1_cartes.append(carte_choisis) if joueur == 0 else borne_cible.joueur2_cartes.append(carte_choisis)
                 print(f"IA joue 'Joker' avec valeur {valeur} et couleur {couleur} sur la Borne {borne_cible}.")
                 if joueur == 0:
-                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_cible].joueur1_cartes)
+                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_index].joueur1_cartes)
                 else:
-                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_cible].joueur2_cartes)
+                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_index].joueur2_cartes)
 
 
         elif carte.nom == "Espion":
             # Permet de jouer un Espion en choisissant une couleur optimale
-            borne_cible = self.choisir_borne_pour_espion(joueur)
+            borne_index, borne_cible = self.choisir_borne_pour_espion(joueur)
             if borne_cible:
-                couleur = self.determiner_meilleure_couleur_espion(borne_cible, joueur)
+                couleur = determiner_meilleure_couleur_espion(borne_cible, joueur)
                 carte_choisis = CarteClan(couleur, 7)
                 borne_cible.joueur1_cartes.append(carte_choisis) if joueur == 0 else borne_cible.joueur2_cartes.append(carte_choisis)
                 print(f"IA joue 'Espion' avec couleur {couleur} sur la Borne {borne_cible}.")
                 if joueur == 0:
-                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_cible].joueur1_cartes)
+                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_index].joueur1_cartes)
                 else:
-                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_cible].joueur2_cartes)
+                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_index].joueur2_cartes)
 
         elif carte.nom == "Porte-Bouclier":
             # Permet de jouer un Porte-Bouclier avec une valeur et une couleur optimales
-            borne_cible = self.choisir_borne_pour_porte_bouclier(joueur)
+            borne_index, borne_cible = self.choisir_borne_pour_porte_bouclier(joueur)
             if borne_cible:
-                valeur, couleur = self.determiner_meilleure_valeur_couleur_porte_bouclier(borne_cible, joueur)
+                valeur, couleur = determiner_meilleure_valeur_couleur_porte_bouclier(borne_cible, joueur)
                 carte_choisis = CarteClan(couleur, valeur)
                 borne_cible.joueur1_cartes.append(carte_choisis) if joueur == 0 else borne_cible.joueur2_cartes.append(carte_choisis)
                 print(f"IA joue 'Porte-Bouclier' avec valeur {valeur} et couleur {couleur} sur la Borne {borne_cible}.")
                 if joueur == 0:
-                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_cible].joueur1_cartes)
+                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_index].joueur1_cartes)
                 else:
-                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_cible].joueur2_cartes)
+                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_index].joueur2_cartes)
 
         else:
             raise ValueError(f"Capacité inconnue pour la carte tactique: {carte.capacite}")
@@ -1437,7 +1586,7 @@ class Plateau:
 
         if meilleures_bornes:
             meilleures_bornes.sort(key=lambda x: x[1], reverse=True)
-            return self.bornes[meilleures_bornes[0][0]]
+            return meilleures_bornes[0][0], self.bornes[meilleures_bornes[0][0]]
         return None
 
     def choisir_borne_pour_espion(self, joueur):
@@ -1454,7 +1603,7 @@ class Plateau:
 
         if meilleures_bornes:
             meilleures_bornes.sort(key=lambda x: x[1], reverse=True)
-            return self.bornes[meilleures_bornes[0][0]]
+            return meilleures_bornes[0][0], self.bornes[meilleures_bornes[0][0]]
         return None
 
     def choisir_borne_pour_porte_bouclier(self, joueur):
@@ -1471,147 +1620,9 @@ class Plateau:
 
         if meilleures_bornes:
             meilleures_bornes.sort(key=lambda x: x[1], reverse=True)
-            return self.bornes[meilleures_bornes[0][0]]
+            return meilleures_bornes[0][0], self.bornes[meilleures_bornes[0][0]]
         return None
 
-    def determiner_meilleure_valeur_couleur_joker(self, borne, joueur):
-        """
-        Détermine la meilleure valeur et couleur pour un Joker sur une borne donnée.
-        """
-        valeurs = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        couleurs = ["rouge", "vert", "bleu", "jaune", "violet", "orange"]
-        meilleure_combinaison = (0, "")
-        meilleur_score = 0
-
-        for valeur in valeurs:
-            for couleur in couleurs:
-                score = self.simuler_ajout_carte(borne, joueur, valeur, couleur)
-                if score > meilleur_score:
-                    meilleur_score = score
-                    meilleure_combinaison = (valeur, couleur)
-
-        return meilleure_combinaison
-
-    def determiner_meilleure_couleur_espion(self, borne, joueur):
-        """
-        Détermine la meilleure couleur pour un Espion sur une borne donnée.
-        """
-        couleurs = ["rouge", "vert", "bleu", "jaune", "violet", "orange"]
-        meilleur_score = 0
-        meilleure_couleur = ""
-
-        for couleur in couleurs:
-            score = self.simuler_ajout_carte(borne, joueur, 7, couleur)
-            if score > meilleur_score:
-                meilleur_score = score
-                meilleure_couleur = couleur
-
-        return meilleure_couleur
-
-    def determiner_meilleure_valeur_couleur_porte_bouclier(self, borne, joueur):
-        """
-        Détermine la meilleure valeur et couleur pour un Porte-Bouclier sur une borne donnée.
-        """
-        valeurs = [1, 2, 3]
-        couleurs = ["rouge", "vert", "bleu", "jaune", "violet", "orange"]
-        meilleure_combinaison = (0, "")
-        meilleur_score = 0
-
-        for valeur in valeurs:
-            for couleur in couleurs:
-                score = self.simuler_ajout_carte(borne, joueur, valeur, couleur)
-                if score > meilleur_score:
-                    meilleur_score = score
-                    meilleure_combinaison = (valeur, couleur)
-
-        return meilleure_combinaison
-
-    def simuler_ajout_carte(self, borne, joueur, valeur, couleur):
-        """
-        Simule l'ajout d'une carte à une borne et retourne le score obtenu.
-        """
-        carte_temp = CarteClan(valeur, couleur)
-        cartes_temp = borne.joueur1_cartes + [carte_temp] if joueur == 0 else borne.joueur2_cartes + [carte_temp]
-        return self.evaluer_mains_supp(joueur, borne, cartes_supp=cartes_temp)
-
-    def evaluer_mains_supp(self, joueur, borne, cartes_supp=None):
-        """
-        Évalue la meilleure combinaison possible pour l'ia sur une borne si elle ajoute une carte sur celle-ci .
-        :param joueur: Index du joueur.
-        :param borne: Borne à évaluer.
-        :param cartes_supp: Liste de cartes supplémentaires pour simulation.
-        :return: Score de la meilleure combinaison.
-        """
-        cartes = list(borne.joueur1_cartes if joueur == 0 else borne.joueur2_cartes)
-        if cartes_supp:
-            cartes.extend(cartes_supp)
-
-        # Trier les cartes par valeur
-        cartes.sort(key=lambda c: c.force)
-
-        # Évaluer les combinaisons possibles
-        forces = [c.force for c in cartes]
-        couleurs = [c.couleur for c in cartes]
-
-        # Vérifier Suite couleur (trois cartes de la même couleur successives)
-        if len(set(couleurs)) == 1 and len(forces) >= 3 and all(
-                forces[i] + 1 == forces[i + 1] for i in range(len(forces) - 1)):
-            return 10
-
-        # Vérifier Brelan (trois cartes de la même valeur)
-        if any(forces.count(f) >= 3 for f in forces):
-            return 8
-
-        # Vérifier Couleur (trois cartes de la même couleur)
-        if len(set(couleurs)) == 1:
-            return 6
-
-        # Vérifier Suite (trois valeurs successives de couleurs quelconques)
-        if len(forces) >= 3 and all(forces[i] + 1 == forces[i + 1] for i in range(len(forces) - 1)):
-            return 4
-
-        # Vérifier Somme (trois cartes quelconques)
-        return sum(forces) if len(forces) <= 3 else sum(sorted(forces, reverse=True)[:3])
-
-    def ia_choisir_cartes_a_remettre(self, main):
-        """
-        Sélectionne les deux cartes les moins utiles pour l'IA à remettre sous la pioche.
-        Critères : faiblesse de la carte ou incompatibilité avec les stratégies en cours.
-        """
-        cartes_evaluees = []
-        for carte in main:
-            if isinstance(carte, CarteClan):
-                compatibilite = self.evaluer_compatibilite_carte(carte, main)
-                cartes_evaluees.append((carte, compatibilite))
-            else:
-                cartes_evaluees.append((carte, 0))  # Priorité basse pour les cartes tactiques inutiles
-
-        cartes_evaluees.sort(key=lambda x: x[1])
-        return [c[0] for c in cartes_evaluees[:2]]
-
-    def evaluer_compatibilite_carte(self, carte, main):
-        """
-        Évalue la compatibilité d'une carte avec les combinaisons potentielles de la main.
-        Critères : potentiel de création de suites, brelans ou autres combinaisons fortes.
-        """
-        forces = [c.force for c in main if isinstance(c, CarteClan) and c != carte]
-        couleurs = [c.couleur for c in main if isinstance(c, CarteClan) and c != carte]
-
-        score = 0
-
-        # Bonus si la carte peut compléter une suite
-        if carte.force - 1 in forces and carte.force + 1 in forces:
-            score += 5
-
-        # Bonus si la carte peut compléter un brelan
-        if forces.count(carte.force) == 2:
-            score += 4
-
-        # Bonus si la carte peut compléter une couleur
-        if couleurs.count(carte.couleur) >= 2:
-            score += 3
-
-        return score
 
 def melanger_pioche(cartes_clans, cartes_tactiques):
     """Mélange les cartes et retourne une pioche."""
