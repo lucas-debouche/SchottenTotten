@@ -1,4 +1,5 @@
 import threading
+import time
 
 from SchottenTotten.Jeux.Joueur import *
 from SchottenTotten.Jeux.IA import *
@@ -633,11 +634,13 @@ class Plateau:
             while running:
                 revendicable = self.verif_borne_revendicable()
                 if self.joueurs[joueur].nom.startswith("IA"):
+                    displayCarte(screen_plateau, joueur, self.joueurs[joueur].main, False)
+
                     for event in pygame.event.get():
                         if event.type == pygame.QUIT:
                             pygame.quit()
                             sys.exit()
-                    #time.sleep(0.5)
+                    time.sleep(0.5)
                     reward = 0
                     # Conversion de l'état actuel en vecteur
                     current_state_vector = convert_plateau_to_vector(self)
@@ -680,6 +683,7 @@ class Plateau:
                                 deplacer_carte(screen_plateau, 0, carte, i, self.bornes[i].joueur1_cartes)
                             for carte in self.bornes[i].joueur2_cartes:
                                 deplacer_carte(screen_plateau, 1, carte, i, self.bornes[i].joueur2_cartes)
+                        displayCarte(screen_plateau, joueur, self.joueurs[joueur].main, False)
                         pygame.display.update()
 
                     elif isinstance(chosen_action[0], CarteClan):
