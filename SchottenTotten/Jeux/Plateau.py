@@ -532,14 +532,9 @@ class Plateau:
                         if event.type == pygame.QUIT:
                             pygame.quit()
                             sys.exit()
-                    #time.sleep(0.5)
+                    if mode == 'classic':
+                        time.sleep(0.5)
                     reward = 0
-                    print("main IA")
-                    for carte in self.joueurs[joueur].main:
-                        if isinstance(carte, CarteTactique):
-                            print(carte.nom)
-                        else:
-                            print(carte.force, carte.couleur)
                     # Conversion de l'état actuel en vecteur
                     current_state_vector = convert_plateau_to_vector(self)
 
@@ -555,7 +550,7 @@ class Plateau:
                     if isinstance(chosen_action[0], CarteTactique):
                         carte = chosen_action[0]
                         if carte.capacite == "Modes de combat":
-                            borne_index = self.jouer_carte_tactique_ia(carte, joueur)
+                            borne_index = self.jouer_carte_tactique_ia(carte, joueur, screen_plateau)
                             nom_carte_tactique = carte.nom
                             if nom_carte_tactique == "Combat de Boue":
                                 self.bornes[borne_index].combat_de_boue = 4
@@ -563,8 +558,14 @@ class Plateau:
                             image_key = f"borne{borne_index}"
                             buttons_images[image_key] = load_and_scale_image(carte_tactique, 100, 50, carte.capacite)
                             image_borne[image_key] = carte_tactique
+                            for i in range(1, 10):
+                                if i == borne_index:
+                                    print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+                                    borne_rect = pygame.Rect(410 + (i - 1) * 110, 350, 100, 50)
+                                    pygame.display.update(borne_rect)
+                            pygame.display.flip()
                         else:
-                            self.jouer_carte_tactique_ia(carte, joueur)
+                            self.jouer_carte_tactique_ia(carte, joueur, screen_plateau)
 
                         #self.displayPlateau(mode, nbr_manche, True, image_borne, False)
 
@@ -1202,7 +1203,7 @@ class Plateau:
         self.joueur_actuel = 1 - self.joueur_actuel
         return reward
 
-    def jouer_carte_tactique_ia(self, carte, joueur):
+    def jouer_carte_tactique_ia(self, carte, joueur, screen_plateau):
         """
         Gère automatiquement le jeu des cartes tactiques par l'IA en respectant les règles spécifiques de chaque carte.
         :param carte: La carte tactique jouée.
@@ -1353,10 +1354,41 @@ class Plateau:
             borne_cible = self.choisir_borne_pour_joker(joueur)
             if borne_cible:
                 valeur, couleur = self.determiner_meilleure_valeur_couleur_joker(borne_cible, joueur)
-                carte.force = valeur
-                carte.couleur = couleur
-                borne_cible.joueur1_cartes.append(carte) if joueur == 0 else borne_cible.joueur2_cartes.append(carte)
+                carte_choisis = CarteClan(couleur, valeur)
+                borne_cible.joueur1_cartes.append(carte_choisis) if joueur == 0 else borne_cible.joueur2_cartes.append(carte_choisis)
                 print(f"IA joue 'Joker' avec valeur {valeur} et couleur {couleur} sur la Borne {borne_cible}.")
+                if joueur == 0:
+                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_cible].joueur1_cartes)
+                else:
+                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_cible].joueur2_cartes)
+
+
+        elif carte.nom == "Espion":
+            # Permet de jouer un Espion en choisissant une couleur optimale
+            borne_cible = self.choisir_borne_pour_espion(joueur)
+            if borne_cible:
+                couleur = self.determiner_meilleure_couleur_espion(borne_cible, joueur)
+                carte_choisis = CarteClan(couleur, 7)
+                borne_cible.joueur1_cartes.append(carte_choisis) if joueur == 0 else borne_cible.joueur2_cartes.append(carte_choisis)
+                print(f"IA joue 'Espion' avec couleur {couleur} sur la Borne {borne_cible}.")
+                if joueur == 0:
+                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_cible].joueur1_cartes)
+                else:
+                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_cible].joueur2_cartes)
+
+        elif carte.nom == "Porte-Bouclier":
+            # Permet de jouer un Porte-Bouclier avec une valeur et une couleur optimales
+            borne_cible = self.choisir_borne_pour_porte_bouclier(joueur)
+            if borne_cible:
+                valeur, couleur = self.determiner_meilleure_valeur_couleur_porte_bouclier(borne_cible, joueur)
+                carte_choisis = CarteClan(couleur, valeur)
+                borne_cible.joueur1_cartes.append(carte_choisis) if joueur == 0 else borne_cible.joueur2_cartes.append(carte_choisis)
+                print(f"IA joue 'Porte-Bouclier' avec valeur {valeur} et couleur {couleur} sur la Borne {borne_cible}.")
+                if joueur == 0:
+                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_cible].joueur1_cartes)
+                else:
+                    deplacer_carte(screen_plateau, joueur, carte_choisis, borne_cible, self.bornes[borne_cible].joueur2_cartes)
+
         else:
             raise ValueError(f"Capacité inconnue pour la carte tactique: {carte.capacite}")
 
