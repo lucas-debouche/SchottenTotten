@@ -1225,7 +1225,6 @@ class Plateau:
         """Jouer une partie rapidement sans affichage."""
         total_reward = 0
         self.joueur_actuel = 0
-
         if self.neural_agent is None:
             self.neural_agent = NeuralQLearningAgent(
                 input_size=len(self.bornes) * 4,  # Chaque borne a 4 caractéristiques
@@ -1238,26 +1237,21 @@ class Plateau:
                 batch_size=64
             )
         while self.verifier_fin_manche():
-
             # IA 1 joue
-            state = convert_plateau_to_vector(self)
-            possible_actions = self.generate_actions()
-            self.neural_agent.action_size = len(possible_actions)
-            action = self.neural_agent.choose_action(state, list(range(len(possible_actions))))
-            action_choisie = possible_actions[action]
-            reward0 = self.effectuer_action(state, action_choisie, action)  # Exécuter l'action choisie par l'IA
-
+            reward0 = self.tour_ia()
             # IA 2 joue (même logique)
-            state = convert_plateau_to_vector(self)
-            possible_actions = self.generate_actions()
-            self.neural_agent.action_size = len(possible_actions)
-            action = self.neural_agent.choose_action(state, list(range(len(possible_actions))))
-            action_choisie = possible_actions[action]
-            reward1 = self.effectuer_action(state, action_choisie, action)
-
+            reward1 = self.tour_ia()
             total_reward = reward0 + reward1
-
         self.neural_agent.log_performance(total_reward, "classic")
+
+    def tour_ia(self):
+        state = convert_plateau_to_vector(self)
+        possible_actions = self.generate_actions()
+        self.neural_agent.action_size = len(possible_actions)
+        action = self.neural_agent.choose_action(state, list(range(len(possible_actions))))
+        action_choisie = possible_actions[action]
+        reward = self.effectuer_action(state, action_choisie, action)
+        return reward
 
     def reset_plateau(self, mode):
         """Réinitialise le plateau."""

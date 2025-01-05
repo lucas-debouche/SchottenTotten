@@ -178,20 +178,17 @@ def save_experiences_to_file(memory, mode, max_per_file=1000):
     """Sauvegarde les expériences dans plusieurs fichiers JSON."""
     if not isinstance(memory, list):  # Si `memory` n'est pas une liste, le convertir
         memory = list(memory)
-
     if mode == "classic":
         filename = 'experiences_classic.json'
     elif mode == "tactic":
         filename = 'experiences_tactic.json'
     else:
         filename = 'experiences_expert.json'
-
     # Diviser les expériences en groupes de max_per_file
     for i in range(0, len(memory), max_per_file):
         chunk = memory[i:i + max_per_file]
         chunk_filename = f"{os.path.splitext(filename)[0]}_part{i // max_per_file + 1}.json"
         filepath = os.path.join(SAVE_DIR, chunk_filename)
-
         # Préparer les données pour le fichier JSON
         experiences = [
             {
@@ -204,7 +201,6 @@ def save_experiences_to_file(memory, mode, max_per_file=1000):
             }
             for state, action, reward, next_state, possible_next_action, done in chunk
         ]
-
         # Sauvegarder les données dans le fichier
         with open(filepath, 'w') as file:
             json.dump(experiences, file, cls=CustomJSONEncoder, indent=4)
