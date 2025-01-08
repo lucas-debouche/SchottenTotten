@@ -428,7 +428,7 @@ class Plateau:
         for joueur in self.joueurs:
             # Vérifier si un joueur contrôle 5 bornes
             if joueur.borne_controlee == 5:
-                self.joueurs[joueur].score += 1
+                self.joueurs[joueur.id].score += 1
                 print(f"{joueur.nom} remporte la manche (5 bornes contrôlées).")
                 return False
 
@@ -438,7 +438,7 @@ class Plateau:
                 if borne.controle_par == joueur:
                     consecutives += 1
                     if consecutives == 3:
-                        self.joueurs[joueur].score += 1
+                        self.joueurs[joueur.id].score += 1
                         print(f"{joueur.nom} remporte la manche (3 bornes consécutives).")
                         return False
                 else:
@@ -1308,7 +1308,7 @@ class Plateau:
         # Mise à jour du réseau neuronal
         self.neural_agent.train_on_experience(
             [carte.to_dict() if isinstance(carte, CarteClan) else carte for carte in state], action, reward, next_state_vector,
-            list(range(len(possible_next_actions))), done
+            list(range(len(possible_next_actions))), done, "classic"
         )
 
         # Décroissance du taux d'exploration
